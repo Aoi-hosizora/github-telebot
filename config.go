@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	ServerConfig *struct {
+		PollerTimeout   uint32 `yaml:"poller-timeout"`
 		PollingDuration uint32 `yaml:"polling-duration"`
 	} `yaml:"server"`
 

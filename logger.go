@@ -7,19 +7,19 @@ import (
 
 func botLog(fromMsg *telebot.Message, sendMsg *telebot.Message, err error) {
 	if fromMsg != nil { // bot
-		if sendMsg == nil { // receive
-			log.Printf("[bot] receive \t %d \t \"%s\"\n", fromMsg.ID, fromMsg.Text)
+		if sendMsg == nil { // no handler
+			log.Printf("[bot] receive \t |%d \t \"%s\" \t (no handler)\n", fromMsg.ID, fromMsg.Text)
 		} else { // send
 			if err == nil {
 				timeSpan := float64(sendMsg.Time().Sub(fromMsg.Time()).Nanoseconds()) / 1e6
-				log.Printf("[bot] reply \t %d \t %.0fms (from %d \"%s\")\n", sendMsg.ID, timeSpan, fromMsg.ID, fromMsg.Text)
+				log.Printf("[bot] reply \t |%d \t %.0fms \t (from %d \"%s\")\n", sendMsg.ID, timeSpan, fromMsg.ID, fromMsg.Text)
 			} else {
 				log.Printf("[bot] failed to reply bot of %d: %v\n", fromMsg.ID, err)
 			}
 		}
-	} else { // channel
+	} else if sendMsg != nil && sendMsg.Chat != nil { // channel
 		if err == nil {
-			log.Printf("[channel] send \t %d \t \"%s\"", sendMsg.ID, sendMsg.Chat.Title)
+			log.Printf("[channel] send \t |%d \t \"%s\"", sendMsg.ID, sendMsg.Chat.Title)
 		} else {
 			log.Printf("[channel] failed to send message to channel: %v\n", err)
 		}

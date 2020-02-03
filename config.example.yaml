@@ -1,4 +1,5 @@
 server:
+  poller-timeout: 10 # second
   polling-duration: 120 # second
 
 telegram:

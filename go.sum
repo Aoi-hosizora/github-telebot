@@ -1,5 +1,5 @@
-github.com/Aoi-hosizora/ahlib v0.0.0-20200128181747-318e0c2b28df h1:qNYFy+JFmaI/c1QdcCaulp+Yhs6hkaUbkG/Zdqi2LVo=
-github.com/Aoi-hosizora/ahlib v0.0.0-20200128181747-318e0c2b28df/go.mod h1:oa2f9jtUDzZ5zklB+pZKOUV7SBpdINmGdjlsKMa77pY=
+github.com/Aoi-hosizora/ahlib v0.0.0-20200204070028-56cdd0c3662f h1:iI2wdb9aXB8+N6HfhHCfCLawEzZYPGPZHcgSszA04yQ=
+github.com/Aoi-hosizora/ahlib v0.0.0-20200204070028-56cdd0c3662f/go.mod h1:oa2f9jtUDzZ5zklB+pZKOUV7SBpdINmGdjlsKMa77pY=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
