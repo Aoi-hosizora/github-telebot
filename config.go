@@ -5,23 +5,20 @@ import (
 	"io/ioutil"
 )
 
-type ServerConfig struct {
-	PollingDuration uint32 `yaml:"polling-duration"`
-}
-
-type TelegramConfig struct {
-	BotToken  string `yaml:"bot-token"`
-	ChannelId string `yaml:"channel-id"`
-}
-
-type GithubConfig struct {
-	Token string `yaml:"token"`
-}
-
 type Config struct {
-	ServerConfig   *ServerConfig   `yaml:"server"`
-	TelegramConfig *TelegramConfig `yaml:"telegram"`
-	GithubConfig   *GithubConfig   `yaml:"github"`
+	ServerConfig *struct {
+		PollingDuration uint32 `yaml:"polling-duration"`
+	} `yaml:"server"`
+
+	TelegramConfig *struct {
+		BotToken  string `yaml:"bot-token"`
+		ChannelId string `yaml:"channel-id"`
+	} `yaml:"telegram"`
+
+	GithubConfig *struct {
+		Username string `yaml:"username"`
+		Token    string `yaml:"token"`
+	} `yaml:"github"`
 }
 
 func loadConfig(configPath string) (*Config, error) {
