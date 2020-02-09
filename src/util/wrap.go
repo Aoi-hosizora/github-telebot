@@ -2,39 +2,10 @@ package util
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/src/config"
 	"github.com/Aoi-hosizora/ah-tgbot/src/model"
 	"github.com/Aoi-hosizora/ahlib/xcondition"
-	"io/ioutil"
-	"net/http"
 	"strings"
 )
-
-const (
-	GithubReceivedEventApi string = "https://api.github.com/users/%s/received_events"
-)
-
-func GetActions(config *config.GithubConfig, page int) (string, error) {
-	url := fmt.Sprintf(GithubReceivedEventApi, config.Username)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
-	if err != nil {
-		return "", err
-	}
-	if config.Private {
-		req.Header.Add("Authorization", fmt.Sprintf("Token %s", config.Token))
-	}
-	resp, err := (&http.Client{}).Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(content), nil
-}
 
 func WrapGithubAction(obj *model.GithubEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
@@ -46,8 +17,11 @@ func WrapGithubAction(obj *model.GithubEvent) string {
 	message := ""
 	switch obj.Type {
 	case "PushEvent":
+		cnt := xcondition.IfThenElse(pl.Size <= 1, "1 commit", fmt.Sprintf("%d commits", pl.Size)).(string)
 		commitUrl := fmt.Sprintf("%s/commits/%s", repoUrl, pl.Commits[0].Sha)
-		message = fmt.Sprintf("%s pushed %d commit ([%s](%s)...) to %s", userMd, pl.Size, pl.Commits[0].Sha[0:7], commitUrl, repoMd)
+		detail := fmt.Sprintf("[%s](%s)", pl.Commits[0].Sha[0:7], commitUrl)
+		detail = xcondition.IfThenElse(pl.Size <= 1, detail, detail+"...").(string)
+		message = fmt.Sprintf("%s pushed %s (%s) to %s", userMd, cnt, detail, repoMd)
 	case "WatchEvent":
 		message = fmt.Sprintf("%s starred %s", userMd, repoMd)
 	case "CreateEvent":
@@ -69,36 +43,38 @@ func WrapGithubAction(obj *model.GithubEvent) string {
 		message = fmt.Sprintf("%s delete %s %s at %s", userMd, pl.RefType, pl.Ref, repoMd)
 	case "PublicEvent":
 		message = fmt.Sprintf("%s made %s %s", userMd, repoMd, xcondition.IfThenElse(obj.Public, "public", "private").(string))
+
 	case "IssuesEvent":
-		message = fmt.Sprintf("%s %s issue [#%d](%s) in %s", userMd, pl.Action, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s issue [#%d](%s) in %s",
+			userMd, pl.Action, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
 	case "IssueCommentEvent":
-		message = fmt.Sprintf("%s %s comment [%d](%s) on issue [#%d](%s) in %s", userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s comment [%d](%s) on issue [#%d](%s) in %s",
+			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
+
 	case "PullRequestEvent":
-		message = fmt.Sprintf("%s %s pull request [#%d](%s) at %s", userMd, pl.Action, pl.Number, pl.PullRequest.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s pull request [#%d](%s) at %s",
+			userMd, pl.Action, pl.Number, pl.PullRequest.HtmlUrl, repoMd)
 	case "PullRequestReviewCommentEvent":
 		message = fmt.Sprintf("%s %s pull request review comment [%d](%s) in pull request [#%d](%s) at %s",
 			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
+
 	case "CommitCommentEvent":
-		message = fmt.Sprintf("%s %s comment [%d](%s) at commit %s in %s", userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Comment.CommitId[0:7], repoMd)
+		message = fmt.Sprintf("%s %s comment [%d](%s) at commit %s in %s",
+			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Comment.CommitId[0:7], repoMd)
+
 	case "MemberEvent":
 		message = fmt.Sprintf("%s %s member [%s](%s) to %s", userMd, pl.Action, pl.Member.Login, pl.Member.HtmlUrl, repoMd)
 	case "ReleaseEvent":
 		message = fmt.Sprintf("%s release [%s](%s) at %s", userMd, pl.Release.TagName, pl.Release.HtmlUrl, repoMd)
 	case "GollumEvent":
-		message = fmt.Sprintf("%s updated %d wiki page at %s", userMd, len(pl.Page), repoMd)
+		cnt := xcondition.IfThenElse(len(pl.Page) <= 1, "1 wiki page", fmt.Sprintf("%d wiki pages", len(pl.Page))).(string)
+		message = fmt.Sprintf("%s updated %s at %s", userMd, cnt, repoMd)
 	default:
 		message = fmt.Sprintf("%s: %s %s", strings.TrimRight(obj.Type, "Event"), userMd, repoMd)
 	}
-	return message
-}
 
-func WrapGithubActions(objs []*model.GithubEvent) string {
-	result := ""
-	if len(objs) == 1 {
-		return WrapGithubAction(objs[0])
+	if !obj.Public {
+		message += " (private)"
 	}
-	for idx, obj := range objs {
-		result += fmt.Sprintf("%d. %s\n", idx+1, WrapGithubAction(obj))
-	}
-	return result
+	return message
 }
