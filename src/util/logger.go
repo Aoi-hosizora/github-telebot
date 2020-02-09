@@ -1,11 +1,11 @@
-package main
+package util
 
 import (
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 )
 
-func botLog(fromMsg *telebot.Message, sendMsg *telebot.Message, err error) {
+func BotLog(fromMsg *telebot.Message, sendMsg *telebot.Message, err error) {
 	if fromMsg != nil { // bot
 		if sendMsg == nil { // no handler
 			log.Printf("[bot] receive \t |%d \t \"%s\" \t (no handler)\n", fromMsg.ID, fromMsg.Text)

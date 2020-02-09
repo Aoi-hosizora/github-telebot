@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"github.com/Aoi-hosizora/ah-tgbot/src/config"
+	"github.com/Aoi-hosizora/ah-tgbot/src/server"
 	"log"
 )
 
@@ -12,7 +14,7 @@ var (
 
 func init() {
 	flag.BoolVar(&help, "h", false, "show help")
-	flag.StringVar(&configPath, "config", "./config.yaml", "change the config path")
+	flag.StringVar(&configPath, "config", "./src/config/config.yaml", "change the config path")
 }
 
 func main() {
@@ -25,15 +27,13 @@ func main() {
 }
 
 func run() {
-	config, err := loadConfig(configPath)
+	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		log.Fatalln("Failed to load config file:", err)
 	}
-	bot := newBot(config)
+	bs := server.NewBotServer(cfg)
 	defer func() {
-		bot.Stop()
+		bs.Bot.Stop()
 	}()
-
-	go bot.Start()
-	polling(config, bot)
+	bs.Serve()
 }

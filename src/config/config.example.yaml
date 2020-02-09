@@ -3,9 +3,10 @@ server:
   polling-duration: 120 # second
 
 telegram:
-  bot-token: xxx
+  bot-token: xxx:xxx
   channel-id: '@xxx'
 
 github:
   username: xxx
+  private: true
   token: xxx

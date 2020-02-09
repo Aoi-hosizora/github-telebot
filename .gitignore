@@ -2,4 +2,4 @@
 .vscode/
 .ionide/
 
-config.yaml
+src/config/config.yaml

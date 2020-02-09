@@ -1,23 +1,28 @@
-package main
+package util
 
 import (
 	"fmt"
+	"github.com/Aoi-hosizora/ah-tgbot/src/config"
+	"github.com/Aoi-hosizora/ah-tgbot/src/model"
 	"github.com/Aoi-hosizora/ahlib/xcondition"
 	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
-type githubUtil struct{}
+const (
+	GithubReceivedEventApi string = "https://api.github.com/users/%s/received_events"
+)
 
-var GithubUtil githubUtil
-
-func (g githubUtil) httpGet(url string, page int, token string) (string, error) {
+func GetActions(config *config.GithubConfig, page int) (string, error) {
+	url := fmt.Sprintf(GithubReceivedEventApi, config.Username)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
 	if err != nil {
 		return "", err
 	}
-	req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
+	if config.Private {
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", config.Token))
+	}
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return "", err
@@ -31,7 +36,7 @@ func (g githubUtil) httpGet(url string, page int, token string) (string, error) 
 	return string(content), nil
 }
 
-func (g githubUtil) WrapGithubAction(obj *GithubEvent) string {
+func WrapGithubAction(obj *model.GithubEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
 	userMd := fmt.Sprintf("[%s](%s)", obj.Actor.Login, userUrl)
@@ -87,13 +92,13 @@ func (g githubUtil) WrapGithubAction(obj *GithubEvent) string {
 	return message
 }
 
-func (g githubUtil) WrapGithubActions(objs []*GithubEvent) string {
+func WrapGithubActions(objs []*model.GithubEvent) string {
 	result := ""
 	if len(objs) == 1 {
-		return g.WrapGithubAction(objs[0])
+		return WrapGithubAction(objs[0])
 	}
 	for idx, obj := range objs {
-		result += fmt.Sprintf("%d. %s\n", idx+1, g.WrapGithubAction(obj))
+		result += fmt.Sprintf("%d. %s\n", idx+1, WrapGithubAction(obj))
 	}
 	return result
 }

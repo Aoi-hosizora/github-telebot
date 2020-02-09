@@ -1,8 +1,23 @@
-package main
+package model
 
 import (
 	"time"
 )
+
+type GithubEvent struct {
+	Type  string `json:"type"`
+	Actor *struct {
+		Login string `json:"login"`
+		Url   string `json:"url"`
+	} `json:"actor"`
+	Repo *struct {
+		Name string `json:"name"`
+		Url  string `json:"url"`
+	} `json:"repo"`
+	Payload   *Payload  `json:"payload"`
+	Public    bool      `json:"public"`
+	CreatedAt time.Time `json:"created_at"`
+}
 
 type Payload struct {
 	Size    uint32 `json:"size"` // 1
@@ -39,19 +54,4 @@ type Payload struct {
 		TagName string `json:"tag_name"` // 1.1
 	}
 	Page []interface{} // gollum
-}
-
-type GithubEvent struct {
-	Type  string `json:"type"`
-	Actor *struct {
-		Login string `json:"login"`
-		Url   string `json:"url"`
-	} `json:"actor"`
-	Repo *struct {
-		Name string `json:"name"`
-		Url  string `json:"url"`
-	} `json:"repo"`
-	Payload   *Payload  `json:"payload"`
-	Public    bool      `json:"public"`
-	CreatedAt time.Time `json:"created_at"`
 }
