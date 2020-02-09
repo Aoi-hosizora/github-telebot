@@ -33,7 +33,7 @@ func run() {
 	}
 	bs := server.NewBotServer(cfg)
 	defer func() {
-		bs.Bot.Stop()
+		bs.Stop()
 	}()
-	bs.Serve()
+	bs.Serve(true)
 }

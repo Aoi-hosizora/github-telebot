@@ -44,7 +44,13 @@ func (b *BotServer) SendTo(to telebot.Recipient, what interface{}, options ...in
 	util.BotLog(nil, msg, err)
 }
 
-func (b *BotServer) Serve() {
-	go b.Bot.Start()
-	Polling(b)
+func (b *BotServer) Serve(poll bool) {
+	if poll {
+		go Polling(b)
+	}
+	b.Bot.Start()
+}
+
+func (b *BotServer) Stop() {
+	b.Bot.Stop()
 }
