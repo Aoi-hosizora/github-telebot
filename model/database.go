@@ -11,6 +11,15 @@ import (
 
 var DB *gorm.DB
 
+type DbStatus int32
+
+const (
+	DbSuccess DbStatus = iota
+	DbFailed
+	DbNotFound
+	DbExisted
+)
+
 func SetupGorm() error {
 	cfg := config.Configs.MysqlConfig
 	source := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name)
@@ -25,11 +34,11 @@ func SetupGorm() error {
 		return "tbl_" + name
 	}
 	xgorm.HookDeleteAtField(db, xgorm.DefaultDeleteAtTimeStamp)
-
 	err = migrate(db)
 	if err != nil {
 		return err
 	}
+
 	DB = db
 	return nil
 }

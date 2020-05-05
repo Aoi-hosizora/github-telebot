@@ -1,15 +1,24 @@
 package logger
 
 import (
+	"fmt"
 	"github.com/Aoi-hosizora/ah-tgbot/config"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 )
 
-func RcvLogger(m *telebot.Message, endpoint string) {
+func RcvLogger(m *telebot.Message, endpoint interface{}) {
+	ep := ""
+	if s, ok := endpoint.(string); ok {
+		ep = s
+	} else if b, ok := endpoint.(*telebot.InlineButton); ok {
+		ep = b.Unique
+	} else {
+		ep = fmt.Sprintf("%v", endpoint)
+	}
 	if config.Configs.Mode == "debug" {
-		if endpoint[0] == '\a' {
-			endpoint = "$on_" + endpoint[1:]
+		if ep[0] == '\a' {
+			ep = "$on_" + ep[1:]
 		}
 		log.Printf("[telebot] -> %4d | %18v | %d %s", m.ID, endpoint, m.Chat.ID, m.Chat.Username)
 	}
