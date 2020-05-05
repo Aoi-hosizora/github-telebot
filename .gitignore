@@ -1,5 +1,9 @@
+### Editor ###
 .idea/
 .vscode/
 .ionide/
+.history/
 
-src/config/config.yaml
+### Build ###
+build/
+config.yaml

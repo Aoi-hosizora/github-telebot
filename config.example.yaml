@@ -1,0 +1,15 @@
+mode: debug
+
+telegram:
+  poller-timeout: 3600 # second
+  bot-token: xxx
+
+task:
+  polling-duration: 60 # second
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  name: db_github_bot
+  user: root
+  password: 123

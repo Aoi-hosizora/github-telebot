@@ -2,12 +2,51 @@ package util
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/src/model"
+	"github.com/Aoi-hosizora/ah-tgbot/model"
 	"github.com/Aoi-hosizora/ahlib/xcondition"
+	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
-func WrapGithubAction(obj *model.GithubEvent) string {
+const (
+	GithubReceivedEventApi string = "https://api.github.com/users/%s/received_events"
+)
+
+func GeGithubActions(user *model.User, page int) (string, error) {
+	url := fmt.Sprintf(GithubReceivedEventApi, user.Username)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
+	if err != nil {
+		return "", err
+	}
+	if user.Private {
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", user.Token))
+	}
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	content, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
+}
+
+func RenderGithubActions(objs []*model.GithubEvent) string {
+	result := ""
+	if len(objs) == 1 {
+		return renderGithubAction(objs[0])
+	}
+	for idx, obj := range objs {
+		result += fmt.Sprintf("%d. %s\n", idx+1, renderGithubAction(obj))
+	}
+	return result
+}
+
+func renderGithubAction(obj *model.GithubEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
 	userMd := fmt.Sprintf("[%s](%s)", obj.Actor.Login, userUrl)
