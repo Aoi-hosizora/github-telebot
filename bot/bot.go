@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// ロミオとシンデレラ
 var (
 	Bot        *telebot.Bot
 	UserStates map[int64]fsm.UserStatus
@@ -43,10 +42,15 @@ func Stop() {
 }
 
 func handleWithLogger(endpoint interface{}, handler interface{}) {
-	if h, ok := handler.(func(*telebot.Message)); ok {
+	if msg, ok := handler.(func(*telebot.Message)); ok {
 		Bot.Handle(endpoint, func(m *telebot.Message) {
 			logger.RcvLogger(m, endpoint)
-			h(m)
+			msg(m)
+		})
+	} else if cb, ok := handler.(func(*telebot.Callback)); ok {
+		Bot.Handle(endpoint, func(c *telebot.Callback) {
+			logger.RcvLogger(c, endpoint)
+			cb(c)
 		})
 	} else {
 		Bot.Handle(endpoint, handler)
@@ -61,6 +65,7 @@ func makeHandle() {
 	handleWithLogger("/bind", startBindCtrl)
 	handleWithLogger("/unbind", startUnbindCtrl)
 	handleWithLogger("/cancel", cancelCtrl)
+	handleWithLogger("/send", sendCtrl)
 
 	handleWithLogger(InlineBtns["btn_unbind"], unbindBtnCtrl)
 	handleWithLogger(InlineBtns["btn_cancel"], cancelBtnCtrl)

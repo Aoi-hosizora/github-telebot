@@ -7,7 +7,10 @@ import (
 	"log"
 )
 
-func RcvLogger(m *telebot.Message, endpoint interface{}) {
+func RcvLogger(handler interface{}, endpoint interface{}) {
+	if config.Configs.Mode != "debug" {
+		return
+	}
 	ep := ""
 	if s, ok := endpoint.(string); ok {
 		ep = s
@@ -16,11 +19,16 @@ func RcvLogger(m *telebot.Message, endpoint interface{}) {
 	} else {
 		ep = fmt.Sprintf("%v", endpoint)
 	}
-	if config.Configs.Mode == "debug" {
-		if ep[0] == '\a' {
-			ep = "$on_" + ep[1:]
-		}
-		log.Printf("[telebot] -> %4d | %18v | %d %s", m.ID, endpoint, m.Chat.ID, m.Chat.Username)
+	if ep[0] == '\a' {
+		ep = "$on_" + ep[1:]
+	}
+
+	if msg, ok := handler.(*telebot.Message); ok {
+		log.Printf("[telebot] -> %4d | %18v | %d %s", msg.ID, ep, msg.Chat.ID, msg.Chat.Username)
+	} else if cb, ok := handler.(*telebot.Callback); ok {
+		log.Printf("[telebot] -> %4d | %18v | %d %s", cb.Message.ID, ep, cb.Message.Chat.ID, cb.Message.Chat.Username)
+	} else {
+		log.Printf("[telebot] -> Others | %18v", ep)
 	}
 }
 

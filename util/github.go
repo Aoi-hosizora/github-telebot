@@ -5,22 +5,48 @@ import (
 	"github.com/Aoi-hosizora/ah-tgbot/model"
 	"github.com/Aoi-hosizora/ahlib/xcondition"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 )
 
 const (
+	GithubUserApi          string = "https://api.github.com/users/%s"
 	GithubReceivedEventApi string = "https://api.github.com/users/%s/received_events"
 )
 
-func GeGithubActions(user *model.User, page int) (string, error) {
-	url := fmt.Sprintf(GithubReceivedEventApi, user.Username)
+func CheckGithubUser(username string, private bool, token string) (bool, error) {
+	url := fmt.Sprintf(GithubUserApi, username)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+	if private {
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
+	}
+	resp, err := (&http.Client{}).Do(req)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return resp.StatusCode == 200, nil
+}
+
+func GetGithubEvents(username string, private bool, token string, page int) (string, error) {
+	url := fmt.Sprintf(GithubReceivedEventApi, username)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
 	if err != nil {
 		return "", err
 	}
-	if user.Private {
-		req.Header.Add("Authorization", fmt.Sprintf("Token %s", user.Token))
+	if private {
+		req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
 	}
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
