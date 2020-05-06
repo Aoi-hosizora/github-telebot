@@ -66,6 +66,7 @@ func makeHandle() {
 	handleWithLogger("/unbind", startUnbindCtrl)
 	handleWithLogger("/cancel", cancelCtrl)
 	handleWithLogger("/send", sendCtrl)
+	handleWithLogger("/sendn", startSendnCtrl)
 
 	handleWithLogger(InlineBtns["btn_unbind"], unbindBtnCtrl)
 	handleWithLogger(InlineBtns["btn_cancel"], cancelBtnCtrl)
