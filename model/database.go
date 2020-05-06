@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ah-tgbot/config"
 	"github.com/Aoi-hosizora/ahlib-web/xgorm"
-	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 )
@@ -28,7 +27,8 @@ func SetupGorm() error {
 		return err
 	}
 
-	db.LogMode(gin.Mode() == gin.DebugMode)
+	// db.LogMode(gin.Mode() == gin.DebugMode)
+	db.LogMode(false)
 	db.SingularTable(true)
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, name string) string {
 		return "tbl_" + name

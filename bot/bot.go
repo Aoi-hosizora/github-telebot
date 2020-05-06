@@ -62,7 +62,9 @@ func makeHandle() {
 	InlineBtns["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
 
 	handleWithLogger("/start", startCtrl)
+	handleWithLogger("/help", helpCtrl)
 	handleWithLogger("/bind", startBindCtrl)
+	handleWithLogger("/me", meCtrl)
 	handleWithLogger("/unbind", startUnbindCtrl)
 	handleWithLogger("/cancel", cancelCtrl)
 	handleWithLogger("/send", sendCtrl)

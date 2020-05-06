@@ -32,7 +32,7 @@ func RcvLogger(handler interface{}, endpoint interface{}) {
 	}
 }
 
-func SndLogger(from *telebot.Message, to *telebot.Message, err error) {
+func ReplyLogger(from *telebot.Message, to *telebot.Message, err error) {
 	if config.Configs.Mode == "debug" {
 		if from != nil {
 			if err != nil {
@@ -40,6 +40,18 @@ func SndLogger(from *telebot.Message, to *telebot.Message, err error) {
 			} else if to != nil {
 				du := to.Time().Sub(from.Time()).Milliseconds()
 				log.Printf("[telebot] <- %4d | %6dms | -> %4d | %d %s", to.ID, du, from.ID, to.Chat.ID, to.Chat.Username)
+			}
+		}
+	}
+}
+
+func SendLogger(chat *telebot.Chat, to *telebot.Message, err error) {
+	if config.Configs.Mode == "debug" {
+		if chat != nil {
+			if err != nil {
+				log.Printf("[telebot] failed to send message to %d %s: %v", chat.ID, chat.Username, err)
+			} else if to != nil {
+				log.Printf("[telebot] <- %4d | %6dms | -> %4d | %d %s", to.ID, -1, -1, to.Chat.ID, to.Chat.Username)
 			}
 		}
 	}

@@ -43,6 +43,6 @@ func run() {
 	}
 	defer bot.Stop()
 
-	go task.Polling()
+	go task.Task()
 	bot.Start()
 }

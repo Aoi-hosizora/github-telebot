@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -54,4 +55,13 @@ type Payload struct {
 		TagName string `json:"tag_name"` // 1.1
 	}
 	Page []interface{} // gollum
+}
+
+func UnmarshalEvents(response string) ([]*GithubEvent, error) {
+	out := make([]*GithubEvent, 0)
+	err := json.Unmarshal([]byte(response), &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }

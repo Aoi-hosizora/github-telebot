@@ -39,7 +39,7 @@ func CheckGithubUser(username string, private bool, token string) (bool, error) 
 	return resp.StatusCode == 200, nil
 }
 
-func GetGithubEvents(username string, private bool, token string, page int) (string, error) {
+func GetGithubEvents(username string, private bool, token string, page int) (response string, err error) {
 	url := fmt.Sprintf(GithubReceivedEventApi, username)
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
 	if err != nil {
