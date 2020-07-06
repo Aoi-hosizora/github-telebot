@@ -3,7 +3,9 @@ package model
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ah-tgbot/config"
+	"github.com/Aoi-hosizora/ah-tgbot/logger"
 	"github.com/Aoi-hosizora/ahlib-web/xgorm"
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 )
@@ -27,18 +29,18 @@ func SetupGorm() error {
 		return err
 	}
 
-	// db.LogMode(gin.Mode() == gin.DebugMode)
-	db.LogMode(false)
+	db.LogMode(gin.Mode() == gin.DebugMode)
 	db.SingularTable(true)
+	db.SetLogger(xgorm.NewGormLogger(logger.StdLogger))
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, name string) string {
 		return "tbl_" + name
 	}
 	xgorm.HookDeleteAtField(db, xgorm.DefaultDeleteAtTimeStamp)
+
 	err = migrate(db)
 	if err != nil {
 		return err
 	}
-
 	DB = db
 	return nil
 }

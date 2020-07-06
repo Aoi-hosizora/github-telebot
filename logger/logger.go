@@ -5,7 +5,10 @@ import (
 	"github.com/Aoi-hosizora/ah-tgbot/config"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
+	"os"
 )
+
+var StdLogger = log.New(os.Stderr, "", log.LstdFlags)
 
 func RcvLogger(handler interface{}, endpoint interface{}) {
 	if config.Configs.Mode != "debug" {

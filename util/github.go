@@ -69,7 +69,7 @@ func RenderGithubActions(objs []*model.GithubEvent) string {
 	for idx, obj := range objs {
 		result += fmt.Sprintf("%d. %s\n", idx+1, renderGithubAction(obj))
 	}
-	return result
+	return result[:len(result)-1]
 }
 
 func renderGithubAction(obj *model.GithubEvent) string {

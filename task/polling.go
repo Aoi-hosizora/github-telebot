@@ -11,8 +11,7 @@ import (
 )
 
 var (
-	old    = make(map[int64][]*model.GithubEvent, 0)
-	dataCh = make(chan string)
+	old = make(map[int64][]*model.GithubEvent, 0)
 )
 
 func sliceDiff(s1 []*model.GithubEvent, s2 []*model.GithubEvent) []*model.GithubEvent {
@@ -51,7 +50,7 @@ func Task() {
 			diff := sliceDiff(events, old[user.ChatID])
 			if len(diff) != 0 {
 				render := util.RenderGithubActions(diff)
-				flag := fmt.Sprintf("From [%s](https://github.com/%s) updated:\n%s", user.Username, user.Username, render)
+				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
 				bot.SendToChat(user.ChatID, flag)
 			}
 			old[user.ChatID] = events
