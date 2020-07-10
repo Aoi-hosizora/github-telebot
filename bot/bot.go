@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	Bot        *telebot.Bot
-	UserStates map[int64]fsm.UserStatus
-	InlineBtns map[string]*telebot.InlineButton
+	Bot           *telebot.Bot
+	UserStates    map[int64]fsm.UserStatus
+	InlineButtons map[string]*telebot.InlineButton
 )
 
 func Load() error {
@@ -28,7 +28,7 @@ func Load() error {
 
 	Bot = bot
 	UserStates = make(map[int64]fsm.UserStatus)
-	InlineBtns = make(map[string]*telebot.InlineButton)
+	InlineButtons = make(map[string]*telebot.InlineButton)
 	makeHandle()
 	return nil
 }
@@ -58,8 +58,8 @@ func handleWithLogger(endpoint interface{}, handler interface{}) {
 }
 
 func makeHandle() {
-	InlineBtns["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
-	InlineBtns["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
+	InlineButtons["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
+	InlineButtons["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
 
 	handleWithLogger("/start", startCtrl)
 	handleWithLogger("/help", helpCtrl)
@@ -70,8 +70,8 @@ func makeHandle() {
 	handleWithLogger("/send", sendCtrl)
 	handleWithLogger("/sendn", startSendnCtrl)
 
-	handleWithLogger(InlineBtns["btn_unbind"], unbindBtnCtrl)
-	handleWithLogger(InlineBtns["btn_cancel"], cancelBtnCtrl)
+	handleWithLogger(InlineButtons["btn_unbind"], unbindBtnCtrl)
+	handleWithLogger(InlineButtons["btn_cancel"], cancelBtnCtrl)
 
 	handleWithLogger(telebot.OnText, onTextCtrl)
 }

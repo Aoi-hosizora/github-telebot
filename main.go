@@ -43,6 +43,7 @@ func run() {
 	}
 	defer bot.Stop()
 
-	go task.Task()
+	go task.ActivityTask()
+	go task.IssueTask()
 	bot.Start()
 }

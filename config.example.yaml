@@ -5,7 +5,8 @@ telegram:
   bot-token: xxx
 
 task:
-  polling-duration: 60 # second
+  polling-activity-duration: 60 # second
+  polling-issue-duration: 300 # second
 
 mysql:
   host: 127.0.0.1

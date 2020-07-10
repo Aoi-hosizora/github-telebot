@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type GithubEvent struct {
+type ActivityEvent struct {
 	Type  string `json:"type"`
 	Actor *struct {
 		Login string `json:"login"`
@@ -15,12 +15,12 @@ type GithubEvent struct {
 		Name string `json:"name"`
 		Url  string `json:"url"`
 	} `json:"repo"`
-	Payload   *Payload  `json:"payload"`
-	Public    bool      `json:"public"`
-	CreatedAt time.Time `json:"created_at"`
+	Payload   *ActivityPayload `json:"payload"`
+	Public    bool             `json:"public"`
+	CreatedAt time.Time        `json:"created_at"`
 }
 
-type Payload struct {
+type ActivityPayload struct {
 	Size    uint32 `json:"size"` // 1
 	Commits []*struct {
 		Sha string `json:"sha"` // 073f349775f412746a0494426a3c66d877c8033d
@@ -57,8 +57,8 @@ type Payload struct {
 	Page []interface{} // gollum
 }
 
-func UnmarshalEvents(response string) ([]*GithubEvent, error) {
-	out := make([]*GithubEvent, 0)
+func UnmarshalActivityEvents(response string) ([]*ActivityEvent, error) {
+	out := make([]*ActivityEvent, 0)
 	err := json.Unmarshal([]byte(response), &out)
 	if err != nil {
 		return nil, err

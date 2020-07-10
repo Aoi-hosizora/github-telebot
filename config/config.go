@@ -22,7 +22,8 @@ type TelegramConfig struct {
 }
 
 type TaskConfig struct {
-	PollingDuration int `yaml:"polling-duration"`
+	PollingActivityDuration int `yaml:"polling-activity-duration"`
+	PollingIssueDuration    int `yaml:"polling-issue-duration"`
 }
 
 type MysqlConfig struct {

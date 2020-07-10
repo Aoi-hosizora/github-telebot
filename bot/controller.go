@@ -156,7 +156,7 @@ func startUnbindCtrl(m *telebot.Message) {
 	} else {
 		flag := fmt.Sprintf(UNBIND_START, user.Username)
 		msg, err := Bot.Send(m.Chat, flag, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{{*InlineBtns["btn_unbind"]}, {*InlineBtns["btn_cancel"]}},
+			InlineKeyboard: [][]telebot.InlineButton{{*InlineButtons["btn_unbind"]}, {*InlineButtons["btn_cancel"]}},
 		})
 		logger.ReplyLogger(m, msg, err)
 	}
@@ -209,17 +209,17 @@ func sendnCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := util.GetGithubEvents(user.Username, user.Private, user.Token, page)
+		resp, err := util.GetGithubActivityEvents(user.Username, user.Private, user.Token, page)
 		if err != nil {
 			log.Println(err)
 			flag = GITHUB_FAILED
 		} else {
-			events, err := model.UnmarshalEvents(resp)
+			events, err := model.UnmarshalActivityEvents(resp)
 			if err != nil {
 				log.Println(err)
 				flag = GITHUB_FAILED
 			} else {
-				render := util.RenderGithubActions(events)
+				render := util.RenderGithubActivityString(events)
 				if render == "" {
 					render = GITHUB_EMPTY
 				} else {
