@@ -11,8 +11,8 @@ import (
 const (
 	GithubUserApi                  string = "https://api.github.com/users/%s"
 	GithubReceivedActivityEventApi string = "https://api.github.com/users/%s/received_events"
-	// GithubReceivedIssueEventApi    string = "http://206.189.236.169:10014/gh/users/%s/issues/timeline"
-	GithubReceivedIssueEventApi string = "http://localhost:10014/gh/users/%s/issues/timeline"
+	GithubReceivedIssueEventApi    string = "http://206.189.236.169:10014/gh/users/%s/issues/timeline"
+	// GithubReceivedIssueEventApi string = "http://localhost:10014/gh/users/%s/issues/timeline"
 )
 
 func CheckGithubUser(username string, private bool, token string) (bool, error) {

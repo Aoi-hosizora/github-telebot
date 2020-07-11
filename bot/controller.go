@@ -241,7 +241,7 @@ func sendnCtrl(m *telebot.Message) {
 // /issue
 func sendIssueCtrl(m *telebot.Message) {
 	m.Text = "1"
-	sendnCtrl(m)
+	sendIssuenCtrl(m)
 }
 
 // /issuen

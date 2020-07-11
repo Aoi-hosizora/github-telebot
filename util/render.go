@@ -100,7 +100,7 @@ func renderGithubIssueString(obj *model.IssueEvent) string {
 	case "reopened":
 		message = fmt.Sprintf("%s reopened %s", actorMd, issueRepoMd)
 	case "renamed":
-		message = fmt.Sprintf("%s renamed %s to %s", actorMd, issueRepoMd, obj.Rename.To)
+		message = fmt.Sprintf("%s renamed %s to [%s](%s)", actorMd, issueRepoMd, obj.Rename.To, issueUrl)
 
 	case "labeled":
 		labelUrl := fmt.Sprintf("%s/labels/%s", repoUrl, obj.Label.Name)
