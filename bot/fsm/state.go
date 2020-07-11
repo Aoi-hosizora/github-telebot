@@ -6,4 +6,5 @@ const (
 	None UserStatus = iota
 	Bind
 	Sendn
+	Issuen
 )

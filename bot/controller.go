@@ -18,12 +18,15 @@ const (
 	HELP  = `
 **Commands**
 /start - show start message
+/help - show this help message
 /cancel - cancel the last action
 /bind - bind a new github account
 /unbind - unbind an old github account
 /me - show the bind user information
 /send - show the first page of user's events
 /sendn - show the n page of user's events
+/issue - show the first page of user's issue events
+/issuen - show the n page of user's issue events
 `
 	ACTION_NO       = "There is no action now."
 	ACTION_CANCELED = "Action has been canceled."
@@ -46,6 +49,7 @@ const (
 	GITHUB_NOT_FOUND = "Github user not found."
 	GITHUB_EMPTY     = "Empty events: \\[]"
 	GITHUB_SENDN     = "Please send the page you want to get, number required."
+	GITHUB_ISSUEN    = "Please send the page you want to get, number required."
 )
 
 // /start
@@ -234,6 +238,61 @@ func sendnCtrl(m *telebot.Message) {
 	logger.ReplyLogger(m, msg, err)
 }
 
+// /issue
+func sendIssueCtrl(m *telebot.Message) {
+	m.Text = "1"
+	sendnCtrl(m)
+}
+
+// /issuen
+func startSendIssuenCtrl(m *telebot.Message) {
+	UserStates[m.Chat.ID] = fsm.Issuen
+	msg, err := Bot.Send(m.Chat, GITHUB_ISSUEN)
+	logger.ReplyLogger(m, msg, err)
+}
+
+// /issuen -> x
+func sendIssuenCtrl(m *telebot.Message) {
+	page, err := strconv.Atoi(m.Text)
+	if err != nil {
+		msg, err := Bot.Send(m.Chat, NUM_REQUIRED)
+		logger.ReplyLogger(m, msg, err)
+		return
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	flag := ""
+	user := model.GetUser(m.Chat.ID)
+	if user == nil {
+		flag = BIND_NOT_YET
+	} else {
+		resp, err := util.GetGithubIssueEvents(user.Username, user.Private, user.Token, page)
+		if err != nil {
+			log.Println(err)
+			flag = GITHUB_FAILED
+		} else {
+			events, err := model.UnmarshalIssueEvents(resp)
+			if err != nil {
+				log.Println(err)
+				flag = GITHUB_FAILED
+			} else {
+				render := util.RenderGithubIssueString(events)
+				if render == "" {
+					render = GITHUB_EMPTY
+				} else {
+					flag = fmt.Sprintf("From [%s](https://github.com/%s) (page %d):\n%s", user.Username, user.Username, page, render)
+				}
+			}
+		}
+	}
+
+	UserStates[m.Chat.ID] = fsm.None
+	msg, err := Bot.Send(m.Chat, flag, telebot.ModeMarkdown)
+	logger.ReplyLogger(m, msg, err)
+}
+
 // onText
 func onTextCtrl(m *telebot.Message) {
 	switch UserStates[m.Chat.ID] {
@@ -241,6 +300,8 @@ func onTextCtrl(m *telebot.Message) {
 		bindCtrl(m)
 	case fsm.Sendn:
 		sendnCtrl(m)
+	case fsm.Issuen:
+		sendIssuenCtrl(m)
 	default:
 		msg, err := Bot.Send(m.Chat, "Unknown command: "+m.Text)
 		logger.ReplyLogger(m, msg, err)
