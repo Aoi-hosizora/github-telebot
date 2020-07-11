@@ -25,8 +25,23 @@ type IssueEvent struct {
 	Milestone *struct {
 		Title string `json:"title"`
 	} `json:"milestone"`
-	CommitId  string    `json:"commit_id"`
-	CommitUrl string    `json:"commit_url"`
+	CommitId  string `json:"commit_id"`
+	CommitUrl string `json:"commit_url"`
+	Body      string `json:"body"`
+	HtmlUrl   string `json:"html_url"`
+	Source    *struct {
+		Issue *struct {
+			Number     int32  `json:"number"`
+			HtmlUrl    string `json:"html_url"`
+			Body       string `json:"body"`
+			Repository *struct {
+				Name  string `json:"name"`
+				Owner *struct {
+					Login string `json:"login"`
+				} `json:"owner"`
+			} `json:"repository"`
+		} `json:"issue"`
+	} `json:"source"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

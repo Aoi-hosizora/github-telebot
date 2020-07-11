@@ -4,75 +4,8 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ah-tgbot/model"
 	"github.com/Aoi-hosizora/ahlib/xcondition"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"strings"
 )
-
-const (
-	GithubUserApi                  string = "https://api.github.com/users/%s"
-	GithubReceivedActivityEventApi string = "https://api.github.com/users/%s/received_events"
-	// GithubReceivedIssueEventApi    string = "http://206.189.236.169:10014/gh/users/%s/issues/event"
-	GithubReceivedIssueEventApi string = "http://localhost:10014/gh/users/%s/issues/event"
-)
-
-func CheckGithubUser(username string, private bool, token string) (bool, error) {
-	url := fmt.Sprintf(GithubUserApi, username)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return false, err
-	}
-	if private {
-		req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	}
-	resp, err := (&http.Client{}).Do(req)
-	if err != nil {
-		log.Println(err)
-		return false, err
-	}
-	defer resp.Body.Close()
-
-	_, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println(err)
-		return false, err
-	}
-	return resp.StatusCode == 200, nil
-}
-
-func GetGithubActivityEvents(username string, private bool, token string, page int) (response string, err error) {
-	url := fmt.Sprintf(GithubReceivedActivityEventApi, username)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
-	if err != nil {
-		return "", err
-	}
-	if private {
-		req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	}
-	resp, err := (&http.Client{}).Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(content), nil
-}
-
-func RenderGithubActivityString(objs []*model.ActivityEvent) string {
-	result := ""
-	if len(objs) == 1 {
-		return renderGithubActivityString(objs[0])
-	}
-	for idx, obj := range objs {
-		result += fmt.Sprintf("%d. %s\n", idx+1, renderGithubActivityString(obj))
-	}
-	return result[:len(result)-1]
-}
 
 func renderGithubActivityString(obj *model.ActivityEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
@@ -146,39 +79,6 @@ func renderGithubActivityString(obj *model.ActivityEvent) string {
 	return message
 }
 
-func GetGithubIssueEvents(username string, private bool, token string, page int) (response string, err error) {
-	url := fmt.Sprintf(GithubReceivedIssueEventApi, username)
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s?page=%d", url, page), nil)
-	if err != nil {
-		return "", err
-	}
-	if private {
-		req.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	}
-	resp, err := (&http.Client{}).Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	content, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return string(content), nil
-}
-
-func RenderGithubIssueString(objs []*model.IssueEvent) string {
-	result := ""
-	if len(objs) == 1 {
-		return renderGithubIssueString(objs[0])
-	}
-	for idx, obj := range objs {
-		result += fmt.Sprintf("%d. %s\n", idx+1, renderGithubIssueString(obj))
-	}
-	return result[:len(result)-1]
-}
-
 func renderGithubIssueString(obj *model.IssueEvent) string {
 	actorUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo)
@@ -193,12 +93,14 @@ func renderGithubIssueString(obj *model.IssueEvent) string {
 	switch obj.Event {
 	case "mentioned":
 		message = fmt.Sprintf("%s is mentioned on %s", actorMd, issueRepoMd)
+	case "opened":
+		message = fmt.Sprintf("%s opened %s", actorMd, issueRepoMd)
 	case "closed":
 		message = fmt.Sprintf("%s closed %s", actorMd, issueRepoMd)
 	case "reopened":
 		message = fmt.Sprintf("%s reopened %s", actorMd, issueRepoMd)
 	case "renamed":
-		message = fmt.Sprintf("%s rename [%s](%s) to [%s](%s) on %s", actorMd, obj.Rename.From, issueUrl, obj.Rename.To, issueUrl, issueRepoMd)
+		message = fmt.Sprintf("%s renamed %s to %s", actorMd, issueRepoMd, obj.Rename.To)
 
 	case "labeled":
 		labelUrl := fmt.Sprintf("%s/labels/%s", repoUrl, obj.Label.Name)
@@ -226,6 +128,13 @@ func renderGithubIssueString(obj *model.IssueEvent) string {
 
 	case "assigned":
 		message = fmt.Sprintf("%s is assigned to %s", actorMd, issueRepoMd)
+	case "commented":
+		message = fmt.Sprintf("%s added a [comment](%s) to %s", actorMd, obj.HtmlUrl, issueRepoMd)
+
+	case "cross-referenced":
+		targetRepoMd := fmt.Sprintf("[%s/%s](https://github.com/%s/%s)", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name)
+		targetIssueRepoMd := fmt.Sprintf("issue [#%d](%s) in %s", obj.Source.Issue.Number, obj.Source.Issue.HtmlUrl, targetRepoMd)
+		message = fmt.Sprintf("%s mentioned %s from %s", actorMd, targetIssueRepoMd, issueRepoMd)
 	case "referenced":
 		toRepo := obj.CommitUrl // https://api.github.com/repos/gofiber/fiber/commits/a65d5027f336339cf4fe20cda0232c56cd64212e
 		toSp := strings.Split(toRepo, "/")
