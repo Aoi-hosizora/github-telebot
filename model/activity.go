@@ -6,6 +6,7 @@ import (
 )
 
 type ActivityEvent struct {
+	Id    string `json:"id"`
 	Type  string `json:"type"`
 	Actor *struct {
 		Login string `json:"login"`
@@ -64,4 +65,8 @@ func UnmarshalActivityEvents(response string) ([]*ActivityEvent, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+func ActivityEventEqual(e1, e2 *ActivityEvent) bool {
+	return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
 }

@@ -6,6 +6,7 @@ import (
 )
 
 type IssueEvent struct {
+	Id    int64  `json:"id"`
 	Event string `json:"event"`
 	Actor *struct {
 		Login string `json:"login"`
@@ -52,4 +53,9 @@ func UnmarshalIssueEvents(response string) ([]*IssueEvent, error) {
 		return nil, err
 	}
 	return out, nil
+}
+
+func IssueEventEqual(e1, e2 *IssueEvent) bool {
+	// `id` is null when `event` is `opened`
+	return e1.Id == e2.Id && e1.Event == e2.Event && e1.Repo == e2.Repo
 }
