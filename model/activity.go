@@ -68,5 +68,6 @@ func UnmarshalActivityEvents(response string) ([]*ActivityEvent, error) {
 }
 
 func ActivityEventEqual(e1, e2 *ActivityEvent) bool {
+	// use event id is enough
 	return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
 }
