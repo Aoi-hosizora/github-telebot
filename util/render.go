@@ -131,6 +131,9 @@ func renderGithubIssueString(obj *model.IssueEvent) string {
 	case "commented":
 		message = fmt.Sprintf("%s added a [comment](%s) to %s", actorMd, obj.HtmlUrl, issueRepoMd)
 
+	case "merged":
+		prMd := fmt.Sprintf("[#%d](https://github.com/%s/pull/%d)", obj.Number, obj.Repo, obj.Number)
+		message = fmt.Sprintf("%s merged pull request %s from %s", actorMd, prMd, issueRepoMd)
 	case "cross-referenced":
 		targetRepoMd := fmt.Sprintf("[%s/%s](https://github.com/%s/%s)", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name)
 		targetIssueRepoMd := fmt.Sprintf("issue [#%d](%s) in %s", obj.Source.Issue.Number, obj.Source.Issue.HtmlUrl, targetRepoMd)
