@@ -48,7 +48,13 @@ func sliceIssueDiff(s1 []*model.IssueEvent, s2 []*model.IssueEvent) []*model.Iss
 	return result
 }
 
-func ActivityTask() {
+func activityTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			activityTask()
+		}
+	}()
+
 	for {
 		users := model.GetUsers()
 		for _, user := range users {
@@ -83,7 +89,13 @@ func ActivityTask() {
 	}
 }
 
-func IssueTask() {
+func issueTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			issueTask()
+		}
+	}()
+
 	for {
 		users := model.GetUsers()
 		for _, user := range users {
@@ -120,4 +132,9 @@ func IssueTask() {
 		// wait to send next time
 		time.Sleep(time.Duration(config.Configs.TaskConfig.PollingIssueDuration) * time.Second)
 	}
+}
+
+func Start() {
+	go activityTask()
+	go issueTask()
 }

@@ -140,10 +140,14 @@ func renderGithubIssueString(obj *model.IssueEvent) string {
 		message = fmt.Sprintf("%s mentioned %s from %s", actorMd, targetIssueRepoMd, issueRepoMd)
 	case "referenced":
 		toRepo := obj.CommitUrl // https://api.github.com/repos/gofiber/fiber/commits/a65d5027f336339cf4fe20cda0232c56cd64212e
-		toSp := strings.Split(toRepo, "/")
-		toRepo = fmt.Sprintf("%s/%s", toSp[len(toSp)-4], toSp[len(toSp)-3])
-		toRepoUrl := fmt.Sprintf("https://github.com/%s", toRepo)
-		message = fmt.Sprintf("%s added a commit [%s](%s) to [%s](%s) that referenced %s", actorMd, obj.CommitId[:7], obj.CommitUrl, toRepo, toRepoUrl, issueRepoMd)
+		if toRepo == "" { // TODO: CommitUrl may be null
+			message = fmt.Sprintf("%s added a commit that referenced %s", actorMd, issueRepoMd)
+		} else {
+			toSp := strings.Split(toRepo, "/")
+			toRepo = fmt.Sprintf("%s/%s", toSp[len(toSp)-4], toSp[len(toSp)-3])
+			toRepoUrl := fmt.Sprintf("https://github.com/%s", toRepo)
+			message = fmt.Sprintf("%s added a commit [%s](%s) to [%s](%s) that referenced %s", actorMd, obj.CommitId[:7], obj.CommitUrl, toRepo, toRepoUrl, issueRepoMd)
+		}
 	default:
 		message = fmt.Sprintf("%s: %s -> %s", strings.Title(obj.Event), actorMd, issueMd)
 	}
