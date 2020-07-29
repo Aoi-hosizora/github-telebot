@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func renderGithubActivityString(obj *model.ActivityEvent) string {
+func RenderActivity(obj *model.ActivityEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
 	userMd := fmt.Sprintf("[%s](%s)", obj.Actor.Login, userUrl)
@@ -79,7 +79,7 @@ func renderGithubActivityString(obj *model.ActivityEvent) string {
 	return message
 }
 
-func renderGithubIssueString(obj *model.IssueEvent) string {
+func RenderIssue(obj *model.IssueEvent) string {
 	actorUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo)
 	issueUrl := fmt.Sprintf("https://github.com/%s/issues/%d", obj.Repo, obj.Number)

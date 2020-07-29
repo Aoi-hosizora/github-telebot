@@ -109,7 +109,7 @@ func bindCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	ok, err := service.CheckGithubUser(user.Username, user.Private, user.Token)
+	ok, err := service.CheckUser(user.Username, user.Private, user.Token)
 	if err != nil {
 		log.Println(err)
 		flag = GITHUB_FAILED
@@ -213,7 +213,7 @@ func sendnCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := service.GetGithubActivityEvents(user.Username, user.Private, user.Token, page)
+		resp, err := service.GetActivityEvents(user.Username, user.Private, user.Token, page)
 		if err != nil {
 			log.Println(err)
 			flag = GITHUB_FAILED
@@ -223,7 +223,7 @@ func sendnCtrl(m *telebot.Message) {
 				log.Println(err)
 				flag = GITHUB_FAILED
 			} else {
-				render := service.RenderGithubActivityString(events)
+				render := service.RenderActivities(events)
 				if render == "" {
 					render = GITHUB_EMPTY
 				} else {
@@ -268,7 +268,7 @@ func sendIssuenCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := service.GetGithubIssueEvents(user.Username, user.Private, user.Token, page)
+		resp, err := service.GetIssueEvents(user.Username, user.Private, user.Token, page)
 		if err != nil {
 			log.Println(err)
 			flag = GITHUB_FAILED
@@ -278,7 +278,7 @@ func sendIssuenCtrl(m *telebot.Message) {
 				log.Println(err)
 				flag = GITHUB_FAILED
 			} else {
-				render := service.RenderGithubIssueString(events)
+				render := service.RenderIssues(events)
 				if render == "" {
 					render = GITHUB_EMPTY
 				} else {

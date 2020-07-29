@@ -59,7 +59,7 @@ func activityTask() {
 		users := model.GetUsers()
 		for _, user := range users {
 			// get event and unmarshal
-			resp, err := service.GetGithubActivityEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetActivityEvents(user.Username, user.Private, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -75,7 +75,7 @@ func activityTask() {
 			diff := sliceActivityDiff(events, oldActivities[user.ChatID])
 			if len(diff) != 0 {
 				// render and send
-				render := service.RenderGithubActivityString(diff)
+				render := service.RenderActivities(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
 				bot.SendToChat(user.ChatID, flag)
 			}
@@ -104,7 +104,7 @@ func issueTask() {
 			}
 
 			// get event and unmarshal
-			resp, err := service.GetGithubIssueEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetIssueEvents(user.Username, user.Private, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -120,7 +120,7 @@ func issueTask() {
 			diff := sliceIssueDiff(events, oldIssues[user.ChatID])
 			if len(diff) != 0 {
 				// render and send
-				render := service.RenderGithubIssueString(diff)
+				render := service.RenderIssues(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
 				bot.SendToChat(user.ChatID, flag)
 			}

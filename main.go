@@ -4,24 +4,20 @@ import (
 	"flag"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/task"
 	"log"
 )
 
 var (
-	help       bool
-	configPath string
+	fHelp   = flag.Bool("h", false, "show help")
+	fConfig = flag.String("config", "./config.yaml", "change the config path")
 )
-
-func init() {
-	flag.BoolVar(&help, "h", false, "show help")
-	flag.StringVar(&configPath, "config", "./config.yaml", "change the config path")
-}
 
 func main() {
 	flag.Parse()
-	if help {
+	if *fHelp {
 		flag.Usage()
 	} else {
 		run()
@@ -29,20 +25,24 @@ func main() {
 }
 
 func run() {
-	err := config.LoadConfig(configPath)
+	err := config.Load(*fConfig)
 	if err != nil {
 		log.Fatalln("Failed to load config:", err)
 	}
+	err = logger.Setup()
+	if err != nil {
+		log.Fatalln("Failed to setup logger:", err)
+	}
 	err = model.SetupGorm()
 	if err != nil {
-		log.Fatalln("Failed to database:", err)
+		log.Fatalln("Failed to connect mysql:", err)
 	}
-	err = bot.Load()
+	err = bot.Setup()
 	if err != nil {
-		log.Fatalln("Failed to connect telegram bot:", err)
+		log.Fatalln("Failed to load telebot:", err)
 	}
-	defer bot.Stop()
 
 	task.Start()
-	bot.Start()
+	defer bot.Bot.Stop()
+	bot.Bot.Start()
 }

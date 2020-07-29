@@ -1,19 +1,14 @@
 package bot
 
 import (
-	"github.com/Aoi-hosizora/github-telebot/src/logger"
-	"gopkg.in/tucnak/telebot.v2"
-	"log"
 	"strconv"
 )
 
-func SendToChat(chatId int64, render string) {
-	chat, err := Bot.ChatByID(strconv.Itoa(int(chatId)))
+func SendToChat(chatId int64, what interface{}, options ...interface{}) error {
+	chat, err := Bot.Bot.ChatByID(strconv.FormatInt(chatId, 64))
 	if err != nil {
-		log.Println(err)
-		return
+		return err
+	} else {
+		return Bot.Send(chat, what, options...)
 	}
-
-	msg, err := Bot.Send(chat, render, telebot.ModeMarkdown)
-	logger.SendLogger(chat, msg, err)
 }
