@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/controller"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"gopkg.in/tucnak/telebot.v2"
@@ -49,24 +50,24 @@ func (b *bot) initHandler() {
 	b.InlineButtons["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
 	b.InlineButtons["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
 
-	b.handleMessage("/start", startCtrl)
-	b.handleMessage("/help", helpCtrl)
-	b.handleMessage("/cancel", cancelCtrl)
-	b.handleMessage("/bind", bindCtrl)
-	b.handleMessage("/unbind", unbindCtrl)
-	b.handleMessage("/me", meCtrl)
+	b.handleMessage("/start", controller.StartCtrl)
+	b.handleMessage("/help", controller.HelpCtrl)
+	b.handleMessage("/cancel", controller.CancelCtrl)
+	b.handleMessage("/bind", controller.BindCtrl)
+	b.handleMessage("/unbind", controller.UnbindCtrl)
+	b.handleMessage("/me", controller.MeCtrl)
 
-	b.handleMessage("/allowIssue", allowIssueCtrl)
-	b.handleMessage("/disallowIssue", disallowIssueCtrl)
-	b.handleMessage("/activity", activityCtrl)
-	b.handleMessage("/activityn", activitynCtrl)
-	b.handleMessage("/issue", issueCtrl)
-	b.handleMessage("/issuen", issuenCtrl)
+	b.handleMessage("/allowIssue", controller.AllowIssueCtrl)
+	b.handleMessage("/disallowIssue", controller.DisallowIssueCtrl)
+	b.handleMessage("/activity", controller.ActivityCtrl)
+	b.handleMessage("/activityN", controller.ActivityNCtrl)
+	b.handleMessage("/issue", controller.IssueCtrl)
+	b.handleMessage("/issueN", controller.IssueNCtrl)
 
-	b.handleInline(b.InlineButtons["btn_unbind"], inlBtnUnbindCtrl)
-	b.handleInline(b.InlineButtons["btn_cancel"], inlBtnCancelCtrl)
+	b.handleInline(b.InlineButtons["btn_unbind"], controller.InlBtnUnbindCtrl)
+	b.handleInline(b.InlineButtons["btn_cancel"], controller.InlBtnCancelCtrl)
 
-	b.handleMessage(telebot.OnText, onTextCtrl)
+	b.handleMessage(telebot.OnText, controller.OnTextCtrl)
 }
 
 func (b *bot) Start() {

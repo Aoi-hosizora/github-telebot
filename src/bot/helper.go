@@ -46,3 +46,8 @@ func (b *bot) Send(c *telebot.Chat, what interface{}, options ...interface{}) er
 	logger.Telebot.Send(c, msg, err)
 	return err
 }
+
+// Mirror method from `telebot.Delete`
+func (b *bot) Delete(msg telebot.Editable) error {
+	return b.Bot.Delete(msg)
+}
