@@ -5,25 +5,17 @@ import (
 	"io/ioutil"
 )
 
-var (
-	Configs *Config
-)
+var Configs *Config
 
-type Config struct {
-	Mode           string          `yaml:"mode"`
-	TelegramConfig *TelegramConfig `yaml:"telegram"`
-	TaskConfig     *TaskConfig     `yaml:"task"`
-	MysqlConfig    *MysqlConfig    `yaml:"mysql"`
+type MetaConfig struct {
+	RunMode string `yaml:"run-mode"`
+	LogPath string `yaml:"log-path"`
+	LogName string `yaml:"log-name"`
 }
 
-type TelegramConfig struct {
-	PollerTimeout int    `yaml:"poller-timeout"`
-	BotToken      string `yaml:"bot-token"`
-}
-
-type TaskConfig struct {
-	PollingActivityDuration int `yaml:"polling-activity-duration"`
-	PollingIssueDuration    int `yaml:"polling-issue-duration"`
+type BotConfig struct {
+	Token         string `yaml:"token"`
+	PollerTimeout uint64 `yaml:"poller-timeout"`
 }
 
 type MysqlConfig struct {
@@ -35,17 +27,28 @@ type MysqlConfig struct {
 	LogMode  bool   `json:"log-mode"`
 }
 
-func LoadConfig(configPath string) error {
+type TaskConfig struct {
+	ActivityDuration uint64 `yaml:"activity-duration"`
+	IssueDuration    uint64 `yaml:"issue-duration"`
+}
+
+type Config struct {
+	Meta  *MetaConfig  `yaml:"meta"`
+	Bot   *BotConfig   `yaml:"bot"`
+	Mysql *MysqlConfig `yaml:"mysql"`
+	Task  *TaskConfig  `yaml:"task"`
+}
+
+func Load(configPath string) error {
 	f, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return err
 	}
-	config := &Config{}
-	err = yaml.Unmarshal(f, config)
+
+	Configs = &Config{}
+	err = yaml.Unmarshal(f, Configs)
 	if err != nil {
 		return err
 	}
-
-	Configs = config
 	return nil
 }

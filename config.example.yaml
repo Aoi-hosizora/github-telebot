@@ -1,12 +1,11 @@
-mode: debug
+meta:
+  run-mode: debug
+  log-path: ./logs/
+  log-name: console
 
-telegram:
+bot:
+  token: xxx
   poller-timeout: 3600 # second
-  bot-token: xxx
-
-task:
-  polling-activity-duration: 60 # second
-  polling-issue-duration: 300 # second
 
 mysql:
   host: 127.0.0.1
@@ -14,3 +13,7 @@ mysql:
   name: db_github_bot
   user: root
   password: 123
+
+task:
+  activity-duration: 60 # second
+  issue-duration: 300 # second

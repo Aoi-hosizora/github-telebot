@@ -58,9 +58,9 @@ type ActivityPayload struct {
 	Page []interface{} // gollum
 }
 
-func UnmarshalActivityEvents(response string) ([]*ActivityEvent, error) {
+func UnmarshalActivityEvents(bs []byte) ([]*ActivityEvent, error) {
 	out := make([]*ActivityEvent, 0)
-	err := json.Unmarshal([]byte(response), &out)
+	err := json.Unmarshal(bs, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -70,4 +70,21 @@ func UnmarshalActivityEvents(response string) ([]*ActivityEvent, error) {
 func ActivityEventEqual(e1, e2 *ActivityEvent) bool {
 	// use event id is enough
 	return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
+}
+
+func ActivitySliceDiff(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEvent {
+	result := make([]*ActivityEvent, 0)
+	for _, item1 := range s1 {
+		exist := false
+		for _, item2 := range s2 {
+			if ActivityEventEqual(item1, item2) {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			result = append(result, item1)
+		}
+	}
+	return result
 }

@@ -14,40 +14,6 @@ var (
 	oldIssues     = make(map[int64][]*model.IssueEvent, 0)
 )
 
-func sliceActivityDiff(s1 []*model.ActivityEvent, s2 []*model.ActivityEvent) []*model.ActivityEvent {
-	result := make([]*model.ActivityEvent, 0)
-	for _, item1 := range s1 {
-		exist := false
-		for _, item2 := range s2 {
-			if model.ActivityEventEqual(item1, item2) {
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			result = append(result, item1)
-		}
-	}
-	return result
-}
-
-func sliceIssueDiff(s1 []*model.IssueEvent, s2 []*model.IssueEvent) []*model.IssueEvent {
-	result := make([]*model.IssueEvent, 0)
-	for _, item1 := range s1 {
-		exist := false
-		for _, item2 := range s2 {
-			if model.IssueEventEqual(item1, item2) {
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			result = append(result, item1)
-		}
-	}
-	return result
-}
-
 func activityTask() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -59,7 +25,7 @@ func activityTask() {
 		users := model.GetUsers()
 		for _, user := range users {
 			// get event and unmarshal
-			resp, err := service.GetGithubActivityEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetActivityEvents(user.Username, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -72,12 +38,12 @@ func activityTask() {
 			if _, ok := oldActivities[user.ChatID]; !ok {
 				oldActivities[user.ChatID] = []*model.ActivityEvent{}
 			}
-			diff := sliceActivityDiff(events, oldActivities[user.ChatID])
+			diff := model.ActivitySliceDiff(events, oldActivities[user.ChatID])
 			if len(diff) != 0 {
 				// render and send
-				render := service.RenderGithubActivityString(diff)
-				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
-				bot.SendToChat(user.ChatID, flag)
+				render := service.RenderActivities(diff)
+				flag := service.RenderResult(render, user.Username)
+				_ = bot.SendToChat(user.ChatID, flag)
 			}
 
 			// update old map
@@ -85,7 +51,7 @@ func activityTask() {
 		}
 
 		// wait to send next time
-		time.Sleep(time.Duration(config.Configs.TaskConfig.PollingActivityDuration) * time.Second)
+		time.Sleep(time.Duration(config.Configs.Task.ActivityDuration) * time.Second)
 	}
 }
 
@@ -99,12 +65,13 @@ func issueTask() {
 	for {
 		users := model.GetUsers()
 		for _, user := range users {
-			if !user.Private {
+			// allow to send issue
+			if user.Token == "" || !user.AllowIssue {
 				continue
 			}
 
 			// get event and unmarshal
-			resp, err := service.GetGithubIssueEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetIssueEvents(user.Username, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -117,12 +84,12 @@ func issueTask() {
 			if _, ok := oldIssues[user.ChatID]; !ok {
 				oldIssues[user.ChatID] = []*model.IssueEvent{}
 			}
-			diff := sliceIssueDiff(events, oldIssues[user.ChatID])
+			diff := model.IssueSliceDiff(events, oldIssues[user.ChatID])
 			if len(diff) != 0 {
 				// render and send
-				render := service.RenderGithubIssueString(diff)
+				render := service.RenderIssues(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
-				bot.SendToChat(user.ChatID, flag)
+				_ = bot.SendToChat(user.ChatID, flag)
 			}
 
 			// update old map
@@ -130,7 +97,7 @@ func issueTask() {
 		}
 
 		// wait to send next time
-		time.Sleep(time.Duration(config.Configs.TaskConfig.PollingIssueDuration) * time.Second)
+		time.Sleep(time.Duration(config.Configs.Task.IssueDuration) * time.Second)
 	}
 }
 
