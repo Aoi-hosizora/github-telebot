@@ -142,10 +142,10 @@ func RenderIssue(obj *model.IssueEvent) string {
 	case "cross-referenced":
 		targetRepoMd := fmt.Sprintf("[%s/%s](https://github.com/%s/%s)", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name)
 		targetIssueRepoMd := fmt.Sprintf("issue [#%d](%s) in %s", obj.Source.Issue.Number, obj.Source.Issue.HtmlUrl, targetRepoMd)
-		message = fmt.Sprintf("%s mentioned %s from %s", actorMd, targetIssueRepoMd, issueRepoMd)
+		message = fmt.Sprintf("%s mentioned %s from %s", actorMd, issueRepoMd, targetIssueRepoMd)
 	case "referenced":
 		toRepo := obj.CommitUrl // https://api.github.com/repos/gofiber/fiber/commits/a65d5027f336339cf4fe20cda0232c56cd64212e
-		if toRepo == "" {       // TODO: CommitUrl may be null
+		if toRepo == "" {       // may null
 			message = fmt.Sprintf("%s added a commit that referenced %s", actorMd, issueRepoMd)
 		} else {
 			toSp := strings.Split(toRepo, "/")

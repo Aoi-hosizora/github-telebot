@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/Aoi-hosizora/ahlib/xslice"
 	"time"
 )
 
@@ -69,7 +70,10 @@ func UnmarshalActivityEvents(bs []byte) ([]*ActivityEvent, error) {
 
 func ActivityEventEqual(e1, e2 *ActivityEvent) bool {
 	// use event id is enough
-	return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
+	if e1.Id != e2.Id {
+		return false
+	}
+	return e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
 }
 
 func ActivitySliceDiff(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEvent {
@@ -87,4 +91,8 @@ func ActivitySliceDiff(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEven
 		}
 	}
 	return result
+}
+
+func ReverseActivitySlice(s []*ActivityEvent) []*ActivityEvent {
+	return xslice.Its(xslice.Reverse(xslice.Sti(s)), &ActivityEvent{}).([]*ActivityEvent)
 }
