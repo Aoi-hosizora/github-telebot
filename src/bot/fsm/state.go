@@ -4,7 +4,7 @@ type UserStatus int
 
 const (
 	None UserStatus = iota
-	Bind
+	Binding
 	Sendn
 	Issuen
 )

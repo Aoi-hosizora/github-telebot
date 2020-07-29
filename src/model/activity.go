@@ -58,9 +58,9 @@ type ActivityPayload struct {
 	Page []interface{} // gollum
 }
 
-func UnmarshalActivityEvents(response string) ([]*ActivityEvent, error) {
+func UnmarshalActivityEvents(bs []byte) ([]*ActivityEvent, error) {
 	out := make([]*ActivityEvent, 0)
-	err := json.Unmarshal([]byte(response), &out)
+	err := json.Unmarshal(bs, &out)
 	if err != nil {
 		return nil, err
 	}

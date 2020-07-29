@@ -51,17 +51,17 @@ func (b *bot) initHandler() {
 
 	b.handleMessage("/start", startCtrl)
 	b.handleMessage("/help", helpCtrl)
-	b.handleMessage("/bind", startBindCtrl)
+	b.handleMessage("/bind", bindCtrl)
 	b.handleMessage("/me", meCtrl)
-	b.handleMessage("/unbind", startUnbindCtrl)
+	b.handleMessage("/unbind", unbindCtrl)
 	b.handleMessage("/cancel", cancelCtrl)
 	b.handleMessage("/send", sendCtrl)
-	b.handleMessage("/sendn", startSendnCtrl)
-	b.handleMessage("/issue", sendIssueCtrl)
-	b.handleMessage("/issuen", startSendIssuenCtrl)
+	b.handleMessage("/sendn", sendnCtrl)
+	b.handleMessage("/issue", issueCtrl)
+	b.handleMessage("/issuen", issuenCtrl)
 
-	b.handleInline(b.InlineButtons["btn_unbind"], unbindBtnCtrl)
-	b.handleInline(b.InlineButtons["btn_cancel"], cancelBtnCtrl)
+	b.handleInline(b.InlineButtons["btn_unbind"], inlBtnUnbindCtrl)
+	b.handleInline(b.InlineButtons["btn_cancel"], inlBtnCancelCtrl)
 
 	b.handleMessage(telebot.OnText, onTextCtrl)
 }

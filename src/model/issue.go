@@ -46,9 +46,9 @@ type IssueEvent struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-func UnmarshalIssueEvents(response string) ([]*IssueEvent, error) {
+func UnmarshalIssueEvents(bs []byte) ([]*IssueEvent, error) {
 	out := make([]*IssueEvent, 0)
-	err := json.Unmarshal([]byte(response), &out)
+	err := json.Unmarshal(bs, &out)
 	if err != nil {
 		return nil, err
 	}

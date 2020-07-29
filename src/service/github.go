@@ -6,10 +6,10 @@ import (
 	"net/http"
 )
 
-func CheckUser(username string, private bool, token string) (bool, error) {
+func CheckUser(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
 	header := &http.Header{}
-	if private {
+	if token != "" {
 		header.Add("Authorization", fmt.Sprintf("Token %s", token))
 	}
 
@@ -17,34 +17,34 @@ func CheckUser(username string, private bool, token string) (bool, error) {
 	return code == 200, err
 }
 
-func GetActivityEvents(username string, private bool, token string, page int) (response string, err error) {
+func GetActivityEvents(username string, token string, page int) ([]byte, error) {
 	url := fmt.Sprintf(ActivityEventApi, username)
 	url = fmt.Sprintf("%s?page=%d", url, page)
 	header := &http.Header{}
-	if private {
+	if token != "" {
 		header.Add("Authorization", fmt.Sprintf("Token %s", token))
 	}
 
 	_, bs, err := HttpGet(url, header)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bs), nil
+	return bs, nil
 }
 
-func GetIssueEvents(username string, private bool, token string, page int) (response string, err error) {
+func GetIssueEvents(username string, token string, page int) ([]byte, error) {
 	url := fmt.Sprintf(IssueEventApi, username)
 	url = fmt.Sprintf("%s?page=%d", url, page)
 	header := &http.Header{}
-	if private {
+	if token != "" {
 		header.Add("Authorization", fmt.Sprintf("Token %s", token))
 	}
 
 	_, bs, err := HttpGet(url, header)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(bs), nil
+	return bs, nil
 }
 
 func RenderActivities(objs []*model.ActivityEvent) string {

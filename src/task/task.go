@@ -59,7 +59,7 @@ func activityTask() {
 		users := model.GetUsers()
 		for _, user := range users {
 			// get event and unmarshal
-			resp, err := service.GetActivityEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetActivityEvents(user.Username, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -77,7 +77,7 @@ func activityTask() {
 				// render and send
 				render := service.RenderActivities(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
-				bot.SendToChat(user.ChatID, flag)
+				_ = bot.SendToChat(user.ChatID, flag)
 			}
 
 			// update old map
@@ -85,7 +85,7 @@ func activityTask() {
 		}
 
 		// wait to send next time
-		time.Sleep(time.Duration(config.Configs.TaskConfig.PollingActivityDuration) * time.Second)
+		time.Sleep(time.Duration(config.Configs.Task.ActivityDuration) * time.Second)
 	}
 }
 
@@ -99,12 +99,12 @@ func issueTask() {
 	for {
 		users := model.GetUsers()
 		for _, user := range users {
-			if !user.Private {
+			if user.Token == "" {
 				continue
 			}
 
 			// get event and unmarshal
-			resp, err := service.GetIssueEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetIssueEvents(user.Username, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -122,7 +122,7 @@ func issueTask() {
 				// render and send
 				render := service.RenderIssues(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
-				bot.SendToChat(user.ChatID, flag)
+				_ = bot.SendToChat(user.ChatID, flag)
 			}
 
 			// update old map
@@ -130,7 +130,7 @@ func issueTask() {
 		}
 
 		// wait to send next time
-		time.Sleep(time.Duration(config.Configs.TaskConfig.PollingIssueDuration) * time.Second)
+		time.Sleep(time.Duration(config.Configs.Task.IssueDuration) * time.Second)
 	}
 }
 

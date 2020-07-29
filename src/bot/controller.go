@@ -2,21 +2,19 @@ package bot
 
 import (
 	"fmt"
+	"github.com/Aoi-hosizora/ahlib-web/xstatus"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
-	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
-	"log"
 	"strconv"
 	"strings"
 )
 
 // noinspection GoSnakeCaseUsage
 const (
-	START = "This is AoiHosizora's github telebot. SendToChat /bind to bind a github user."
-	HELP  = `
-**Commands**
+	START = "This is AoiHosizora's github telebot. /help to show help message. /bind to bind a github user."
+	HELP  = `**Commands**
 /start - show start message
 /help - show this help message
 /cancel - cancel the last action
@@ -26,18 +24,18 @@ const (
 /send - show the first page of user's events
 /sendn - show the n page of user's events
 /issue - show the first page of user's issue events
-/issuen - show the n page of user's issue events
-`
-	ACTION_NO       = "There is no action now."
+/issuen - show the n page of user's issue events`
+	NO_ACTION       = "There is no action now."
 	ACTION_CANCELED = "Action has been canceled."
 	NUM_REQUIRED    = "Excepted number, but got a string. Please resend a number."
 
-	BIND_START         = "Please send github's username and token (split with whitespace) if you want to watch private events also. SendToChat /cancel to cancel."
+	BIND_START         = "Please send github's username and token (split with whitespace) if you want to watch private events also. /cancel to cancel."
 	BIND_ALREADY       = "You have already bind with a github account."
 	BIND_NOT_YET       = "You haven't bind a github account yet."
+	BIND_EMPTY         = "Please send a non-empty username again."
 	BIND_FAILED        = "Failed to bind github account, please retry."
-	BIND_SUCCESS       = "Bind user %s without token success. Use /send try to get events."
-	BIND_TOKEN_SUCCESS = "Bind user %s with token success. Use /send try to get events."
+	BIND_SUCCESS       = "Binding user %s without token success. /send to get events."
+	BIND_TOKEN_SUCCESS = "Binding user %s with token success. /send to get events."
 
 	UNBIND_START   = "Sure to unbind the current github account %s?"
 	UNBIND_FAILED  = "Failed to unbind github account, please retry."
@@ -54,83 +52,73 @@ const (
 
 // /start
 func startCtrl(m *telebot.Message) {
-	msg, err := Bot.Send(m.Chat, START)
-	logger.ReplyLogger(m, msg, err)
+	_ = Bot.Reply(m, START)
 }
 
 // /help
 func helpCtrl(m *telebot.Message) {
-	msg, err := Bot.Send(m.Chat, HELP, telebot.ModeMarkdown)
-	logger.ReplyLogger(m, msg, err)
+	_ = Bot.Reply(m, HELP, telebot.ModeMarkdown)
 }
 
 // /cancel
 func cancelCtrl(m *telebot.Message) {
-	if UserStates[m.Chat.ID] == fsm.None {
-		msg, err := Bot.Send(m.Chat, ACTION_NO)
-		logger.ReplyLogger(m, msg, err)
+	if Bot.UserStates[m.Chat.ID] == fsm.None {
+		_ = Bot.Reply(m, NO_ACTION)
 	} else {
-		UserStates[m.Chat.ID] = fsm.None
-		msg, err := Bot.Send(m.Chat, ACTION_CANCELED)
-		logger.ReplyLogger(m, msg, err)
+		Bot.UserStates[m.Chat.ID] = fsm.None
+		_ = Bot.Reply(m, ACTION_CANCELED, &telebot.ReplyMarkup{
+			ReplyKeyboardRemove: true,
+		})
 	}
 }
 
-// btn_cancel
-func cancelBtnCtrl(c *telebot.Callback) {
-	// _, _ = Bot.Edit(c.Message, c.Message.Text+" (You choose Cancel)", &telebot.ReplyMarkup{})
-	_ = Bot.Delete(c.Message)
-	m := c.Message
-	msg, err := Bot.Send(m.Chat, ACTION_CANCELED)
-	logger.ReplyLogger(m, msg, err)
-}
-
 // /bind
-func startBindCtrl(m *telebot.Message) {
+func bindCtrl(m *telebot.Message) {
 	user := model.GetUser(m.Chat.ID)
 	if user != nil {
-		msg, err := Bot.Send(m.Chat, BIND_ALREADY)
-		logger.ReplyLogger(m, msg, err)
+		_ = Bot.Reply(m, BIND_ALREADY)
 	} else {
-		UserStates[m.Chat.ID] = fsm.Bind
-		msg, err := Bot.Send(m.Chat, BIND_START)
-		logger.ReplyLogger(m, msg, err)
+		Bot.UserStates[m.Chat.ID] = fsm.Binding
+		_ = Bot.Reply(m, BIND_START)
 	}
 }
 
 // /bind -> x
-func bindCtrl(m *telebot.Message) {
-	sp := strings.Split(m.Text, " ")
+func fromBindingCtrl(m *telebot.Message) {
+	text := strings.TrimSpace(m.Text)
+	if text == "" {
+		_ = Bot.Reply(m, BIND_EMPTY)
+		return
+	}
+
+	sp := strings.Split(text, " ")
 	username := sp[0]
 	user := &model.User{ChatID: m.Chat.ID, Username: username}
-	if len(sp) > 1 && sp[1] != "" {
-		user.Private = true
+	if len(sp) >= 2 {
 		user.Token = sp[1]
 	}
 
 	flag := ""
-	ok, err := service.CheckUser(user.Username, user.Private, user.Token)
+	ok, err := service.CheckUser(user.Username, user.Token)
 	if err != nil {
-		log.Println(err)
 		flag = GITHUB_FAILED
 	} else if !ok {
 		flag = GITHUB_NOT_FOUND
 	} else {
 		status := model.AddUser(user)
-		if status == model.DbExisted {
+		if status == xstatus.DbExisted {
 			flag = BIND_ALREADY
-		} else if status == model.DbFailed {
+		} else if status == xstatus.DbFailed {
 			flag = BIND_FAILED
-		} else if user.Private {
+		} else if user.Token != "" {
 			flag = fmt.Sprintf(BIND_TOKEN_SUCCESS, username)
 		} else {
 			flag = fmt.Sprintf(BIND_SUCCESS, username)
 		}
 	}
 
-	UserStates[m.Chat.ID] = fsm.None
-	msg, err := Bot.Send(m.Chat, flag)
-	logger.ReplyLogger(m, msg, err)
+	Bot.UserStates[m.Chat.ID] = fsm.None
+	_ = Bot.Reply(m, flag)
 }
 
 // /me
@@ -141,70 +129,72 @@ func meCtrl(m *telebot.Message) {
 		flag = BIND_NOT_YET
 	} else {
 		n := fmt.Sprintf("[%s](https://github.com/%s)", user.Username, user.Username)
-		if user.Private {
+		if user.Token != "" {
 			flag = fmt.Sprintf(GITHUB_ME_TOKEN, n)
 		} else {
 			flag = fmt.Sprintf(GITHUB_ME, n)
 		}
 	}
-	msg, err := Bot.Send(m.Chat, flag)
-	logger.ReplyLogger(m, msg, err)
+	_ = Bot.Reply(m, flag)
 }
 
 // /unbind
-func startUnbindCtrl(m *telebot.Message) {
+func unbindCtrl(m *telebot.Message) {
 	user := model.GetUser(m.Chat.ID)
 	if user == nil {
-		msg, err := Bot.Send(m.Chat, BIND_NOT_YET)
-		logger.ReplyLogger(m, msg, err)
-	} else {
-		flag := fmt.Sprintf(UNBIND_START, user.Username)
-		msg, err := Bot.Send(m.Chat, flag, &telebot.ReplyMarkup{
-			InlineKeyboard: [][]telebot.InlineButton{{*InlineButtons["btn_unbind"]}, {*InlineButtons["btn_cancel"]}},
-		})
-		logger.ReplyLogger(m, msg, err)
+		_ = Bot.Reply(m, BIND_NOT_YET)
+		return
 	}
+
+	flag := fmt.Sprintf(UNBIND_START, user.Username)
+	_ = Bot.Reply(m, flag, &telebot.ReplyMarkup{
+		InlineKeyboard: [][]telebot.InlineButton{
+			{*Bot.InlineButtons["btn_unbind"]}, {*Bot.InlineButtons["btn_cancel"]},
+		},
+	})
 }
 
-// btn_unbind
-func unbindBtnCtrl(c *telebot.Callback) {
-	_ = Bot.Delete(c.Message)
-	m := c.Message
+// inl:btn_cancel
+func inlBtnCancelCtrl(c *telebot.Callback) {
+	_ = Bot.Bot.Delete(c.Message)
+	_ = Bot.Reply(c.Message, ACTION_CANCELED)
+}
+
+// inl:btn_unbind
+func inlBtnUnbindCtrl(c *telebot.Callback) {
+	_ = Bot.Bot.Delete(c.Message)
 	flag := ""
-	status := model.DeleteUser(m.Chat.ID)
-	if status == model.DbNotFound {
+	status := model.DeleteUser(c.Message.Chat.ID)
+	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
-	} else if status == model.DbFailed {
+	} else if status == xstatus.DbFailed {
 		flag = UNBIND_FAILED
 	} else {
 		flag = UNBIND_SUCCESS
 	}
-	msg, err := Bot.Send(m.Chat, flag)
-	logger.ReplyLogger(m, msg, err)
+
+	_ = Bot.Reply(c.Message, flag)
 }
 
 // /send
 func sendCtrl(m *telebot.Message) {
 	m.Text = "1"
-	sendnCtrl(m)
+	fromSendnCtrl(m)
 }
 
 // /sendn
-func startSendnCtrl(m *telebot.Message) {
-	UserStates[m.Chat.ID] = fsm.Sendn
-	msg, err := Bot.Send(m.Chat, GITHUB_SENDN)
-	logger.ReplyLogger(m, msg, err)
+func sendnCtrl(m *telebot.Message) {
+	Bot.UserStates[m.Chat.ID] = fsm.Sendn
+	_ = Bot.Reply(m, GITHUB_SENDN)
 }
 
 // /sendn -> x
-func sendnCtrl(m *telebot.Message) {
+func fromSendnCtrl(m *telebot.Message) {
 	page, err := strconv.Atoi(m.Text)
 	if err != nil {
-		msg, err := Bot.Send(m.Chat, NUM_REQUIRED)
-		logger.ReplyLogger(m, msg, err)
+		_ = Bot.Reply(m, NUM_REQUIRED)
 		return
-	}
-	if page <= 0 {
+	} else if page <= 0 {
 		page = 1
 	}
 
@@ -213,53 +203,40 @@ func sendnCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := service.GetActivityEvents(user.Username, user.Private, user.Token, page)
-		if err != nil {
-			log.Println(err)
+		if resp, err := service.GetActivityEvents(user.Username, user.Token, page); err != nil {
 			flag = GITHUB_FAILED
+		} else if events, err := model.UnmarshalActivityEvents(resp); err != nil {
+			flag = GITHUB_FAILED
+		} else if render := service.RenderActivities(events); render == "" {
+			render = GITHUB_EMPTY
 		} else {
-			events, err := model.UnmarshalActivityEvents(resp)
-			if err != nil {
-				log.Println(err)
-				flag = GITHUB_FAILED
-			} else {
-				render := service.RenderActivities(events)
-				if render == "" {
-					render = GITHUB_EMPTY
-				} else {
-					flag = fmt.Sprintf("From [%s](https://github.com/%s) (page %d):\n%s", user.Username, user.Username, page, render)
-				}
-			}
+			flag = fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) (page %d)", render, user.Username, user.Username, page)
 		}
 	}
 
-	UserStates[m.Chat.ID] = fsm.None
-	msg, err := Bot.Send(m.Chat, flag, telebot.ModeMarkdown)
-	logger.ReplyLogger(m, msg, err)
+	Bot.UserStates[m.Chat.ID] = fsm.None
+	_ = Bot.Reply(m, flag, telebot.ModeMarkdown)
 }
 
 // /issue
-func sendIssueCtrl(m *telebot.Message) {
+func issueCtrl(m *telebot.Message) {
 	m.Text = "1"
-	sendIssuenCtrl(m)
+	fromIssuenCtrl(m)
 }
 
 // /issuen
-func startSendIssuenCtrl(m *telebot.Message) {
-	UserStates[m.Chat.ID] = fsm.Issuen
-	msg, err := Bot.Send(m.Chat, GITHUB_ISSUEN)
-	logger.ReplyLogger(m, msg, err)
+func issuenCtrl(m *telebot.Message) {
+	Bot.UserStates[m.Chat.ID] = fsm.Issuen
+	_ = Bot.Reply(m, GITHUB_ISSUEN)
 }
 
 // /issuen -> x
-func sendIssuenCtrl(m *telebot.Message) {
+func fromIssuenCtrl(m *telebot.Message) {
 	page, err := strconv.Atoi(m.Text)
 	if err != nil {
-		msg, err := Bot.Send(m.Chat, NUM_REQUIRED)
-		logger.ReplyLogger(m, msg, err)
+		_ = Bot.Reply(m, NUM_REQUIRED)
 		return
-	}
-	if page <= 0 {
+	} else if page <= 0 {
 		page = 1
 	}
 
@@ -268,42 +245,31 @@ func sendIssuenCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := service.GetIssueEvents(user.Username, user.Private, user.Token, page)
-		if err != nil {
-			log.Println(err)
+		if resp, err := service.GetIssueEvents(user.Username, user.Token, page); err != nil {
 			flag = GITHUB_FAILED
+		} else if events, err := model.UnmarshalIssueEvents(resp); err != nil {
+			flag = GITHUB_FAILED
+		} else if render := service.RenderIssues(events); render == "" {
+			render = GITHUB_EMPTY
 		} else {
-			events, err := model.UnmarshalIssueEvents(resp)
-			if err != nil {
-				log.Println(err)
-				flag = GITHUB_FAILED
-			} else {
-				render := service.RenderIssues(events)
-				if render == "" {
-					render = GITHUB_EMPTY
-				} else {
-					flag = fmt.Sprintf("From [%s](https://github.com/%s) (page %d):\n%s", user.Username, user.Username, page, render)
-				}
-			}
+			flag = fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) (page %d)", render, user.Username, user.Username, page)
 		}
 	}
 
-	UserStates[m.Chat.ID] = fsm.None
-	msg, err := Bot.Send(m.Chat, flag, telebot.ModeMarkdown)
-	logger.ReplyLogger(m, msg, err)
+	Bot.UserStates[m.Chat.ID] = fsm.None
+	_ = Bot.Reply(m, flag, telebot.ModeMarkdown)
 }
 
 // onText
 func onTextCtrl(m *telebot.Message) {
-	switch UserStates[m.Chat.ID] {
-	case fsm.Bind:
-		bindCtrl(m)
+	switch Bot.UserStates[m.Chat.ID] {
+	case fsm.Binding:
+		fromBindingCtrl(m)
 	case fsm.Sendn:
-		sendnCtrl(m)
+		fromSendnCtrl(m)
 	case fsm.Issuen:
-		sendIssuenCtrl(m)
+		fromIssuenCtrl(m)
 	default:
-		msg, err := Bot.Send(m.Chat, "Unknown command: "+m.Text)
-		logger.ReplyLogger(m, msg, err)
+		_ = Bot.Reply(m, "Unknown command: "+m.Text)
 	}
 }
