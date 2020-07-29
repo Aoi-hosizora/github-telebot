@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/config"
+	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 	"os"

@@ -2,10 +2,10 @@ package task
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/bot"
-	"github.com/Aoi-hosizora/ah-tgbot/config"
-	"github.com/Aoi-hosizora/ah-tgbot/model"
-	"github.com/Aoi-hosizora/ah-tgbot/util"
+	"github.com/Aoi-hosizora/github-telebot/src/bot"
+	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/model"
+	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"time"
 )
 
@@ -59,7 +59,7 @@ func activityTask() {
 		users := model.GetUsers()
 		for _, user := range users {
 			// get event and unmarshal
-			resp, err := util.GetGithubActivityEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetGithubActivityEvents(user.Username, user.Private, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -75,7 +75,7 @@ func activityTask() {
 			diff := sliceActivityDiff(events, oldActivities[user.ChatID])
 			if len(diff) != 0 {
 				// render and send
-				render := util.RenderGithubActivityString(diff)
+				render := service.RenderGithubActivityString(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
 				bot.SendToChat(user.ChatID, flag)
 			}
@@ -104,7 +104,7 @@ func issueTask() {
 			}
 
 			// get event and unmarshal
-			resp, err := util.GetGithubIssueEvents(user.Username, user.Private, user.Token, 1)
+			resp, err := service.GetGithubIssueEvents(user.Username, user.Private, user.Token, 1)
 			if err != nil {
 				continue
 			}
@@ -120,7 +120,7 @@ func issueTask() {
 			diff := sliceIssueDiff(events, oldIssues[user.ChatID])
 			if len(diff) != 0 {
 				// render and send
-				render := util.RenderGithubIssueString(diff)
+				render := service.RenderGithubIssueString(diff)
 				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
 				bot.SendToChat(user.ChatID, flag)
 			}

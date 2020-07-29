@@ -2,10 +2,10 @@ package bot
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/bot/fsm"
-	"github.com/Aoi-hosizora/ah-tgbot/logger"
-	"github.com/Aoi-hosizora/ah-tgbot/model"
-	"github.com/Aoi-hosizora/ah-tgbot/util"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/src/logger"
+	"github.com/Aoi-hosizora/github-telebot/src/model"
+	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 	"strconv"
@@ -109,7 +109,7 @@ func bindCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	ok, err := util.CheckGithubUser(user.Username, user.Private, user.Token)
+	ok, err := service.CheckGithubUser(user.Username, user.Private, user.Token)
 	if err != nil {
 		log.Println(err)
 		flag = GITHUB_FAILED
@@ -213,7 +213,7 @@ func sendnCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := util.GetGithubActivityEvents(user.Username, user.Private, user.Token, page)
+		resp, err := service.GetGithubActivityEvents(user.Username, user.Private, user.Token, page)
 		if err != nil {
 			log.Println(err)
 			flag = GITHUB_FAILED
@@ -223,7 +223,7 @@ func sendnCtrl(m *telebot.Message) {
 				log.Println(err)
 				flag = GITHUB_FAILED
 			} else {
-				render := util.RenderGithubActivityString(events)
+				render := service.RenderGithubActivityString(events)
 				if render == "" {
 					render = GITHUB_EMPTY
 				} else {
@@ -268,7 +268,7 @@ func sendIssuenCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		resp, err := util.GetGithubIssueEvents(user.Username, user.Private, user.Token, page)
+		resp, err := service.GetGithubIssueEvents(user.Username, user.Private, user.Token, page)
 		if err != nil {
 			log.Println(err)
 			flag = GITHUB_FAILED
@@ -278,7 +278,7 @@ func sendIssuenCtrl(m *telebot.Message) {
 				log.Println(err)
 				flag = GITHUB_FAILED
 			} else {
-				render := util.RenderGithubIssueString(events)
+				render := service.RenderGithubIssueString(events)
 				if render == "" {
 					render = GITHUB_EMPTY
 				} else {

@@ -1,4 +1,4 @@
-module github.com/Aoi-hosizora/ah-tgbot
+module github.com/Aoi-hosizora/github-telebot
 
 go 1.13
 

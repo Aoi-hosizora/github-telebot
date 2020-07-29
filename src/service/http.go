@@ -1,8 +1,8 @@
-package util
+package service
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/model"
+	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"io/ioutil"
 	"log"
 	"net/http"

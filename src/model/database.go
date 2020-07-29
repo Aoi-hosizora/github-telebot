@@ -2,9 +2,9 @@ package model
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/config"
-	"github.com/Aoi-hosizora/ah-tgbot/logger"
 	"github.com/Aoi-hosizora/ahlib-web/xgorm"
+	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"

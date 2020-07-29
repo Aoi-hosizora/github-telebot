@@ -1,7 +1,7 @@
 package bot
 
 import (
-	"github.com/Aoi-hosizora/ah-tgbot/logger"
+	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 	"strconv"

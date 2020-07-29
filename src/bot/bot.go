@@ -1,9 +1,9 @@
 package bot
 
 import (
-	"github.com/Aoi-hosizora/ah-tgbot/bot/fsm"
-	"github.com/Aoi-hosizora/ah-tgbot/config"
-	"github.com/Aoi-hosizora/ah-tgbot/logger"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
 	"time"

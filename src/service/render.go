@@ -1,9 +1,9 @@
-package util
+package service
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ah-tgbot/model"
 	"github.com/Aoi-hosizora/ahlib/xcondition"
+	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"strings"
 )
 
@@ -140,7 +140,7 @@ func renderGithubIssueString(obj *model.IssueEvent) string {
 		message = fmt.Sprintf("%s mentioned %s from %s", actorMd, targetIssueRepoMd, issueRepoMd)
 	case "referenced":
 		toRepo := obj.CommitUrl // https://api.github.com/repos/gofiber/fiber/commits/a65d5027f336339cf4fe20cda0232c56cd64212e
-		if toRepo == "" { // TODO: CommitUrl may be null
+		if toRepo == "" {       // TODO: CommitUrl may be null
 			message = fmt.Sprintf("%s added a commit that referenced %s", actorMd, issueRepoMd)
 		} else {
 			toSp := strings.Split(toRepo, "/")

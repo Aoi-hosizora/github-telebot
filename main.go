@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/Aoi-hosizora/ah-tgbot/bot"
-	"github.com/Aoi-hosizora/ah-tgbot/config"
-	"github.com/Aoi-hosizora/ah-tgbot/model"
-	"github.com/Aoi-hosizora/ah-tgbot/task"
+	"github.com/Aoi-hosizora/github-telebot/src/bot"
+	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/model"
+	"github.com/Aoi-hosizora/github-telebot/src/task"
 	"log"
 )
 
