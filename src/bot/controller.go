@@ -13,41 +13,51 @@ import (
 
 // noinspection GoSnakeCaseUsage
 const (
-	START = "This is AoiHosizora's github telebot. /help to show help message. /bind to bind a github user."
+	START = "This is AoiHosizora's github telebot. Use /help to show help message."
 	HELP  = `**Commands**
 /start - show start message
-/help - show this help message
+/help - show help message
 /cancel - cancel the last action
-/bind - bind a new github account
+/bind - bind with a new github account
 /unbind - unbind an old github account
-/me - show the bind user information
-/send - show the first page of user's events
-/sendn - show the n page of user's events
-/issue - show the first page of user's issue events
-/issuen - show the n page of user's issue events`
-	NO_ACTION       = "There is no action now."
-	ACTION_CANCELED = "Action has been canceled."
-	NUM_REQUIRED    = "Excepted number, but got a string. Please resend a number."
+/me - show the bound user's information
 
-	BIND_START         = "Please send github's username and token (split with whitespace) if you want to watch private events also. /cancel to cancel."
-	BIND_ALREADY       = "You have already bind with a github account."
-	BIND_NOT_YET       = "You haven't bind a github account yet."
-	BIND_EMPTY         = "Please send a non-empty username again."
-	BIND_FAILED        = "Failed to bind github account, please retry."
-	BIND_SUCCESS       = "Binding user %s without token success. /send to get events."
-	BIND_TOKEN_SUCCESS = "Binding user %s with token success. /send to get events."
+/allowIssue - allow bot to send issue periodically
+/disallowIssue - allow bot to send issue periodically
+/activity - show the first page of activity events
+/activityn - show the nth page of activity events
+/issue - show the first page of issue events
+/issuen - show the nth page of issue events`
+
+	NO_ACTION       = "There is no action now."
+	ACTION_CANCELED = "Current action has been canceled."
+	NUM_REQUIRED    = "Excepted integer, but got a string. Please resend an integer."
+
+	BIND_START         = "Please send github's username, and token (split with whitespace) if you want to watch private events also. /cancel to cancel."
+	BIND_ALREADY       = "You have already bound with a github account."
+	BIND_NOT_YET       = "You have not bound a github account yet."
+	BIND_EMPTY         = "Please resend a non-empty username again."
+	BIND_FAILED        = "Failed to bind github account, please retry later."
+	BIND_SUCCESS       = "Binding user %s without token success. /activity to get activity events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
+	BIND_TOKEN_SUCCESS = "Binding user %s with token success. /send to get events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
+	BIND_SUCCESS_TIP   = "(Tips: new activity events will be sent periodically, but issue events will not be sent automatically, use /allowIssue to allow)"
 
 	UNBIND_START   = "Sure to unbind the current github account %s?"
-	UNBIND_FAILED  = "Failed to unbind github account, please retry."
+	UNBIND_FAILED  = "Failed to unbind github account, please retry later."
 	UNBIND_SUCCESS = "Unbind user success."
 
-	GITHUB_ME        = "You have bind with user: %s without token."
-	GITHUB_ME_TOKEN  = "You have bind with user: %s with token."
-	GITHUB_FAILED    = "Failed to get github information, please retry."
+	ISSUE_ONLY_FOR_TOKEN   = "This only can be allowed if you have bound with a token."
+	ISSUE_ALLOW_SUCCESS    = "Success to allow bot to send issue events periodically."
+	ISSUE_DISALLOW_SUCCESS = "Success to disallow bot to send issue events periodically."
+	ISSUE_ALLOW_FAILED     = "Failed to allow bot to send issue events periodically."
+	ISSUE_DISALLOW_FAILED  = "Failed to disallow bot to send issue events periodically."
+
+	GITHUB_ME        = "You have bound with user: %s without token."
+	GITHUB_ME_TOKEN  = "You have bound with user: %s with token."
+	GITHUB_FAILED    = "Failed to get github information, please retry later."
 	GITHUB_NOT_FOUND = "Github user not found."
 	GITHUB_EMPTY     = "Empty events: \\[]"
-	GITHUB_SENDN     = "Please send the page you want to get, number required."
-	GITHUB_ISSUEN    = "Please send the page you want to get, number required."
+	GITHUB_SEND_PAGE = "Please send the page you want to get, number required."
 )
 
 // /start
@@ -176,20 +186,70 @@ func inlBtnUnbindCtrl(c *telebot.Callback) {
 	_ = Bot.Reply(c.Message, flag)
 }
 
-// /send
-func sendCtrl(m *telebot.Message) {
+// /allowIssue
+func allowIssueCtrl(m *telebot.Message) {
+	user := model.GetUser(m.Chat.ID)
+	if user == nil {
+		_ = Bot.Reply(m, BIND_NOT_YET)
+		return
+	} else if user.Token == "" {
+		_ = Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		return
+	}
+
+	flag := ""
+	user.AllowIssue = true
+	status := model.UpdateUser(user)
+	if status == xstatus.DbNotFound {
+		flag = BIND_NOT_YET
+	} else if status == xstatus.DbFailed {
+		flag = ISSUE_ALLOW_FAILED
+	} else {
+		flag = ISSUE_ALLOW_SUCCESS
+	}
+
+	_ = Bot.Reply(m, flag)
+}
+
+// /disallowIssue
+func disallowIssueCtrl(m *telebot.Message) {
+	user := model.GetUser(m.Chat.ID)
+	if user == nil {
+		_ = Bot.Reply(m, BIND_NOT_YET)
+		return
+	} else if user.Token == "" {
+		_ = Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		return
+	}
+
+	flag := ""
+	user.AllowIssue = false
+	status := model.UpdateUser(user)
+	if status == xstatus.DbNotFound {
+		flag = BIND_NOT_YET
+	} else if status == xstatus.DbFailed {
+		flag = ISSUE_DISALLOW_FAILED
+	} else {
+		flag = ISSUE_DISALLOW_SUCCESS
+	}
+
+	_ = Bot.Reply(m, flag)
+}
+
+// /activity
+func activityCtrl(m *telebot.Message) {
 	m.Text = "1"
-	fromSendnCtrl(m)
+	fromActivitynCtrl(m)
 }
 
-// /sendn
-func sendnCtrl(m *telebot.Message) {
-	Bot.UserStates[m.Chat.ID] = fsm.Sendn
-	_ = Bot.Reply(m, GITHUB_SENDN)
+// /activityn
+func activitynCtrl(m *telebot.Message) {
+	Bot.UserStates[m.Chat.ID] = fsm.Activityn
+	_ = Bot.Reply(m, GITHUB_SEND_PAGE)
 }
 
-// /sendn -> x
-func fromSendnCtrl(m *telebot.Message) {
+// /activityn -> x
+func fromActivitynCtrl(m *telebot.Message) {
 	page, err := strconv.Atoi(m.Text)
 	if err != nil {
 		_ = Bot.Reply(m, NUM_REQUIRED)
@@ -227,7 +287,7 @@ func issueCtrl(m *telebot.Message) {
 // /issuen
 func issuenCtrl(m *telebot.Message) {
 	Bot.UserStates[m.Chat.ID] = fsm.Issuen
-	_ = Bot.Reply(m, GITHUB_ISSUEN)
+	_ = Bot.Reply(m, GITHUB_SEND_PAGE)
 }
 
 // /issuen -> x
@@ -252,7 +312,7 @@ func fromIssuenCtrl(m *telebot.Message) {
 		} else if render := service.RenderIssues(events); render == "" {
 			render = GITHUB_EMPTY
 		} else {
-			flag = fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) (page %d)", render, user.Username, user.Username, page)
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" (page %d)", page)
 		}
 	}
 
@@ -265,8 +325,8 @@ func onTextCtrl(m *telebot.Message) {
 	switch Bot.UserStates[m.Chat.ID] {
 	case fsm.Binding:
 		fromBindingCtrl(m)
-	case fsm.Sendn:
-		fromSendnCtrl(m)
+	case fsm.Activityn:
+		fromActivitynCtrl(m)
 	case fsm.Issuen:
 		fromIssuenCtrl(m)
 	default:

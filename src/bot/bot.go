@@ -51,12 +51,15 @@ func (b *bot) initHandler() {
 
 	b.handleMessage("/start", startCtrl)
 	b.handleMessage("/help", helpCtrl)
-	b.handleMessage("/bind", bindCtrl)
-	b.handleMessage("/me", meCtrl)
-	b.handleMessage("/unbind", unbindCtrl)
 	b.handleMessage("/cancel", cancelCtrl)
-	b.handleMessage("/send", sendCtrl)
-	b.handleMessage("/sendn", sendnCtrl)
+	b.handleMessage("/bind", bindCtrl)
+	b.handleMessage("/unbind", unbindCtrl)
+	b.handleMessage("/me", meCtrl)
+
+	b.handleMessage("/allowIssue", allowIssueCtrl)
+	b.handleMessage("/disallowIssue", disallowIssueCtrl)
+	b.handleMessage("/activity", activityCtrl)
+	b.handleMessage("/activityn", activitynCtrl)
 	b.handleMessage("/issue", issueCtrl)
 	b.handleMessage("/issuen", issuenCtrl)
 

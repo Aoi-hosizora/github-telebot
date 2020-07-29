@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+func RenderResult(list string, username string) string {
+	username = fmt.Sprintf("From [%s](https://github.com/%s)", username, username)
+	return fmt.Sprintf("%s\n====\n%s", list, username)
+}
+
 func RenderActivity(obj *model.ActivityEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)

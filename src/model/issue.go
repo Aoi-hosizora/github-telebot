@@ -60,3 +60,20 @@ func IssueEventEqual(e1, e2 *IssueEvent) bool {
 	// so must use {event|repo|number}
 	return e1.Id == e2.Id && e1.Event == e2.Event && e1.Repo == e2.Repo && e1.Number == e2.Number
 }
+
+func IssueSliceDiff(s1 []*IssueEvent, s2 []*IssueEvent) []*IssueEvent {
+	result := make([]*IssueEvent, 0)
+	for _, item1 := range s1 {
+		exist := false
+		for _, item2 := range s2 {
+			if IssueEventEqual(item1, item2) {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			result = append(result, item1)
+		}
+	}
+	return result
+}

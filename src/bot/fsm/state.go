@@ -5,6 +5,6 @@ type UserStatus int
 const (
 	None UserStatus = iota
 	Binding
-	Sendn
+	Activityn
 	Issuen
 )
