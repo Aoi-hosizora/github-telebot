@@ -3,16 +3,12 @@ package task
 import (
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
 	"sync"
 	"time"
-)
-
-var (
-	oldActivities = make(map[int64][]*model.ActivityEvent, 0)
-	oldIssues     = make(map[int64][]*model.IssueEvent, 0)
 )
 
 func activityTask() {
@@ -23,7 +19,7 @@ func activityTask() {
 	}()
 
 	for {
-		users := model.GetUsers()
+		users := database.GetUsers()
 		if len(users) > 0 {
 			wg := sync.WaitGroup{}
 			wg.Add(len(users))
@@ -42,11 +38,20 @@ func activityTask() {
 						return
 					}
 
-					// check map and get diff
-					if _, ok := oldActivities[user.ChatID]; !ok {
-						oldActivities[user.ChatID] = []*model.ActivityEvent{}
+					// check events and get diff
+					oldEvents, ok := database.GetOldActivities(user.ChatID)
+					if !ok {
+						wg.Done()
+						return
 					}
-					diff := model.ActivitySliceDiff(events, oldActivities[user.ChatID])
+					diff := model.ActivitySliceDiff(events, oldEvents)
+
+					// update old events
+					ok = database.SetOldActivities(user.ChatID, events)
+					if !ok {
+						wg.Done()
+						return
+					}
 
 					// render and send
 					if len(diff) != 0 {
@@ -57,8 +62,6 @@ func activityTask() {
 						}
 					}
 
-					// update old map
-					oldActivities[user.ChatID] = events
 					wg.Done()
 				}(user)
 				// ------------------------------------------------------------------------------------------------------ //
@@ -78,7 +81,7 @@ func issueTask() {
 	}()
 
 	for {
-		users := model.GetUsers()
+		users := database.GetUsers()
 		if len(users) > 0 {
 			wg := sync.WaitGroup{}
 			wg.Add(len(users))
@@ -100,11 +103,20 @@ func issueTask() {
 						return
 					}
 
-					// check map and get diff
-					if _, ok := oldIssues[user.ChatID]; !ok {
-						oldIssues[user.ChatID] = []*model.IssueEvent{}
+					// check events and get diff
+					oldEvents, ok := database.GetOldIssues(user.ChatID)
+					if !ok {
+						wg.Done()
+						return
 					}
-					diff := model.IssueSliceDiff(events, oldIssues[user.ChatID])
+					diff := model.IssueSliceDiff(events, oldEvents)
+
+					// update old events
+					ok = database.SetOldIssues(user.ChatID, events)
+					if !ok {
+						wg.Done()
+						return
+					}
 
 					// render and send
 					if len(diff) != 0 {
@@ -115,8 +127,6 @@ func issueTask() {
 						}
 					}
 
-					// update old map
-					oldIssues[user.ChatID] = events
 					wg.Done()
 				}(user)
 				// ------------------------------------------------------------------------------------------------------ //
@@ -124,7 +134,6 @@ func issueTask() {
 			wg.Wait()
 		}
 
-		// wait to send next time
 		time.Sleep(time.Duration(config.Configs.Task.IssueDuration) * time.Second)
 	}
 }

@@ -58,10 +58,7 @@ func UnmarshalIssueEvents(bs []byte) ([]*IssueEvent, error) {
 func IssueEventEqual(e1, e2 *IssueEvent) bool {
 	// `id` is null when `event` is `opened`
 	// so must use {event|repo|number}
-	if e1.Id != e2.Id {
-		return false
-	}
-	return e1.Event == e2.Event && e1.Repo == e2.Repo && e1.Number == e2.Number
+	return e1.Id == e2.Id && e1.Event == e2.Event && e1.Repo == e2.Repo && e1.Number == e2.Number
 }
 
 func IssueSliceDiff(s1 []*IssueEvent, s2 []*IssueEvent) []*IssueEvent {

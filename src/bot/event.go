@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xstatus"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
@@ -12,7 +13,7 @@ import (
 
 // /allowissue
 func AllowIssueCtrl(m *telebot.Message) {
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	if user == nil {
 		_ = Bot.Reply(m, BIND_NOT_YET)
 		return
@@ -23,7 +24,7 @@ func AllowIssueCtrl(m *telebot.Message) {
 
 	flag := ""
 	user.AllowIssue = true
-	status := model.UpdateUser(user)
+	status := database.UpdateUser(user)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -37,7 +38,7 @@ func AllowIssueCtrl(m *telebot.Message) {
 
 // /disallowissue
 func DisallowIssueCtrl(m *telebot.Message) {
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	if user == nil {
 		_ = Bot.Reply(m, BIND_NOT_YET)
 		return
@@ -48,7 +49,7 @@ func DisallowIssueCtrl(m *telebot.Message) {
 
 	flag := ""
 	user.AllowIssue = false
-	status := model.UpdateUser(user)
+	status := database.UpdateUser(user)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -83,7 +84,7 @@ func fromActivityNCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
@@ -125,7 +126,7 @@ func fromIssueNCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else if user.Token == "" {

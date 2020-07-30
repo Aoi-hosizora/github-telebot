@@ -4,8 +4,8 @@ import (
 	"flag"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
-	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/task"
 	"log"
 )
@@ -33,10 +33,15 @@ func run() {
 	if err != nil {
 		log.Fatalln("Failed to setup logger:", err)
 	}
-	err = model.SetupGorm()
+	err = database.SetupGorm()
 	if err != nil {
 		log.Fatalln("Failed to connect mysql:", err)
 	}
+	err = database.SetupRedis()
+	if err != nil {
+		log.Fatalln("Failed to connect redis:", err)
+	}
+
 	err = bot.Setup()
 	if err != nil {
 		log.Fatalln("Failed to load telebot:", err)

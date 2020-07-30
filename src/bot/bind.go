@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xstatus"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
@@ -12,7 +13,7 @@ import (
 
 // /bind
 func BindCtrl(m *telebot.Message) {
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	if user != nil {
 		_ = Bot.Reply(m, BIND_ALREADY)
 	} else {
@@ -43,7 +44,7 @@ func fromBindingCtrl(m *telebot.Message) {
 	} else if !ok {
 		flag = GITHUB_NOT_FOUND
 	} else {
-		status := model.AddUser(user)
+		status := database.AddUser(user)
 		if status == xstatus.DbExisted {
 			flag = BIND_ALREADY
 		} else if status == xstatus.DbFailed {
@@ -61,7 +62,7 @@ func fromBindingCtrl(m *telebot.Message) {
 
 // /me
 func MeCtrl(m *telebot.Message) {
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	flag := ""
 	if user == nil {
 		flag = BIND_NOT_YET
@@ -78,7 +79,7 @@ func MeCtrl(m *telebot.Message) {
 
 // /unbind
 func UnbindCtrl(m *telebot.Message) {
-	user := model.GetUser(m.Chat.ID)
+	user := database.GetUser(m.Chat.ID)
 	if user == nil {
 		_ = Bot.Reply(m, BIND_NOT_YET)
 		return
@@ -102,7 +103,7 @@ func InlBtnCancelCtrl(c *telebot.Callback) {
 func InlBtnUnbindCtrl(c *telebot.Callback) {
 	_ = Bot.Delete(c.Message)
 	flag := ""
-	status := model.DeleteUser(c.Message.Chat.ID)
+	status := database.DeleteUser(c.Message.Chat.ID)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
