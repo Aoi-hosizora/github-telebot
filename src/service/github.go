@@ -54,7 +54,13 @@ func RenderActivities(objs []*model.ActivityEvent) string {
 
 	result := ""
 	for idx, obj := range objs {
-		result += fmt.Sprintf("%d. %s\n", idx+1, RenderActivity(obj))
+		if r := RenderActivity(obj); r != "" {
+			result += fmt.Sprintf("%d. %s\n", idx+1, r)
+		}
+	}
+
+	if result == "" {
+		return ""
 	}
 	return result[:len(result)-1]
 }
@@ -66,7 +72,13 @@ func RenderIssues(objs []*model.IssueEvent) string {
 
 	result := ""
 	for idx, obj := range objs {
-		result += fmt.Sprintf("%d. %s\n", idx+1, RenderIssue(obj))
+		if r := RenderIssue(obj); r != "" {
+			result += fmt.Sprintf("%d. %s\n", idx+1, r)
+		}
+	}
+
+	if result == "" {
+		return ""
 	}
 	return result[:len(result)-1]
 }

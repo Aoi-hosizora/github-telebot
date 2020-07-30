@@ -1,10 +1,11 @@
-package model
+package database
 
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xgorm"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
+	"github.com/Aoi-hosizora/github-telebot/src/model"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 )
@@ -37,10 +38,10 @@ func SetupGorm() error {
 }
 
 func migrate(db *gorm.DB) error {
-	for _, model := range []interface{}{
-		&User{},
+	for _, m := range []interface{}{
+		&model.User{},
 	} {
-		rdb := db.AutoMigrate(model)
+		rdb := db.AutoMigrate(m)
 		if rdb.Error != nil {
 			return rdb.Error
 		}

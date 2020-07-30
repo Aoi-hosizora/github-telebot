@@ -27,15 +27,26 @@ type MysqlConfig struct {
 	LogMode  bool   `json:"log-mode"`
 }
 
+type RedisConfig struct {
+	Host           string `yaml:"host"`
+	Port           int32  `yaml:"port"`
+	Db             int32  `yaml:"db"`
+	Password       string `yaml:"password"`
+	ConnectTimeout int32  `yaml:"connect-timeout"`
+	ReadTimeout    int32  `yaml:"read-timeout"`
+	WriteTimeout   int32  `yaml:"write-timeout"`
+}
+
 type TaskConfig struct {
-	ActivityDuration uint64 `yaml:"activity-duration"`
-	IssueDuration    uint64 `yaml:"issue-duration"`
+	Activity string `yaml:"activity"`
+	Issue    string `yaml:"issue"`
 }
 
 type Config struct {
 	Meta  *MetaConfig  `yaml:"meta"`
 	Bot   *BotConfig   `yaml:"bot"`
 	Mysql *MysqlConfig `yaml:"mysql"`
+	Redis *RedisConfig `yaml:"redis"`
 	Task  *TaskConfig  `yaml:"task"`
 }
 

@@ -1,107 +1,145 @@
 package task
 
 import (
-	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
+	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
-	"time"
+	"github.com/robfig/cron/v3"
+	"gopkg.in/tucnak/telebot.v2"
+	"sync"
 )
 
-var (
-	oldActivities = make(map[int64][]*model.ActivityEvent, 0)
-	oldIssues     = make(map[int64][]*model.IssueEvent, 0)
-)
+var Cron *cron.Cron
+
+func Setup() error {
+	Cron = cron.New(cron.WithSeconds())
+
+	_, err := Cron.AddFunc(config.Configs.Task.Activity, activityTask)
+	if err != nil {
+		return err
+	}
+
+	_, err = Cron.AddFunc(config.Configs.Task.Issue, issueTask)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func activityTask() {
-	defer func() {
-		if err := recover(); err != nil {
-			activityTask()
-		}
-	}()
+	defer func() { recover() }()
 
-	for {
-		users := model.GetUsers()
-		for _, user := range users {
+	users := database.GetUsers()
+	if len(users) == 0 {
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(users))
+	for _, user := range users {
+		// ------------------------------------------------------------------------------------------------------ //
+		go func(user *model.User) {
 			// get event and unmarshal
 			resp, err := service.GetActivityEvents(user.Username, user.Token, 1)
 			if err != nil {
-				continue
+				wg.Done()
+				return
 			}
 			events, err := model.UnmarshalActivityEvents(resp)
 			if err != nil {
-				continue
+				wg.Done()
+				return
 			}
 
-			// check map and diff
-			if _, ok := oldActivities[user.ChatID]; !ok {
-				oldActivities[user.ChatID] = []*model.ActivityEvent{}
+			// check events and get diff
+			oldEvents, ok := database.GetOldActivities(user.ChatID)
+			if !ok {
+				wg.Done()
+				return
 			}
-			diff := model.ActivitySliceDiff(events, oldActivities[user.ChatID])
+			diff := model.ActivitySliceDiff(events, oldEvents)
+
+			// update old events
+			ok = database.SetOldActivities(user.ChatID, events)
+			if !ok {
+				wg.Done()
+				return
+			}
+
+			// render and send
 			if len(diff) != 0 {
-				// render and send
 				render := service.RenderActivities(diff)
-				flag := service.RenderResult(render, user.Username)
-				_ = bot.SendToChat(user.ChatID, flag)
+				if render != "" {
+					flag := service.RenderResult(render, user.Username)
+					_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+				}
 			}
 
-			// update old map
-			oldActivities[user.ChatID] = events
-		}
-
-		// wait to send next time
-		time.Sleep(time.Duration(config.Configs.Task.ActivityDuration) * time.Second)
+			wg.Done()
+		}(user)
+		// ------------------------------------------------------------------------------------------------------ //
 	}
+	wg.Wait()
 }
 
 func issueTask() {
-	defer func() {
-		if err := recover(); err != nil {
-			issueTask()
-		}
-	}()
+	defer func() { recover() }()
 
-	for {
-		users := model.GetUsers()
-		for _, user := range users {
+	users := database.GetUsers()
+	if len(users) == 0 {
+		return
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Add(len(users))
+	for _, user := range users {
+		// ------------------------------------------------------------------------------------------------------ //
+		go func(user *model.User) {
 			// allow to send issue
 			if user.Token == "" || !user.AllowIssue {
-				continue
+				return
 			}
 
 			// get event and unmarshal
 			resp, err := service.GetIssueEvents(user.Username, user.Token, 1)
 			if err != nil {
-				continue
+				return
 			}
 			events, err := model.UnmarshalIssueEvents(resp)
 			if err != nil {
-				continue
+				return
 			}
 
-			// check map and diff
-			if _, ok := oldIssues[user.ChatID]; !ok {
-				oldIssues[user.ChatID] = []*model.IssueEvent{}
+			// check events and get diff
+			oldEvents, ok := database.GetOldIssues(user.ChatID)
+			if !ok {
+				wg.Done()
+				return
 			}
-			diff := model.IssueSliceDiff(events, oldIssues[user.ChatID])
+			diff := model.IssueSliceDiff(events, oldEvents)
+
+			// update old events
+			ok = database.SetOldIssues(user.ChatID, events)
+			if !ok {
+				wg.Done()
+				return
+			}
+
+			// render and send
 			if len(diff) != 0 {
-				// render and send
 				render := service.RenderIssues(diff)
-				flag := fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) updated.", render, user.Username, user.Username)
-				_ = bot.SendToChat(user.ChatID, flag)
+				if render != "" {
+					flag := service.RenderResult(render, user.Username)
+					_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+				}
 			}
 
-			// update old map
-			oldIssues[user.ChatID] = events
-		}
-
-		// wait to send next time
-		time.Sleep(time.Duration(config.Configs.Task.IssueDuration) * time.Second)
+			wg.Done()
+		}(user)
+		// ------------------------------------------------------------------------------------------------------ //
 	}
-}
-
-func Start() {
-	go activityTask()
-	go issueTask()
+	wg.Wait()
 }
