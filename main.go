@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -42,12 +43,19 @@ func run() {
 		log.Fatalln("Failed to connect redis:", err)
 	}
 
+	fmt.Println()
 	err = bot.Setup()
 	if err != nil {
 		log.Fatalln("Failed to load telebot:", err)
 	}
+	err = task.Setup()
+	if err != nil {
+		log.Fatalln("Failed to setup cron:", err)
+	}
 
-	task.Start()
+	defer task.Cron.Stop()
+	task.Cron.Start()
+
 	defer bot.Bot.Stop()
 	bot.Bot.Start()
 }

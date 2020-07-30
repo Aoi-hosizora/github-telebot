@@ -1,7 +1,7 @@
 github.com/Aoi-hosizora/ahlib v1.2.4 h1:33lGxwrY1tbjFrGGz9skSnZ2rJd3aZqdBxpHb1udPCg=
 github.com/Aoi-hosizora/ahlib v1.2.4/go.mod h1:wIMHkzMHi8SVAYiH7khSmLLJl2DygP5sRwpu10FzOxU=
-github.com/Aoi-hosizora/ahlib-web v1.2.4 h1:WNW6iXymWypZ9xZV7TNzqWOxLI8SCDYPd9ngq/uw2ns=
-github.com/Aoi-hosizora/ahlib-web v1.2.4/go.mod h1:2YBYY0u6UZ8rbI/XG3yaMoU+DroelXJ2FNSx4CTFUrQ=
+github.com/Aoi-hosizora/ahlib-web v1.2.5 h1:K0kSaBAob6GlGhLL3VYTnN/xxJ3zvxQ6ryuVPpG9voo=
+github.com/Aoi-hosizora/ahlib-web v1.2.5/go.mod h1:2YBYY0u6UZ8rbI/XG3yaMoU+DroelXJ2FNSx4CTFUrQ=
 github.com/Aoi-hosizora/go-serverchan v1.0.0/go.mod h1:xje3libEmHAI+GXwuundHgp/PC8NuuLUJfnuoGADUu4=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -107,6 +107,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5/go.mod h1:GEXHk5HgEKCvEIIrSpFI3ozzG5xOKA2DVlEX/gGnewM=
+github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
+github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/sirupsen/logrus v1.6.0 h1:UBcNElsrwanuuMsnGSlYmtmgbb23qDR5dG+6X6Oo89I=
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

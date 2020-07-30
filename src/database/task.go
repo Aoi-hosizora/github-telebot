@@ -8,6 +8,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const MagicToken = "$$"
@@ -26,18 +27,21 @@ func parseActivityPattern(key string) (chatId int64, id, t, repo string) {
 	return
 }
 
-func getIssuePattern(chatId string, id, event, repo, num string) string {
+func getIssuePattern(chatId string, id, event, repo, ct, num string) string {
+	event = strings.ReplaceAll(event, "-", MagicToken)
 	repo = strings.ReplaceAll(repo, "-", MagicToken)
-	return fmt.Sprintf("gh-issue-ev-%s-%s-%s-%s-%s", chatId, id, event, repo, num)
+	return fmt.Sprintf("gh-issue-ev-%s-%s-%s-%s-%s-%s", chatId, id, event, repo, ct, num)
 }
 
-func parseIssuePattern(key string) (chatId, id int64, event, repo string, num int32) {
+func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct time.Time, num int32) {
 	sp := strings.Split(key, "-")
 	chatId, _ = xnumber.ParseInt64(sp[3], 10)
 	id, _ = xnumber.ParseInt64(sp[4], 10)
-	event = sp[5]
+	event = strings.ReplaceAll(sp[5], MagicToken, "-")
 	repo = strings.ReplaceAll(sp[6], MagicToken, "-")
-	num, _ = xnumber.ParseInt32(sp[7], 10)
+	ctn, _ := xnumber.ParseInt64(sp[7], 10)
+	ct = time.Unix(ctn, 0)
+	num, _ = xnumber.ParseInt32(sp[8], 10)
 	return
 }
 
@@ -80,21 +84,21 @@ func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 }
 
 func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
-	keys, err := redis.Strings(Conn.Do("KEYS", getIssuePattern(strconv.FormatInt(chatId, 10), "*", "*", "*", "*")))
+	keys, err := redis.Strings(Conn.Do("KEYS", getIssuePattern(strconv.FormatInt(chatId, 10), "*", "*", "*", "*", "*")))
 	if err != nil {
 		return nil, false
 	}
 
 	evs := make([]*model.IssueEvent, len(keys))
 	for idx := range evs {
-		_, id, event, repo, num := parseIssuePattern(keys[idx])
-		evs[idx] = &model.IssueEvent{Id: id, Event: event, Repo: repo, Number: num}
+		_, id, event, repo, ct, num := parseIssuePattern(keys[idx])
+		evs[idx] = &model.IssueEvent{Id: id, Event: event, Repo: repo, CreatedAt: ct, Number: num}
 	}
 	return evs, true
 }
 
 func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
-	pattern := getIssuePattern(strconv.FormatInt(chatId, 10), "*", "*", "*", "*")
+	pattern := getIssuePattern(strconv.FormatInt(chatId, 10), "*", "*", "*", "*", "*")
 	tot, del, err := xredis.WithConn(Conn).DeleteAll(pattern)
 	if err != nil || (tot != 0 && del == 0) {
 		return false
@@ -104,7 +108,7 @@ func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
 	values := make([]string, 0)
 	for _, ev := range evs {
 		id := strconv.FormatInt(chatId, 10)
-		pattern := getIssuePattern(id, strconv.FormatInt(ev.Id, 10), ev.Event, ev.Repo, strconv.Itoa(int(ev.Number)))
+		pattern := getIssuePattern(id, strconv.FormatInt(ev.Id, 10), ev.Event, ev.Repo, strconv.FormatInt(ev.CreatedAt.Unix(), 10), strconv.Itoa(int(ev.Number)))
 		keys = append(keys, pattern)
 		values = append(values, id)
 	}

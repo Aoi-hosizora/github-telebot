@@ -6,6 +6,7 @@
 ### Function
 
 + Query github's activity events and issue events
++ Run task with cron (through mysql and redis)
 
 ### References
 

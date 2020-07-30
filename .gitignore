@@ -10,3 +10,4 @@ config.yaml
 logs/*
 logs/*.*
 !logs/.gitkeep
+database_test.go

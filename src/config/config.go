@@ -38,8 +38,8 @@ type RedisConfig struct {
 }
 
 type TaskConfig struct {
-	ActivityDuration uint64 `yaml:"activity-duration"`
-	IssueDuration    uint64 `yaml:"issue-duration"`
+	Activity string `yaml:"activity"`
+	Issue    string `yaml:"issue"`
 }
 
 type Config struct {

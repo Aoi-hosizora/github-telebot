@@ -25,7 +25,6 @@ func Setup() error {
 		return err
 	}
 
-	fmt.Println()
 	log.Println("[Telebot] Success to connect telegram bot:", b.Me.Username)
 	fmt.Println()
 

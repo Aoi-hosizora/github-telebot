@@ -56,9 +56,9 @@ func UnmarshalIssueEvents(bs []byte) ([]*IssueEvent, error) {
 }
 
 func IssueEventEqual(e1, e2 *IssueEvent) bool {
-	// `id` is null when `event` is `opened`
-	// so must use {event|repo|number}
-	return e1.Id == e2.Id && e1.Event == e2.Event && e1.Repo == e2.Repo && e1.Number == e2.Number
+	// `id` is null when `event` is `opened` or `cross-referenced`
+	// so must use {event|repo|number|createAt}
+	return e1.Id == e2.Id && e1.Event == e2.Event && e1.Repo == e2.Repo && e1.Number == e2.Number && e1.CreatedAt.Unix() == e2.CreatedAt.Unix()
 }
 
 func IssueSliceDiff(s1 []*IssueEvent, s2 []*IssueEvent) []*IssueEvent {

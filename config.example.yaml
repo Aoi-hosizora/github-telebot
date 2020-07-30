@@ -24,5 +24,5 @@ redis:
   write-timeout: 1000
 
 task:
-  activity-duration: 60 # second
-  issue-duration: 300 # second
+  activity: 0 */1 * * * *
+  issue: 0 */5 * * * *
