@@ -143,8 +143,12 @@ func RenderIssue(obj *model.IssueEvent) string {
 		message = fmt.Sprintf("%s added a [comment](%s) to %s", userMd, obj.HtmlUrl, issueMd)
 
 	case "merged":
-		prMd := fmt.Sprintf("[%s#%d](https://github.com/%s/pull/%d)", Markdown(obj.Repo), obj.Number, obj.Repo, obj.Number)
-		message = fmt.Sprintf("%s merged pull request %s", userMd, prMd)
+		message = fmt.Sprintf("%s merged pull request %s", userMd, issueMd)
+	case "head_ref_deleted":
+		message = fmt.Sprintf("%s deleted the head branch of %s", userMd, issueMd)
+	case "head_ref_restored":
+		message = fmt.Sprintf("%s restored the head branch of %s", userMd, issueMd)
+
 	case "cross-referenced":
 		mdShow := fmt.Sprintf("%s/%s#%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
 		mdUrl := fmt.Sprintf("https://github.com/%s/%s/issue/%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
