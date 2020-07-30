@@ -1,9 +1,8 @@
-package controller
+package bot
 
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xstatus"
-	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
@@ -11,14 +10,14 @@ import (
 	"strconv"
 )
 
-// /allowIssue
+// /allowissue
 func AllowIssueCtrl(m *telebot.Message) {
 	user := model.GetUser(m.Chat.ID)
 	if user == nil {
-		_ = bot.Bot.Reply(m, BIND_NOT_YET)
+		_ = Bot.Reply(m, BIND_NOT_YET)
 		return
 	} else if user.Token == "" {
-		_ = bot.Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		_ = Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
 		return
 	}
 
@@ -33,17 +32,17 @@ func AllowIssueCtrl(m *telebot.Message) {
 		flag = ISSUE_ALLOW_SUCCESS
 	}
 
-	_ = bot.Bot.Reply(m, flag)
+	_ = Bot.Reply(m, flag)
 }
 
-// /disallowIssue
+// /disallowissue
 func DisallowIssueCtrl(m *telebot.Message) {
 	user := model.GetUser(m.Chat.ID)
 	if user == nil {
-		_ = bot.Bot.Reply(m, BIND_NOT_YET)
+		_ = Bot.Reply(m, BIND_NOT_YET)
 		return
 	} else if user.Token == "" {
-		_ = bot.Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		_ = Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
 		return
 	}
 
@@ -58,7 +57,7 @@ func DisallowIssueCtrl(m *telebot.Message) {
 		flag = ISSUE_DISALLOW_SUCCESS
 	}
 
-	_ = bot.Bot.Reply(m, flag)
+	_ = Bot.Reply(m, flag)
 }
 
 // /activity
@@ -67,17 +66,17 @@ func ActivityCtrl(m *telebot.Message) {
 	fromActivityNCtrl(m)
 }
 
-// /activityN
+// /activityn
 func ActivityNCtrl(m *telebot.Message) {
-	bot.Bot.UserStates[m.Chat.ID] = fsm.ActivityN
-	_ = bot.Bot.Reply(m, GITHUB_SEND_PAGE)
+	Bot.UserStates[m.Chat.ID] = fsm.ActivityN
+	_ = Bot.Reply(m, GITHUB_SEND_PAGE)
 }
 
-// /activityN -> x
+// /activityn -> x
 func fromActivityNCtrl(m *telebot.Message) {
 	page, err := strconv.Atoi(m.Text)
 	if err != nil {
-		_ = bot.Bot.Reply(m, NUM_REQUIRED)
+		_ = Bot.Reply(m, NUM_REQUIRED)
 		return
 	} else if page <= 0 {
 		page = 1
@@ -95,12 +94,12 @@ func fromActivityNCtrl(m *telebot.Message) {
 		} else if render := service.RenderActivities(events); render == "" {
 			render = GITHUB_EMPTY
 		} else {
-			flag = fmt.Sprintf("%s\n---\nFrom [%s](https://github.com/%s) (page %d)", render, user.Username, user.Username, page)
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" (page %d)", page)
 		}
 	}
 
-	bot.Bot.UserStates[m.Chat.ID] = fsm.None
-	_ = bot.Bot.Reply(m, flag, telebot.ModeMarkdown)
+	Bot.UserStates[m.Chat.ID] = fsm.None
+	_ = Bot.Reply(m, flag, telebot.ModeMarkdown)
 }
 
 // /issue
@@ -109,17 +108,17 @@ func IssueCtrl(m *telebot.Message) {
 	fromIssueNCtrl(m)
 }
 
-// /issueN
+// /issuen
 func IssueNCtrl(m *telebot.Message) {
-	bot.Bot.UserStates[m.Chat.ID] = fsm.IssueN
-	_ = bot.Bot.Reply(m, GITHUB_SEND_PAGE)
+	Bot.UserStates[m.Chat.ID] = fsm.IssueN
+	_ = Bot.Reply(m, GITHUB_SEND_PAGE)
 }
 
-// /issueN -> x
+// /issuen -> x
 func fromIssueNCtrl(m *telebot.Message) {
 	page, err := strconv.Atoi(m.Text)
 	if err != nil {
-		_ = bot.Bot.Reply(m, NUM_REQUIRED)
+		_ = Bot.Reply(m, NUM_REQUIRED)
 		return
 	} else if page <= 0 {
 		page = 1
@@ -129,6 +128,8 @@ func fromIssueNCtrl(m *telebot.Message) {
 	user := model.GetUser(m.Chat.ID)
 	if user == nil {
 		flag = BIND_NOT_YET
+	} else if user.Token == "" {
+		flag = ISSUE_ONLY_FOR_TOKEN
 	} else {
 		if resp, err := service.GetIssueEvents(user.Username, user.Token, page); err != nil {
 			flag = GITHUB_FAILED
@@ -141,6 +142,6 @@ func fromIssueNCtrl(m *telebot.Message) {
 		}
 	}
 
-	bot.Bot.UserStates[m.Chat.ID] = fsm.None
-	_ = bot.Bot.Reply(m, flag, telebot.ModeMarkdown)
+	Bot.UserStates[m.Chat.ID] = fsm.None
+	_ = Bot.Reply(m, flag, telebot.ModeMarkdown)
 }

@@ -5,6 +5,7 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
+	"gopkg.in/tucnak/telebot.v2"
 	"sync"
 	"time"
 )
@@ -40,7 +41,6 @@ func activityTask() {
 						wg.Done()
 						return
 					}
-					events = model.ReverseActivitySlice(events)
 
 					// check map and get diff
 					if _, ok := oldActivities[user.ChatID]; !ok {
@@ -51,8 +51,10 @@ func activityTask() {
 					// render and send
 					if len(diff) != 0 {
 						render := service.RenderActivities(diff)
-						flag := service.RenderResult(render, user.Username)
-						_ = bot.SendToChat(user.ChatID, flag)
+						if render != "" {
+							flag := service.RenderResult(render, user.Username)
+							_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+						}
 					}
 
 					// update old map
@@ -97,7 +99,6 @@ func issueTask() {
 					if err != nil {
 						return
 					}
-					events = model.ReverseIssueSlice(events)
 
 					// check map and get diff
 					if _, ok := oldIssues[user.ChatID]; !ok {
@@ -108,8 +109,10 @@ func issueTask() {
 					// render and send
 					if len(diff) != 0 {
 						render := service.RenderIssues(diff)
-						flag := service.RenderResult(render, user.Username)
-						_ = bot.SendToChat(user.ChatID, flag)
+						if render != "" {
+							flag := service.RenderResult(render, user.Username)
+							_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+						}
 					}
 
 					// update old map

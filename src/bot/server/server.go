@@ -1,12 +1,28 @@
-package bot
+package server
 
 import (
+	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
+type BotServer struct {
+	Bot           *telebot.Bot
+	UserStates    map[int64]fsm.UserStatus
+	InlineButtons map[string]*telebot.InlineButton
+	ReplyButtons  map[string]*telebot.ReplyButton
+}
+
+func (b *BotServer) Start() {
+	b.Bot.Start()
+}
+
+func (b *BotServer) Stop() {
+	b.Bot.Stop()
+}
+
 // Handle text endpoint with Message handler.
-func (b *bot) handleMessage(endpoint string, handler func(*telebot.Message)) {
+func (b *BotServer) HandleMessage(endpoint string, handler func(*telebot.Message)) {
 	b.Bot.Handle(endpoint, func(m *telebot.Message) {
 		logger.Telebot.Receive(endpoint, m)
 		handler(m)
@@ -14,7 +30,7 @@ func (b *bot) handleMessage(endpoint string, handler func(*telebot.Message)) {
 }
 
 // Handle inline button endpoint with callback handler.
-func (b *bot) handleInline(endpoint *telebot.InlineButton, handler func(*telebot.Callback)) {
+func (b *BotServer) HandleInline(endpoint *telebot.InlineButton, handler func(*telebot.Callback)) {
 	b.Bot.Handle(endpoint, func(c *telebot.Callback) {
 		logger.Telebot.Receive(endpoint, c)
 		handler(c)
@@ -22,7 +38,7 @@ func (b *bot) handleInline(endpoint *telebot.InlineButton, handler func(*telebot
 }
 
 // Handle reply button endpoint with callback handler.
-func (b *bot) handleReply(endpoint *telebot.ReplyButton, handler func(*telebot.Message)) {
+func (b *BotServer) HandleReply(endpoint *telebot.ReplyButton, handler func(*telebot.Message)) {
 	b.Bot.Handle(endpoint, func(m *telebot.Message) {
 		logger.Telebot.Receive(endpoint, m)
 		handler(m)
@@ -30,7 +46,7 @@ func (b *bot) handleReply(endpoint *telebot.ReplyButton, handler func(*telebot.M
 }
 
 // Reply content to a specific message.
-func (b *bot) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
+func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
 	msg, err := b.Bot.Send(m.Chat, what, options...)
 	logger.Telebot.Reply(m, msg, err)
 	if err != nil {
@@ -41,13 +57,13 @@ func (b *bot) Reply(m *telebot.Message, what interface{}, options ...interface{}
 }
 
 // Send content to a specific chat (ByID).
-func (b *bot) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
+func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
 	msg, err := b.Bot.Send(c, what, options...)
 	logger.Telebot.Send(c, msg, err)
 	return err
 }
 
 // Mirror method from `telebot.Delete`
-func (b *bot) Delete(msg telebot.Editable) error {
+func (b *BotServer) Delete(msg telebot.Editable) error {
 	return b.Bot.Delete(msg)
 }

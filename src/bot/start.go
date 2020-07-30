@@ -1,40 +1,43 @@
-package controller
+package bot
 
 import (
-	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
 // noinspection GoSnakeCaseUsage
 const (
-	START = "This is AoiHosizora's github telebot. Use /help to show help message."
+	START = "Here is AoiHosizora's github telebot. Use /help to show help message."
 	HELP  = `**Commands**
 /start - show start message
 /help - show help message
 /cancel - cancel the last action
+
+**Account**
 /bind - bind with a new github account
 /unbind - unbind an old github account
 /me - show the bound user's information
-/allowIssue - allow bot to send issue periodically
-/disallowIssue - allow bot to send issue periodically
+
+**Events**
+/allowissue - allow bot to send issue
+/disallowissue - allow bot to send issue
 /activity - show the first page of activity events
-/activityN - show the nth page of activity events
+/activityn - show the nth page of activity events
 /issue - show the first page of issue events
-/issueN - show the nth page of issue events`
+/issuen - show the nth page of issue events`
 
 	NO_ACTION       = "There is no action now."
 	ACTION_CANCELED = "Current action has been canceled."
 	NUM_REQUIRED    = "Excepted integer, but got a string. Please resend an integer."
 
-	BIND_START         = "Please send github's username, and token (split with whitespace) if you want to watch private events also. /cancel to cancel."
+	BIND_START         = "Please send github's username, and token (split with whitespace) if you want to watch private events or issue events also. /cancel to cancel."
 	BIND_ALREADY       = "You have already bound with a github account."
 	BIND_NOT_YET       = "You have not bound a github account yet."
 	BIND_EMPTY         = "Please resend a non-empty username again."
 	BIND_FAILED        = "Failed to bind github account, please retry later."
 	BIND_SUCCESS       = "Binding user %s without token success. /activity to get activity events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
-	BIND_TOKEN_SUCCESS = "Binding user %s with token success. /send to get events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
-	BIND_SUCCESS_TIP   = "(Tips: new activity events will be sent periodically, but issue events will not be sent. Use /allowIssue to allow)"
+	BIND_TOKEN_SUCCESS = "Binding user %s with token success. /activity to get events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
+	BIND_SUCCESS_TIP   = "(Tips: new activity events will be sent periodically, but issue events will not be sent. Use /allowissue to allow)"
 
 	UNBIND_START   = "Sure to unbind the current github account %s?"
 	UNBIND_FAILED  = "Failed to unbind github account, please retry later."
@@ -56,21 +59,21 @@ const (
 
 // /start
 func StartCtrl(m *telebot.Message) {
-	_ = bot.Bot.Reply(m, START)
+	_ = Bot.Reply(m, START)
 }
 
 // /help
 func HelpCtrl(m *telebot.Message) {
-	_ = bot.Bot.Reply(m, HELP, telebot.ModeMarkdown)
+	_ = Bot.Reply(m, HELP, telebot.ModeMarkdown)
 }
 
 // /cancel
 func CancelCtrl(m *telebot.Message) {
-	if bot.Bot.UserStates[m.Chat.ID] == fsm.None {
-		_ = bot.Bot.Reply(m, NO_ACTION)
+	if Bot.UserStates[m.Chat.ID] == fsm.None {
+		_ = Bot.Reply(m, NO_ACTION)
 	} else {
-		bot.Bot.UserStates[m.Chat.ID] = fsm.None
-		_ = bot.Bot.Reply(m, ACTION_CANCELED, &telebot.ReplyMarkup{
+		Bot.UserStates[m.Chat.ID] = fsm.None
+		_ = Bot.Reply(m, ACTION_CANCELED, &telebot.ReplyMarkup{
 			ReplyKeyboardRemove: true,
 		})
 	}
@@ -78,7 +81,7 @@ func CancelCtrl(m *telebot.Message) {
 
 // onText
 func OnTextCtrl(m *telebot.Message) {
-	switch bot.Bot.UserStates[m.Chat.ID] {
+	switch Bot.UserStates[m.Chat.ID] {
 	case fsm.Binding:
 		fromBindingCtrl(m)
 	case fsm.ActivityN:
@@ -86,6 +89,6 @@ func OnTextCtrl(m *telebot.Message) {
 	case fsm.IssueN:
 		fromIssueNCtrl(m)
 	default:
-		_ = bot.Bot.Reply(m, "Unknown command: "+m.Text)
+		_ = Bot.Reply(m, "Unknown command: "+m.Text)
 	}
 }

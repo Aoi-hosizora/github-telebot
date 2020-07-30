@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	"github.com/Aoi-hosizora/ahlib/xslice"
 	"time"
 )
 
@@ -91,8 +90,4 @@ func ActivitySliceDiff(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEven
 		}
 	}
 	return result
-}
-
-func ReverseActivitySlice(s []*ActivityEvent) []*ActivityEvent {
-	return xslice.Its(xslice.Reverse(xslice.Sti(s)), &ActivityEvent{}).([]*ActivityEvent)
 }

@@ -7,3 +7,6 @@
 ### Build ###
 build/
 config.yaml
+logs/*
+logs/*.*
+!logs/.gitkeep
