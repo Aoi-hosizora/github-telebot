@@ -1,16 +1,28 @@
 package server
 
 import (
+	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
+var Bot *BotServer
+
 type BotServer struct {
 	Bot           *telebot.Bot
-	UserStates    map[int64]fsm.UserStatus
+	UsersData     *xtelebot.UsersData
 	InlineButtons map[string]*telebot.InlineButton
 	ReplyButtons  map[string]*telebot.ReplyButton
+}
+
+func NewBotServer(bot *telebot.Bot) *BotServer {
+	return &BotServer{
+		Bot:           bot,
+		UsersData:     xtelebot.NewUsersData(fsm.None),
+		InlineButtons: make(map[string]*telebot.InlineButton),
+		ReplyButtons:  make(map[string]*telebot.ReplyButton),
+	}
 }
 
 func (b *BotServer) Start() {
@@ -19,6 +31,10 @@ func (b *BotServer) Start() {
 
 func (b *BotServer) Stop() {
 	b.Bot.Stop()
+}
+
+func (b *BotServer) Delete(msg telebot.Editable) error {
+	return b.Bot.Delete(msg)
 }
 
 // Handle text endpoint with Message handler.
@@ -61,9 +77,4 @@ func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface
 	msg, err := b.Bot.Send(c, what, options...)
 	logger.Telebot.Send(c, msg, err)
 	return err
-}
-
-// Mirror method from `telebot.Delete`
-func (b *BotServer) Delete(msg telebot.Editable) error {
-	return b.Bot.Delete(msg)
 }

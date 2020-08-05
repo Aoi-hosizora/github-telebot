@@ -19,12 +19,12 @@ type BotConfig struct {
 }
 
 type MysqlConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Name     string `json:"name"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-	LogMode  bool   `json:"log-mode"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Name     string `yaml:"name"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	LogMode  bool   `yaml:"log-mode"`
 }
 
 type RedisConfig struct {

@@ -2,16 +2,14 @@ package bot
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
+	"github.com/Aoi-hosizora/ahlib/xnumber"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/controller"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"gopkg.in/tucnak/telebot.v2"
 	"log"
-	"strconv"
 	"time"
 )
-
-var Bot *server.BotServer
 
 func Setup() error {
 	b, err := telebot.NewBot(telebot.Settings{
@@ -25,16 +23,12 @@ func Setup() error {
 		return err
 	}
 
+	fmt.Println()
 	log.Println("[Telebot] Success to connect telegram bot:", b.Me.Username)
 	fmt.Println()
 
-	Bot = &server.BotServer{
-		Bot:           b,
-		UserStates:    make(map[int64]fsm.UserStatus),
-		InlineButtons: make(map[string]*telebot.InlineButton),
-		ReplyButtons:  make(map[string]*telebot.ReplyButton),
-	}
-	initHandler(Bot)
+	server.Bot = server.NewBotServer(b)
+	initHandler(server.Bot)
 
 	return nil
 }
@@ -43,31 +37,31 @@ func initHandler(b *server.BotServer) {
 	b.InlineButtons["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
 	b.InlineButtons["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
 
-	b.HandleMessage("/start", StartCtrl)
-	b.HandleMessage("/help", HelpCtrl)
-	b.HandleMessage("/cancel", CancelCtrl)
-	b.HandleMessage("/bind", BindCtrl)
-	b.HandleMessage("/unbind", UnbindCtrl)
-	b.HandleMessage("/me", MeCtrl)
+	b.HandleMessage("/start", controller.StartCtrl)
+	b.HandleMessage("/help", controller.HelpCtrl)
+	b.HandleMessage("/cancel", controller.CancelCtrl)
+	b.HandleMessage("/bind", controller.BindCtrl)
+	b.HandleMessage("/unbind", controller.UnbindCtrl)
+	b.HandleMessage("/me", controller.MeCtrl)
 
-	b.HandleMessage("/allowissue", AllowIssueCtrl)
-	b.HandleMessage("/disallowissue", DisallowIssueCtrl)
-	b.HandleMessage("/activity", ActivityCtrl)
-	b.HandleMessage("/activityn", ActivityNCtrl)
-	b.HandleMessage("/issue", IssueCtrl)
-	b.HandleMessage("/issuen", IssueNCtrl)
+	b.HandleMessage("/allowissue", controller.AllowIssueCtrl)
+	b.HandleMessage("/disallowissue", controller.DisallowIssueCtrl)
+	b.HandleMessage("/activity", controller.ActivityCtrl)
+	b.HandleMessage("/activityn", controller.ActivityNCtrl)
+	b.HandleMessage("/issue", controller.IssueCtrl)
+	b.HandleMessage("/issuen", controller.IssueNCtrl)
 
-	b.HandleInline(b.InlineButtons["btn_unbind"], InlBtnUnbindCtrl)
-	b.HandleInline(b.InlineButtons["btn_cancel"], InlBtnCancelCtrl)
+	b.HandleInline(b.InlineButtons["btn_unbind"], controller.InlBtnUnbindCtrl)
+	b.HandleInline(b.InlineButtons["btn_cancel"], controller.InlBtnCancelCtrl)
 
-	b.HandleMessage(telebot.OnText, OnTextCtrl)
+	b.HandleMessage(telebot.OnText, controller.OnTextCtrl)
 }
 
 func SendToChat(chatId int64, what interface{}, options ...interface{}) error {
-	chat, err := Bot.Bot.ChatByID(strconv.FormatInt(chatId, 10))
+	chat, err := server.Bot.Bot.ChatByID(xnumber.FormatInt64(chatId, 10))
 	if err != nil {
 		return err
-	} else {
-		return Bot.Send(chat, what, options...)
 	}
+
+	return server.Bot.Send(chat, what, options...)
 }

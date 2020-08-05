@@ -1,9 +1,11 @@
 package fsm
 
-type UserStatus int
+import (
+	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
+)
 
 const (
-	None UserStatus = iota
+	None xtelebot.UserStatus = iota
 	Binding
 	ActivityN
 	IssueN

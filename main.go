@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
@@ -56,6 +57,6 @@ func run() {
 	defer task.Cron.Stop()
 	task.Cron.Start()
 
-	defer bot.Bot.Stop()
-	bot.Bot.Start()
+	defer server.Bot.Stop()
+	server.Bot.Start()
 }
