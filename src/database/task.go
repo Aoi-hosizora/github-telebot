@@ -46,7 +46,10 @@ func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct tim
 }
 
 func GetOldActivities(chatId int64) ([]*model.ActivityEvent, bool) {
-	keys, err := redis.Strings(Conn.Do("KEYS", getActivityPattern(strconv.FormatInt(chatId, 10), "*", "*", "*")))
+	pattern := getActivityPattern(strconv.FormatInt(chatId, 10), "*", "*", "*")
+	redisMu.Lock()
+	keys, err := redis.Strings(Conn.Do("KEYS", pattern))
+	redisMu.Unlock()
 	if err != nil {
 		return nil, false
 	}
@@ -66,7 +69,9 @@ func GetOldActivities(chatId int64) ([]*model.ActivityEvent, bool) {
 
 func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 	pattern := getActivityPattern(strconv.FormatInt(chatId, 10), "*", "*", "*")
+	redisMu.Lock()
 	tot, del, err := xredis.WithConn(Conn).DeleteAll(pattern)
+	redisMu.Unlock()
 	if err != nil || (tot != 0 && del == 0) {
 		return false
 	}
@@ -79,12 +84,17 @@ func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 		keys = append(keys, pattern)
 		values = append(values, id)
 	}
+
+	redisMu.Lock()
 	tot, add, err := xredis.WithConn(Conn).SetAll(keys, values)
+	redisMu.Unlock()
 	return err == nil && (tot == 0 || add >= 1)
 }
 
 func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
+	redisMu.Lock()
 	keys, err := redis.Strings(Conn.Do("KEYS", getIssuePattern(strconv.FormatInt(chatId, 10), "*", "*", "*", "*", "*")))
+	redisMu.Unlock()
 	if err != nil {
 		return nil, false
 	}
@@ -99,7 +109,9 @@ func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
 
 func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
 	pattern := getIssuePattern(strconv.FormatInt(chatId, 10), "*", "*", "*", "*", "*")
+	redisMu.Lock()
 	tot, del, err := xredis.WithConn(Conn).DeleteAll(pattern)
+	redisMu.Unlock()
 	if err != nil || (tot != 0 && del == 0) {
 		return false
 	}
@@ -112,6 +124,9 @@ func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
 		keys = append(keys, pattern)
 		values = append(values, id)
 	}
+
+	redisMu.Lock()
 	tot, add, err := xredis.WithConn(Conn).SetAll(keys, values)
+	redisMu.Unlock()
 	return err == nil && (tot == 0 || add >= 1)
 }

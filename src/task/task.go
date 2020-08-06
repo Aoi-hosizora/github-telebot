@@ -9,7 +9,6 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"github.com/robfig/cron/v3"
 	"gopkg.in/tucnak/telebot.v2"
-	"log"
 	"sync"
 	"time"
 )
@@ -38,7 +37,6 @@ func checkSilent(user *model.User) bool {
 		ss := user.SilentStart
 		se := user.SilentEnd
 		hour := hm.Hour()
-		log.Println(ss, se, hour)
 		if ss < se { // 2 5
 			if hour >= ss && hour <= se {
 				return true

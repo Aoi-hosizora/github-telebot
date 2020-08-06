@@ -6,10 +6,14 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"github.com/gomodule/redigo/redis"
+	"sync"
 	"time"
 )
 
-var Conn redis.Conn
+var (
+	Conn    redis.Conn
+	redisMu sync.Mutex
+)
 
 func SetupRedis() error {
 	cfg := config.Configs.Redis
