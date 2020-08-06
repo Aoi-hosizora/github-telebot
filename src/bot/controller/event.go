@@ -70,7 +70,7 @@ func ActivityCtrl(m *telebot.Message) {
 
 // /activityn
 func ActivityNCtrl(m *telebot.Message) {
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.ActivityN)
+	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.ActivityPage)
 	_ = server.Bot.Reply(m, GITHUB_SEND_PAGE_Q)
 }
 
@@ -112,7 +112,7 @@ func IssueCtrl(m *telebot.Message) {
 
 // /issuen
 func IssueNCtrl(m *telebot.Message) {
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.IssueN)
+	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.IssuePage)
 	_ = server.Bot.Reply(m, GITHUB_SEND_PAGE_Q)
 }
 

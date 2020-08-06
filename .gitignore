@@ -11,3 +11,4 @@ logs/*
 logs/*.*
 !logs/.gitkeep
 database_test.go
+controller_test.go

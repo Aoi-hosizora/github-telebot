@@ -1,6 +1,7 @@
 package task
 
 import (
+	"github.com/Aoi-hosizora/ahlib/xzone"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -8,7 +9,9 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"github.com/robfig/cron/v3"
 	"gopkg.in/tucnak/telebot.v2"
+	"log"
 	"sync"
+	"time"
 )
 
 var Cron *cron.Cron
@@ -27,6 +30,26 @@ func Setup() error {
 	}
 
 	return nil
+}
+
+func checkSilent(user *model.User) bool {
+	if user.Silent {
+		hm, _ := xzone.MoveToZone(time.Now(), user.TimeZone)
+		ss := user.SilentStart
+		se := user.SilentEnd
+		hour := hm.Hour()
+		log.Println(ss, se, hour)
+		if ss < se { // 2 5
+			if hour >= ss && hour <= se {
+				return true
+			}
+		} else { // 22 2
+			if (hour >= ss && hour <= 23) || (hour >= 0 && hour <= se) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func activityTask() {
@@ -74,7 +97,11 @@ func activityTask() {
 				render := service.RenderActivities(diff)
 				if render != "" {
 					flag := service.RenderResult(render, user.Username)
-					_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+					if checkSilent(user) {
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
+					} else {
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+					}
 				}
 			}
 
@@ -133,7 +160,11 @@ func issueTask() {
 				render := service.RenderIssues(diff)
 				if render != "" {
 					flag := service.RenderResult(render, user.Username)
-					_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+					if checkSilent(user) {
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
+					} else {
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+					}
 				}
 			}
 

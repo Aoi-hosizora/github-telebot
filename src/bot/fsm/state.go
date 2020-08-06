@@ -6,7 +6,16 @@ import (
 
 const (
 	None xtelebot.UserStatus = iota
+
+	// Start binding, need to send username and token.
 	Binding
-	ActivityN
-	IssueN
+
+	// Want to send activity events, need to send page number.
+	ActivityPage
+
+	// Want to send issue events, need to send page number.
+	IssuePage
+
+	// Want to setup silent, need to send 2 hour numbers.
+	SilentHour
 )

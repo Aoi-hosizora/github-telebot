@@ -3,6 +3,8 @@ package controller
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xstatus"
+	"github.com/Aoi-hosizora/ahlib/xnumber"
+	"github.com/Aoi-hosizora/ahlib/xzone"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -114,4 +116,95 @@ func InlBtnUnbindCtrl(c *telebot.Callback) {
 	}
 
 	_ = server.Bot.Reply(c.Message, flag)
+}
+
+// /enablesilent
+func EnableSilentCtrl(m *telebot.Message) {
+	user := database.GetUser(m.Chat.ID)
+	if user == nil {
+		_ = server.Bot.Reply(m, BIND_NOT_YET)
+		return
+	}
+
+	server.Bot.UsersData.SetCache(m.Chat.ID, "user", user)
+	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.SilentHour)
+	_ = server.Bot.Reply(m, SILENT_Q)
+}
+
+// /enablesilent -> x
+func fromSilentHourCtrl(m *telebot.Message) {
+	user := server.Bot.UsersData.GetCache(m.Chat.ID, "user").(*model.User)
+	sp := strings.Split(strings.TrimSpace(m.Text), " ")
+	if len(sp) < 3 || sp[0] == sp[1] {
+		_ = server.Bot.Reply(m, SILENT_FORMAT_REQUIRED)
+		return
+	}
+
+	start, err1 := xnumber.ParseInt(sp[0], 10)
+	end, err2 := xnumber.ParseInt(sp[1], 10)
+	if (err1 != nil || start < 0 || start > 23) || (err2 != nil || end < 0 || end > 23) {
+		_ = server.Bot.Reply(m, SILENT_HOUR_REQUIRED)
+		return
+	}
+	zone := sp[2]
+	loc, err := xzone.ParseTimeZone(zone)
+	if err != nil {
+		_ = server.Bot.Reply(m, SILENT_ZONE_REQUIRED)
+		return
+	}
+
+	user.Silent = true
+	user.SilentStart = start
+	user.SilentEnd = end
+	user.TimeZone = zone
+	status := database.UpdateUser(user)
+
+	flag := ""
+	if status == xstatus.DbNotFound {
+		flag = BIND_NOT_YET
+	} else if status == xstatus.DbFailed {
+		flag = SILENT_FAILED
+	} else {
+		f := ""
+		if start < end {
+			f = fmt.Sprintf("%dh to %dh for %s", start, end, loc.String())
+		} else {
+			f = fmt.Sprintf("%dh to %dh next day for %s", start, end, loc.String())
+		}
+		flag = fmt.Sprintf(SILENT_SUCCESS, f)
+	}
+
+	server.Bot.UsersData.DeleteCache(m.Chat.ID, "user")
+	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
+	_ = server.Bot.Reply(m, flag)
+}
+
+// /disablesilent
+func DisableSilentCtrl(m *telebot.Message) {
+	user := database.GetUser(m.Chat.ID)
+	if user == nil {
+		_ = server.Bot.Reply(m, BIND_NOT_YET)
+		return
+	}
+
+	if !user.Silent {
+		_ = server.Bot.Reply(m, SILENT_NOT_YET)
+		return
+	}
+
+	user.Silent = false
+	user.SilentStart = 0
+	user.SilentEnd = 0
+	status := database.UpdateUser(user)
+
+	flag := ""
+	if status == xstatus.DbNotFound {
+		flag = BIND_NOT_YET
+	} else if status == xstatus.DbFailed {
+		flag = DISABLE_SILENT_FAILED
+	} else {
+		flag = DISABLE_SILENT_SUCCESS
+	}
+
+	_ = server.Bot.Reply(m, flag)
 }
