@@ -70,14 +70,15 @@ func MeCtrl(m *telebot.Message) {
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else {
-		n := fmt.Sprintf("[%s](https://github.com/%s)", user.Username, user.Username)
+		name := service.Markdown(user.Username)
+		n := fmt.Sprintf("[%s](https://github.com/%s)", name, user.Username)
 		if user.Token != "" {
 			flag = fmt.Sprintf(GITHUB_ME_TOKEN, n)
 		} else {
 			flag = fmt.Sprintf(GITHUB_ME, n)
 		}
 	}
-	_ = server.Bot.Reply(m, flag)
+	_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
 }
 
 // /unbind

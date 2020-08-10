@@ -21,7 +21,6 @@ func Markdown(s string) string {
 }
 
 func RenderActivity(obj *model.ActivityEvent) string {
-
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
 	userMd := fmt.Sprintf("[%s](%s)", Markdown(obj.Actor.Login), userUrl)
