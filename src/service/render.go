@@ -150,7 +150,7 @@ func RenderIssue(obj *model.IssueEvent) string {
 
 	case "cross-referenced":
 		mdShow := fmt.Sprintf("%s/%s#%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
-		mdUrl := fmt.Sprintf("https://github.com/%s/%s/issue/%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
+		mdUrl := fmt.Sprintf("https://github.com/%s/%s/issues/%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
 		targetMd := fmt.Sprintf("[%s](%s)", Markdown(mdShow), mdUrl)
 		message = fmt.Sprintf("%s mentioned %s from %s", userMd, issueMd, targetMd)
 	case "referenced":

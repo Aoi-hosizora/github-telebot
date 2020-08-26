@@ -22,7 +22,8 @@ func GetUser(chatId int64) *model.User {
 }
 
 func AddUser(user *model.User) xstatus.DbStatus {
-	return xgorm.WithDB(DB).Insert(&model.User{}, user)
+	s, _ := xgorm.WithDB(DB).Create(&model.User{}, user)
+	return s
 }
 
 func UpdateUser(user *model.User) xstatus.DbStatus {
@@ -35,9 +36,11 @@ func UpdateUser(user *model.User) xstatus.DbStatus {
 		"silent_end":   user.SilentEnd,
 		"time_zone":    user.TimeZone,
 	}
-	return xgorm.WithDB(DB).Update(&model.User{}, &model.User{ChatID: user.ChatID}, m)
+	s, _ := xgorm.WithDB(DB).Update(&model.User{}, &model.User{ChatID: user.ChatID}, m)
+	return s
 }
 
 func DeleteUser(chatId int64) xstatus.DbStatus {
-	return xgorm.WithDB(DB).Delete(&model.User{}, nil, &model.User{ChatID: chatId})
+	s, _ := xgorm.WithDB(DB).Delete(&model.User{}, nil, &model.User{ChatID: chatId})
+	return s
 }

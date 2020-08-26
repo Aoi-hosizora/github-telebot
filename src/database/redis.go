@@ -31,7 +31,7 @@ func SetupRedis() error {
 	}
 
 	// Conn = xredis.NewRedisLogrus(conn, logger.Logger, config.Configs.Meta.RunMode == "debug")
-	Conn = xredis.NewRedisLogrus(conn, logger.Logger, false)
+	Conn = xredis.NewLogrusLogger(conn, logger.Logger, false)
 
 	return nil
 }
