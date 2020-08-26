@@ -67,6 +67,9 @@ func RenderActivity(obj *model.ActivityEvent) string {
 	case "PullRequestEvent":
 		message = fmt.Sprintf("%s %s pull request [#%d](%s) at %s",
 			userMd, pl.Action, pl.Number, pl.PullRequest.HtmlUrl, repoMd)
+	case "PullRequestReviewEvent":
+		message = fmt.Sprintf("%s %s pull a request review in pull request [#%d](%s) at %s",
+			userMd, pl.Action, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
 	case "PullRequestReviewCommentEvent":
 		message = fmt.Sprintf("%s %s pull request review comment [%d](%s) in pull request [#%d](%s) at %s",
 			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
@@ -147,6 +150,10 @@ func RenderIssue(obj *model.IssueEvent) string {
 		message = fmt.Sprintf("%s deleted the head branch of %s", userMd, issueMd)
 	case "head_ref_restored":
 		message = fmt.Sprintf("%s restored the head branch of %s", userMd, issueMd)
+	case "added_to_project":
+		message = fmt.Sprintf("%s added %s to a project", userMd, issueMd)
+	case "removed_from_project":
+		message = fmt.Sprintf("%s removed %s from a project", userMd, issueMd)
 
 	case "cross-referenced":
 		mdShow := fmt.Sprintf("%s/%s#%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
