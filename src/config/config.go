@@ -19,12 +19,14 @@ type BotConfig struct {
 }
 
 type MysqlConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Name     string `yaml:"name"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	LogMode  bool   `yaml:"log-mode"`
+	Host        string `yaml:"host"`
+	Port        int    `yaml:"port"`
+	Name        string `yaml:"name"`
+	User        string `yaml:"user"`
+	Password    string `yaml:"password"`
+	MaxIdle     int32  `yaml:"max-idle"`
+	MaxActive   int32  `yaml:"max-active"`
+	MaxLifetime int32  `yaml:"max-lifetime"`
 }
 
 type RedisConfig struct {
@@ -35,6 +37,10 @@ type RedisConfig struct {
 	ConnectTimeout int32  `yaml:"connect-timeout"`
 	ReadTimeout    int32  `yaml:"read-timeout"`
 	WriteTimeout   int32  `yaml:"write-timeout"`
+	MaxIdle        int32  `yaml:"max-idle"`
+	MaxActive      int32  `yaml:"max-active"`
+	MaxLifetime    int32  `yaml:"max-lifetime"`
+	IdleTimeout    int32  `yaml:"idle-timeout"`
 }
 
 type TaskConfig struct {

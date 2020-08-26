@@ -13,15 +13,22 @@ mysql:
   name: db_github_bot
   user: root
   password: 123
+  max-idle: 10
+  max-active: 100
+  max-lifetime: 3600 # second
 
 redis:
   host: 127.0.0.1
   port: 6379
   db: 1
   password: 123
-  connect-timeout: 1000 # microsecond
-  read-timeout: 1000
-  write-timeout: 1000
+  connect-timeout: 5000 # microsecond
+  read-timeout: 5000 # microsecond
+  write-timeout: 5000 # microsecond
+  max-idle: 10
+  max-active: 100
+  max-lifetime: 3600 # second
+  idle-timeout: 300 # second
 
 task:
   activity: 0 */1 * * * *
