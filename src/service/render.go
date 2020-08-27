@@ -174,7 +174,8 @@ func RenderIssue(obj *model.IssueEvent) string {
 			message = ""
 		}
 	default:
-		message = fmt.Sprintf("%s: %s %s", strings.Title(obj.Event), userMd, issueMd)
+		event := strings.ReplaceAll(obj.Event, "_", "\\_")
+		message = fmt.Sprintf("%s: %s %s", strings.Title(event), userMd, issueMd)
 	}
 
 	return message

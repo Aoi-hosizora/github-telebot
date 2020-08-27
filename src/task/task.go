@@ -140,10 +140,6 @@ func issueTask() {
 
 			// check events and get diff
 			oldEvents, ok := database.GetOldIssues(user.ChatID)
-			if !ok {
-				wg.Done()
-				return
-			}
 			diff := model.IssueSliceDiff(events, oldEvents)
 
 			// update old events
@@ -155,9 +151,9 @@ func issueTask() {
 
 			// render and send
 			if len(diff) != 0 {
-				render := service.RenderIssues(diff) + " (Issue events)"
+				render := service.RenderIssues(diff)
 				if render != "" {
-					flag := service.RenderResult(render, user.Username)
+					flag := service.RenderResult(render, user.Username) + " (Issue events)"
 					if checkSilent(user) {
 						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
 					} else {

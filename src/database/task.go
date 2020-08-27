@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xredis"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
-	"github.com/Aoi-hosizora/ahlib/xstring"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/gomodule/redigo/redis"
-	"sort"
 	"strings"
 	"time"
 )
@@ -28,13 +26,13 @@ func parseActivityPattern(key string) (chatId int64, id, t, repo string) {
 	return
 }
 
-func getIssuePattern(chatId, id, event, repo, ct, num, date string) string {
+func getIssuePattern(chatId, id, event, repo, ct, num string) string {
 	event = strings.ReplaceAll(event, "-", MagicToken)
 	repo = strings.ReplaceAll(repo, "-", MagicToken)
-	return fmt.Sprintf("gh-issue-ev-%s-%s-%s-%s-%s-%s-%s", chatId, id, event, repo, ct, num, date)
+	return fmt.Sprintf("gh-issue-ev-%s-%s-%s-%s-%s-%s", chatId, id, event, repo, ct, num)
 }
 
-func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct time.Time, num int32, date string) {
+func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct time.Time, num int32) {
 	sp := strings.Split(key, "-")
 	chatId, _ = xnumber.ParseInt64(sp[3], 10)
 	id, _ = xnumber.ParseInt64(sp[4], 10)
@@ -43,7 +41,6 @@ func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct tim
 	ctn, _ := xnumber.ParseInt64(sp[7], 10)
 	ct = time.Unix(ctn, 0)
 	num, _ = xnumber.ParseInt32(sp[8], 10)
-	date = sp[9]
 	return
 }
 
@@ -79,8 +76,9 @@ func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 		return false
 	}
 	defer conn.Close()
+	chatIdStr := xnumber.I64toa(chatId)
 
-	pattern := getActivityPattern(xnumber.I64toa(chatId), "*", "*", "*")
+	pattern := getActivityPattern(chatIdStr, "*", "*", "*")
 	tot, del, err := xredis.WithConn(conn).DeleteAll(pattern)
 	if err != nil || (tot != 0 && del == 0) {
 		return false
@@ -89,10 +87,9 @@ func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 	keys := make([]string, 0)
 	values := make([]string, 0)
 	for _, ev := range evs {
-		id := xnumber.I64toa(chatId)
-		pattern := getActivityPattern(id, ev.Id, ev.Type, ev.Repo.Name)
+		pattern := getActivityPattern(chatIdStr, ev.Id, ev.Type, ev.Repo.Name)
 		keys = append(keys, pattern)
-		values = append(values, id)
+		values = append(values, chatIdStr)
 	}
 
 	tot, add, err := xredis.WithConn(conn).SetAll(keys, values)
@@ -106,20 +103,15 @@ func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
 	}
 	defer conn.Close()
 
-	pattern := getIssuePattern(xnumber.I64toa(chatId), "*", "*", "*", "*", "*", "*")
+	pattern := getIssuePattern(xnumber.I64toa(chatId), "*", "*", "*", "*", "*")
 	keys, err := redis.Strings(conn.Do("KEYS", pattern))
 	if err != nil {
 		return nil, false
 	}
 
-	idMap := make(map[int64]bool)
 	evs := make([]*model.IssueEvent, 0)
 	for _, key := range keys {
-		_, id, event, repo, ct, num, _ := parseIssuePattern(key)
-		if _, ok := idMap[id]; ok {
-			continue
-		}
-		idMap[id] = true
+		_, id, event, repo, ct, num := parseIssuePattern(key)
 		evs = append(evs, &model.IssueEvent{Id: id, Event: event, Repo: repo, CreatedAt: ct, Number: num})
 	}
 	return evs, true
@@ -131,44 +123,19 @@ func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
 		return false
 	}
 	defer conn.Close()
-
-	// find history keys first
 	chatIdStr := xnumber.I64toa(chatId)
-	pattern := getIssuePattern(chatIdStr, "*", "*", "*", "*", "*", "*")
-	keys, err := redis.Strings(conn.Do("KEYS", pattern))
-	if err != nil {
+
+	pattern := getIssuePattern(chatIdStr, "*", "*", "*", "*", "*")
+	tot, del, err := xredis.WithConn(conn).DeleteAll(pattern)
+	if err != nil || (tot != 0 && del == 0) {
 		return false
 	}
 
-	// export all history date token
-	dateTokMap := make(map[string]bool)
-	for _, key := range keys {
-		_, _, _, _, _, _, dateTok := parseIssuePattern(key)
-		dateTokMap[dateTok] = true
-	}
-	dateToks := make([]string, 0)
-	for dateTok := range dateTokMap {
-		dateToks = append(dateToks, dateTok)
-	}
-	sort.Strings(dateToks)
-
-	// if there are more than 2 dates, remove to the last date
-	if len(dateToks) > 1 {
-		for _, dateTok := range dateToks[:len(dateToks)-1] {
-			pattern := getIssuePattern(chatIdStr, "*", "*", "*", "*", "*", dateTok)
-			tot, del, err := xredis.WithConn(conn).DeleteAll(pattern)
-			if err != nil || (tot != 0 && del == 0) {
-				return false
-			}
-		}
-	}
-
 	// set to redis, and check if duplicate in last history
-	keys = make([]string, 0)
+	keys := make([]string, 0)
 	values := make([]string, 0)
-	nowTok := xstring.CurrentTimeUuid(22)
 	for _, ev := range evs {
-		pattern := getIssuePattern(chatIdStr, xnumber.I64toa(ev.Id), ev.Event, ev.Repo, xnumber.I64toa(ev.CreatedAt.Unix()), xnumber.I32toa(ev.Number), nowTok)
+		pattern := getIssuePattern(chatIdStr, xnumber.I64toa(ev.Id), ev.Event, ev.Repo, xnumber.I64toa(ev.CreatedAt.Unix()), xnumber.I32toa(ev.Number))
 		keys = append(keys, pattern)
 		values = append(values, chatIdStr)
 	}

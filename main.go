@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/src/bot"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
@@ -44,7 +43,6 @@ func run() {
 		log.Fatalln("Failed to connect redis:", err)
 	}
 
-	fmt.Println()
 	err = bot.Setup()
 	if err != nil {
 		log.Fatalln("Failed to load telebot:", err)
