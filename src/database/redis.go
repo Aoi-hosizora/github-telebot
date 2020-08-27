@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	rpool *redis.Pool
+	Rpool *redis.Pool
 )
 
 func SetupRedis() error {
 	cfg := config.Configs.Redis
-	pool := &redis.Pool{
+	Rpool = &redis.Pool{
 		MaxIdle:         int(cfg.MaxIdle),
 		MaxActive:       int(cfg.MaxActive),
 		MaxConnLifetime: time.Duration(cfg.MaxLifetime) * time.Second,
@@ -39,7 +39,7 @@ func SetupRedis() error {
 		},
 	}
 
-	conn := pool.Get()
+	conn := Rpool.Get()
 	defer conn.Close()
 	err := conn.Err()
 	if err != nil {
