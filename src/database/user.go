@@ -27,7 +27,7 @@ func AddUser(user *model.User) xstatus.DbStatus {
 }
 
 func UpdateUser(user *model.User) xstatus.DbStatus {
-	m := map[string]interface{}{
+	s, _ := xgorm.WithDB(DB).Update(&model.User{}, &model.User{ChatID: user.ChatID}, map[string]interface{}{
 		"username":     user.Username,
 		"token":        user.Token,
 		"allow_issue":  user.AllowIssue,
@@ -35,8 +35,7 @@ func UpdateUser(user *model.User) xstatus.DbStatus {
 		"silent_start": user.SilentStart,
 		"silent_end":   user.SilentEnd,
 		"time_zone":    user.TimeZone,
-	}
-	s, _ := xgorm.WithDB(DB).Update(&model.User{}, &model.User{ChatID: user.ChatID}, m)
+	})
 	return s
 }
 

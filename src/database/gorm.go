@@ -8,6 +8,7 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
+	"time"
 )
 
 var DB *gorm.DB
@@ -27,6 +28,10 @@ func SetupGorm() error {
 		return "tbl_" + name
 	}
 	xgorm.HookDeleteAtField(db, xgorm.DefaultDeleteAtTimeStamp)
+
+	db.DB().SetMaxIdleConns(int(cfg.MaxIdle))
+	db.DB().SetMaxOpenConns(int(cfg.MaxActive))
+	db.DB().SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second)
 
 	err = migrate(db)
 	if err != nil {

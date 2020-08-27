@@ -3,13 +3,13 @@ package controller
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xstatus"
+	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
-	"strconv"
 )
 
 // /allowissue
@@ -76,7 +76,7 @@ func ActivityNCtrl(m *telebot.Message) {
 
 // /activityn -> x
 func fromActivityNCtrl(m *telebot.Message) {
-	page, err := strconv.Atoi(m.Text)
+	page, err := xnumber.Atoi(m.Text)
 	if err != nil {
 		_ = server.Bot.Reply(m, NUM_REQUIRED)
 		return
@@ -118,7 +118,7 @@ func IssueNCtrl(m *telebot.Message) {
 
 // /issuen -> x
 func fromIssueNCtrl(m *telebot.Message) {
-	page, err := strconv.Atoi(m.Text)
+	page, err := xnumber.Atoi(m.Text)
 	if err != nil {
 		_ = server.Bot.Reply(m, NUM_REQUIRED)
 		return
