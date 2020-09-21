@@ -154,6 +154,8 @@ func RenderIssue(obj *model.IssueEvent) string {
 		message = fmt.Sprintf("%s added %s to a project", userMd, issueMd)
 	case "removed_from_project":
 		message = fmt.Sprintf("%s removed %s from a project", userMd, issueMd)
+	case "moved_columns_in_project":
+		message = fmt.Sprintf("%s moved %s to column in a project", userMd, issueMd)
 
 	case "cross-referenced":
 		mdShow := fmt.Sprintf("%s/%s#%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
