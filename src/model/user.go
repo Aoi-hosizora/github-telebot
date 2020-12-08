@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/Aoi-hosizora/ahlib-web/xgorm"
+	"github.com/Aoi-hosizora/ahlib-db/xgorm"
 	"time"
 )
 
@@ -17,5 +17,5 @@ type User struct {
 	TimeZone    string `gorm:"non_null;default:'+00:00'"`
 
 	DeletedAt *time.Time `gorm:"default:'1970-01-01 00:00:00';unique_index:uk_chat_delete_at"`
-	xgorm.GormTimeWithoutDeletedAt
+	xgorm.GormTimeWithoutDeleteAt
 }

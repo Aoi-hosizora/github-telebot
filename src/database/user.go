@@ -1,8 +1,8 @@
 package database
 
 import (
-	"github.com/Aoi-hosizora/ahlib-web/xgorm"
-	"github.com/Aoi-hosizora/ahlib-web/xstatus"
+	"github.com/Aoi-hosizora/ahlib-db/xgorm"
+	"github.com/Aoi-hosizora/ahlib/xstatus"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 )
 
@@ -22,12 +22,13 @@ func GetUser(chatId int64) *model.User {
 }
 
 func AddUser(user *model.User) xstatus.DbStatus {
-	s, _ := xgorm.WithDB(DB).Create(&model.User{}, user)
+	rdb := DB.Model(&model.User{}).Create(user)
+	s, _ := xgorm.CreateErr(rdb)
 	return s
 }
 
 func UpdateUser(user *model.User) xstatus.DbStatus {
-	s, _ := xgorm.WithDB(DB).Update(&model.User{}, &model.User{ChatID: user.ChatID}, map[string]interface{}{
+	rdb := DB.Model(&model.User{}).Where(&model.User{ChatID: user.ChatID}).Updates(map[string]interface{}{
 		"username":     user.Username,
 		"token":        user.Token,
 		"allow_issue":  user.AllowIssue,
@@ -36,10 +37,12 @@ func UpdateUser(user *model.User) xstatus.DbStatus {
 		"silent_end":   user.SilentEnd,
 		"time_zone":    user.TimeZone,
 	})
+	s, _ := xgorm.UpdateErr(rdb)
 	return s
 }
 
 func DeleteUser(chatId int64) xstatus.DbStatus {
-	s, _ := xgorm.WithDB(DB).Delete(&model.User{}, nil, &model.User{ChatID: chatId})
+	rdb := DB.Model(&model.User{}).Where(&model.User{ChatID: chatId}).Delete(&model.User{})
+	s, _ := xgorm.DeleteErr(rdb)
 	return s
 }

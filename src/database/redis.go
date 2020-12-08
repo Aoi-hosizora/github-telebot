@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ahlib-web/xredis"
+	"github.com/Aoi-hosizora/ahlib-db/xredis"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"github.com/gomodule/redigo/redis"
@@ -33,7 +33,7 @@ func SetupRedis() error {
 				return nil, err
 			}
 
-			conn = xredis.NewLogrusLogger(conn, logger.Logger, config.Configs.Meta.RunMode == "debug").WithSkip(4)
+			conn = xredis.NewLogrusRedis(conn, logger.Logger, config.Configs.Meta.RunMode == "debug").WithSkip(4)
 			conn = xredis.NewMutexRedis(conn)
 			return conn, nil
 		},

@@ -96,9 +96,9 @@ func activityTask() {
 				if render != "" {
 					flag := service.RenderResult(render, user.Username) + " (Activity events)"
 					if checkSilent(user) {
-						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
 					} else {
-						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
 					}
 				}
 			}
@@ -155,9 +155,9 @@ func issueTask() {
 				if render != "" {
 					flag := service.RenderResult(render, user.Username) + " (Issue events)"
 					if checkSilent(user) {
-						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
 					} else {
-						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+						_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
 					}
 				}
 			}

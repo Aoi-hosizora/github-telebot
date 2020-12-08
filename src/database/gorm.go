@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ahlib-web/xgorm"
+	"github.com/Aoi-hosizora/ahlib-db/xgorm"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
@@ -23,11 +23,11 @@ func SetupGorm() error {
 
 	db.LogMode(config.Configs.Meta.RunMode == "debug")
 	db.SingularTable(true)
-	db.SetLogger(xgorm.NewGormLogrus(logger.Logger))
+	db.SetLogger(xgorm.NewLogrusLogger(logger.Logger))
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, name string) string {
 		return "tbl_" + name
 	}
-	xgorm.HookDeleteAtField(db, xgorm.DefaultDeleteAtTimeStamp)
+	xgorm.HookDeleteAtField(db, xgorm.DefaultDeleteAtTimestamp)
 
 	db.DB().SetMaxIdleConns(int(cfg.MaxIdle))
 	db.DB().SetMaxOpenConns(int(cfg.MaxActive))

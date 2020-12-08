@@ -22,6 +22,7 @@ func Setup() error {
 
 	Logger.SetLevel(logLevel)
 	Logger.SetReportCaller(false)
+	Logger.SetFormatter(&xlogrus.CustomFormatter{TimestampFormat: time.RFC3339})
 	Logger.AddHook(xlogrus.NewRotateLogHook(&xlogrus.RotateLogConfig{
 		MaxAge:       15 * 24 * time.Hour,
 		RotationTime: 24 * time.Hour,
@@ -30,9 +31,6 @@ func Setup() error {
 		Level:        logLevel,
 		Formatter:    &logrus.JSONFormatter{TimestampFormat: time.RFC3339},
 	}))
-	Logger.SetFormatter(&xlogrus.CustomFormatter{
-		ForceColor: true,
-	})
 
 	Telebot = xtelebot.NewTelebotLogrus(Logger, true)
 

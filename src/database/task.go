@@ -2,7 +2,7 @@ package database
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ahlib-web/xredis"
+	"github.com/Aoi-hosizora/ahlib-db/xredis"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/gomodule/redigo/redis"

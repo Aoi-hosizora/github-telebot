@@ -2,8 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ahlib-web/xstatus"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
+	"github.com/Aoi-hosizora/ahlib/xstatus"
 	"github.com/Aoi-hosizora/ahlib/xzone"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
