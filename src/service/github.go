@@ -49,13 +49,13 @@ func GetIssueEvents(username string, token string, page int) ([]byte, error) {
 
 func RenderActivities(objs []*model.ActivityEvent) string {
 	if len(objs) == 1 {
-		return RenderActivity(objs[0])
+		return RenderActivity(objs[0]) // <<<<<<
 	}
 
 	result := ""
 	for idx, obj := range objs {
-		if r := RenderActivity(obj); r != "" {
-			result += fmt.Sprintf("%d. %s\n", idx+1, r)
+		if r := RenderActivity(obj); r != "" { // <<<<<<
+			result += fmt.Sprintf("%d\\. %s\n", idx+1, r) // <<<<<<
 		}
 	}
 
@@ -67,13 +67,13 @@ func RenderActivities(objs []*model.ActivityEvent) string {
 
 func RenderIssues(objs []*model.IssueEvent) string {
 	if len(objs) == 1 {
-		return RenderIssue(objs[0])
+		return RenderIssue(objs[0]) // <<<<<<
 	}
 
 	result := ""
 	for idx, obj := range objs {
-		if r := RenderIssue(obj); r != "" {
-			result += fmt.Sprintf("%d. %s\n", idx+1, r)
+		if r := RenderIssue(obj); r != "" { // <<<<<<
+			result += fmt.Sprintf("%d\\. %s\n", idx+1, r) // <<<<<<
 		}
 	}
 

@@ -27,7 +27,7 @@ func SetupGorm() error {
 	gorm.DefaultTableNameHandler = func(db *gorm.DB, name string) string {
 		return "tbl_" + name
 	}
-	xgorm.HookDeleteAtField(db, xgorm.DefaultDeleteAtTimestamp)
+	xgorm.HookDeleteAtField(db, "1970-01-01 00:00:00") // <<<
 
 	db.DB().SetMaxIdleConns(int(cfg.MaxIdle))
 	db.DB().SetMaxOpenConns(int(cfg.MaxActive))

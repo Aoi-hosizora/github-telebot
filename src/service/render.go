@@ -2,22 +2,37 @@ package service
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ahlib/xcondition"
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"strings"
 )
 
 func RenderResult(list, username string) string {
-	username = fmt.Sprintf("From [%s](https://github.com/%s).", username, username)
-	return fmt.Sprintf("%s\n====\n%s", list, username)
+	res := fmt.Sprintf("From [%s](https://github.com/%s)\\.", Markdown(username), username)
+	return fmt.Sprintf("%s\n\\=\\=\\=\\=\n%s", list, res)
 }
 
 func Markdown(s string) string {
 	s = strings.ReplaceAll(s, `\`, `\\`)
-	s = strings.ReplaceAll(s, `_`, `\_`)
+	s = strings.ReplaceAll(s, `*`, `\*`)
+	s = strings.ReplaceAll(s, `[`, `\[`)
 	s = strings.ReplaceAll(s, "`", "\\`")
-	s = strings.ReplaceAll(s, "[", `\[`)
-	s = strings.ReplaceAll(s, "*", `\*`)
+
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	s = strings.ReplaceAll(s, `]`, `\]`)
+	s = strings.ReplaceAll(s, `~`, `\~`)
+	s = strings.ReplaceAll(s, `>`, `\>`)
+	s = strings.ReplaceAll(s, `#`, `\#`)
+	s = strings.ReplaceAll(s, `+`, `\+`)
+	s = strings.ReplaceAll(s, `-`, `\-`)
+	s = strings.ReplaceAll(s, `=`, `\=`)
+	s = strings.ReplaceAll(s, `|`, `\|`)
+	s = strings.ReplaceAll(s, `{`, `\{`)
+	s = strings.ReplaceAll(s, `}`, `\}`)
+	s = strings.ReplaceAll(s, `.`, `\.`)
+	s = strings.ReplaceAll(s, `!`, `\!`)
+
+	// [google\-test\_test\+test\=test\[test\]\!\(test\)\`test](www.google.co.jp)
+	// google-test_test+test=test[test]!(test)`test (http://www.google.co.jp/)
 	return s
 }
 
@@ -31,63 +46,58 @@ func RenderActivity(obj *model.ActivityEvent) string {
 	message := ""
 	switch obj.Type {
 	case "PushEvent":
-		cnt := xcondition.IfThenElse(pl.Size <= 1, "1 commit", fmt.Sprintf("%d commits", pl.Size)).(string)
+		cnt := IfThenElse(pl.Size <= 1, "1 commit", fmt.Sprintf("%d commits", pl.Size))
 		commitUrl := fmt.Sprintf("%s/commits/%s", repoUrl, pl.Commits[0].Sha)
 		detail := fmt.Sprintf("[%s](%s)", pl.Commits[0].Sha[0:7], commitUrl)
-		detail = xcondition.IfThenElse(pl.Size <= 1, detail, detail+"...").(string)
-		message = fmt.Sprintf("%s pushed %s (%s) to %s", userMd, cnt, detail, repoMd)
+		detail = IfThenElse(pl.Size <= 1, detail, detail+"\\.\\.\\.")
+		message = fmt.Sprintf("%s pushed %s \\(%s\\) to %s", userMd, cnt, detail, repoMd)
 	case "WatchEvent":
 		message = fmt.Sprintf("%s starred %s", userMd, repoMd)
 	case "CreateEvent":
 		switch pl.RefType {
 		case "branch":
 			branchUrl := fmt.Sprintf("%s/tree/%s", repoUrl, pl.Ref)
-			message = fmt.Sprintf("%s created branch [%s](%s) at %s", userMd, pl.Ref, branchUrl, repoMd)
+			message = fmt.Sprintf("%s created branch [%s](%s) at %s", userMd, Markdown(pl.Ref), branchUrl, repoMd)
 		case "tag":
 			tagUrl := fmt.Sprintf("%s/tree/%s", repoUrl, pl.Ref)
-			message = fmt.Sprintf("%s created tag [%s](%s) at %s", userMd, pl.Ref, tagUrl, repoMd)
+			message = fmt.Sprintf("%s created tag [%s](%s) at %s", userMd, Markdown(pl.Ref), tagUrl, repoMd)
 		case "repository":
-			message = fmt.Sprintf("%s created %s repository %s", userMd, xcondition.IfThenElse(obj.Public, "public", "private").(string), repoMd)
+			message = fmt.Sprintf("%s created %s repository %s", userMd, IfThenElse(obj.Public, "public", "private"), repoMd)
 		default:
-			message = fmt.Sprintf("%s created %s at %s", userMd, pl.RefType, repoMd)
+			message = fmt.Sprintf("%s created %s at %s", userMd, Markdown(pl.RefType), repoMd)
 		}
 	case "ForkEvent":
-		message = fmt.Sprintf("%s forked %s to [%s](%s)", userMd, repoMd, pl.Forkee.FullName, pl.Forkee.HtmlUrl)
+		message = fmt.Sprintf("%s forked %s to [%s](%s)", userMd, repoMd, Markdown(pl.Forkee.FullName), pl.Forkee.HtmlUrl)
 	case "DeleteEvent":
-		message = fmt.Sprintf("%s delete %s %s at %s", userMd, pl.RefType, pl.Ref, repoMd)
+		message = fmt.Sprintf("%s delete %s %s at %s", userMd, Markdown(pl.RefType), Markdown(pl.Ref), repoMd)
 	case "PublicEvent":
-		message = fmt.Sprintf("%s made %s %s", userMd, repoMd, xcondition.IfThenElse(obj.Public, "public", "private").(string))
+		message = fmt.Sprintf("%s made %s %s", userMd, repoMd, IfThenElse(obj.Public, "public", "private"))
 
 	case "IssuesEvent":
-		message = fmt.Sprintf("%s %s issue [#%d](%s) in %s",
-			userMd, pl.Action, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s issue [\\#%d](%s) in %s", userMd, pl.Action, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
 	case "IssueCommentEvent":
-		message = fmt.Sprintf("%s %s comment [%d](%s) on issue [#%d](%s) in %s",
-			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s comment [%d](%s) on issue [\\#%d](%s) in %s", userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
 
 	case "PullRequestEvent":
-		message = fmt.Sprintf("%s %s pull request [#%d](%s) at %s",
-			userMd, pl.Action, pl.Number, pl.PullRequest.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s pull request [\\#%d](%s) at %s", userMd, pl.Action, pl.Number, pl.PullRequest.HtmlUrl, repoMd)
 	case "PullRequestReviewEvent":
-		message = fmt.Sprintf("%s %s pull a request review in pull request [#%d](%s) at %s",
-			userMd, pl.Action, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s pull a request review in pull request [\\#%d](%s) at %s", userMd, pl.Action, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
 	case "PullRequestReviewCommentEvent":
-		message = fmt.Sprintf("%s %s pull request review comment [%d](%s) in pull request [#%d](%s) at %s",
-			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
+		message = fmt.Sprintf("%s %s pull request review comment [%d](%s) in pull request [\\#%d](%s) at %s", userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.PullRequest.Number, pl.PullRequest.HtmlUrl, repoMd)
 
 	case "CommitCommentEvent":
-		message = fmt.Sprintf("%s %s comment [%d](%s) at commit %s in %s",
-			userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Comment.CommitId[0:7], repoMd)
+		message = fmt.Sprintf("%s %s comment [%d](%s) at commit %s in %s", userMd, pl.Action, pl.Comment.Id, pl.Comment.HtmlUrl, pl.Comment.CommitId[0:7], repoMd)
 
 	case "MemberEvent":
 		message = fmt.Sprintf("%s %s member [%s](%s) to %s", userMd, pl.Action, Markdown(pl.Member.Login), pl.Member.HtmlUrl, repoMd)
 	case "ReleaseEvent":
 		message = fmt.Sprintf("%s release [%s](%s) at %s", userMd, Markdown(pl.Release.TagName), pl.Release.HtmlUrl, repoMd)
 	case "GollumEvent":
-		cnt := xcondition.IfThenElse(len(pl.Page) <= 1, "1 wiki page", fmt.Sprintf("%d wiki pages", len(pl.Page))).(string)
+		cnt := IfThenElse(len(pl.Page) <= 1, "1 wiki page", fmt.Sprintf("%d wiki pages", len(pl.Page)))
 		message = fmt.Sprintf("%s updated %s at %s", userMd, cnt, repoMd)
 	default:
-		message = fmt.Sprintf("%s: %s %s", strings.TrimRight(obj.Type, "Event"), userMd, repoMd)
+		event := strings.TrimRight(obj.Type, "Event")
+		message = fmt.Sprintf("%s: %s %s", Markdown(event), userMd, repoMd)
 	}
 
 	if !obj.Public {
@@ -101,7 +111,7 @@ func RenderIssue(obj *model.IssueEvent) string {
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo)
 	issueUrl := fmt.Sprintf("https://github.com/%s/issues/%d", obj.Repo, obj.Number)
 	userMd := fmt.Sprintf("[%s](%s)", Markdown(obj.Actor.Login), userUrl)
-	issueMd := fmt.Sprintf("[%s#%d](%s)", Markdown(obj.Repo), obj.Number, issueUrl)
+	issueMd := fmt.Sprintf("[%s\\#%d](%s)", Markdown(obj.Repo), obj.Number, issueUrl)
 
 	message := ""
 	switch obj.Event {
@@ -114,7 +124,7 @@ func RenderIssue(obj *model.IssueEvent) string {
 	case "reopened":
 		message = fmt.Sprintf("%s reopened %s", userMd, issueMd)
 	case "renamed":
-		message = fmt.Sprintf("%s renamed %s to `%s`", userMd, issueMd, obj.Rename.To)
+		message = fmt.Sprintf("%s renamed %s to `%s`", userMd, issueMd, Markdown(obj.Rename.To))
 
 	case "labeled":
 		labelUrl := fmt.Sprintf("%s/labels/%s", repoUrl, obj.Label.Name)
@@ -156,7 +166,7 @@ func RenderIssue(obj *model.IssueEvent) string {
 	case "removed_from_project":
 		message = fmt.Sprintf("%s removed %s from a project", userMd, issueMd)
 	case "moved_columns_in_project":
-		message = fmt.Sprintf("%s moved %s to column in a project", userMd, issueMd)
+		message = fmt.Sprintf("%s repository %s was moved to column in a project", userMd, issueMd)
 
 	case "cross-referenced":
 		mdShow := fmt.Sprintf("%s/%s#%d", obj.Source.Issue.Repository.Owner.Login, obj.Source.Issue.Repository.Name, obj.Source.Issue.Number)
@@ -177,9 +187,15 @@ func RenderIssue(obj *model.IssueEvent) string {
 			message = ""
 		}
 	default:
-		event := strings.ReplaceAll(obj.Event, "_", "\\_")
-		message = fmt.Sprintf("%s: %s %s", strings.Title(event), userMd, issueMd)
+		message = fmt.Sprintf("%s: %s %s", Markdown(obj.Event), userMd, issueMd)
 	}
 
 	return message
+}
+
+func IfThenElse(cond bool, s1, s2 string) string {
+	if cond {
+		return s1
+	}
+	return s2
 }

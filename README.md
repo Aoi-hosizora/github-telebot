@@ -1,7 +1,6 @@
 # github-telebot
 
-+ A github telegram bot built by [tucnak/telebot.v2](https://github.com/tucnak/telebot/tree/v2)
-+ Bot see [t.me/aoihosiozra_github_events_bot](https://t.me/aoihosiozra_github_events_bot)
++ A github telegram bot built by [tucnak/telebot.v2](https://github.com/tucnak/telebot/tree/v2).
 
 ### Function
 

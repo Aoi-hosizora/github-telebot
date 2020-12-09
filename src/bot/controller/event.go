@@ -10,6 +10,7 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/model"
 	"github.com/Aoi-hosizora/github-telebot/src/service"
 	"gopkg.in/tucnak/telebot.v2"
+	"strings"
 )
 
 // /allowissue
@@ -85,6 +86,7 @@ func fromActivityNCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
+	v2 := false
 	user := database.GetUser(m.Chat.ID)
 	if user == nil {
 		flag = BIND_NOT_YET
@@ -94,14 +96,24 @@ func fromActivityNCtrl(m *telebot.Message) {
 		} else if events, err := model.UnmarshalActivityEvents(resp); err != nil {
 			flag = GITHUB_FAILED
 		} else if render := service.RenderActivities(events); render == "" {
-			render = GITHUB_EMPTY
+			flag = GITHUB_EMPTY
 		} else {
-			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" (page %d)", page)
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<<<<
+			v2 = true
 		}
 	}
 
 	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
-	_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+	if !v2 {
+		_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+	} else {
+		err := server.Bot.Reply(m, flag, telebot.ModeMarkdownV2)
+		if err != nil && strings.Contains(err.Error(), "must be escaped") {
+			flag = strings.ReplaceAll(flag, "\\", "")
+			flag += "\n\nPlease contact with the developer with the message:\n" + err.Error()
+			_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+		}
+	}
 }
 
 // /issue
@@ -126,6 +138,7 @@ func fromIssueNCtrl(m *telebot.Message) {
 		page = 1
 	}
 
+	v2 := false
 	flag := ""
 	user := database.GetUser(m.Chat.ID)
 	if user == nil {
@@ -138,12 +151,22 @@ func fromIssueNCtrl(m *telebot.Message) {
 		} else if events, err := model.UnmarshalIssueEvents(resp); err != nil {
 			flag = GITHUB_FAILED
 		} else if render := service.RenderIssues(events); render == "" {
-			render = GITHUB_EMPTY
+			flag = GITHUB_EMPTY
 		} else {
-			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" (page %d)", page)
+			v2 = true
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<<<<
 		}
 	}
 
 	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
-	_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+	if !v2 {
+		_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+	} else {
+		err := server.Bot.Reply(m, flag, telebot.ModeMarkdownV2)
+		if err != nil && strings.Contains(err.Error(), "must be escaped") {
+			flag = strings.ReplaceAll(flag, "\\", "")
+			flag += "\n\nPlease contact with the developer with the message:\n" + err.Error()
+			_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+		}
+	}
 }

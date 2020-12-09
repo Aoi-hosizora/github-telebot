@@ -39,6 +39,9 @@ func initHandler(b *server.BotServer) {
 	b.HandleMessage("/help", controller.HelpCtrl)
 	b.HandleMessage("/cancel", controller.CancelCtrl)
 	b.HandleMessage(telebot.OnText, controller.OnTextCtrl)
+	// b.HandleMessage("/aaa", func(m *telebot.Message) {
+	// 	_ = server.Bot.Reply(m, m.Text, telebot.ModeMarkdownV2)
+	// })
 
 	// user
 	b.InlineButtons["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
@@ -61,7 +64,7 @@ func initHandler(b *server.BotServer) {
 }
 
 func SendToChat(chatId int64, what interface{}, options ...interface{}) error {
-	chat, err := server.Bot.Bot.ChatByID(xnumber.FormatInt64(chatId, 10))
+	chat, err := server.Bot.Bot.ChatByID(xnumber.I64toa(chatId))
 	if err != nil {
 		return err
 	}

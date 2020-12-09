@@ -33,7 +33,7 @@ func SetupRedis() error {
 				return nil, err
 			}
 
-			conn = xredis.NewLogrusRedis(conn, logger.Logger, config.Configs.Meta.RunMode == "debug").WithSkip(4)
+			conn = xredis.NewLogrusRedis(conn, logger.Logger, false).WithSkip(4)
 			conn = xredis.NewMutexRedis(conn)
 			return conn, nil
 		},
