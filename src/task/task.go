@@ -97,9 +97,9 @@ func activityTask() {
 
 			// render and send
 			if len(diff) != 0 {
-				render := service.RenderActivities(diff) // <<<<<<
+				render := service.RenderActivities(diff) // <<<
 				if render != "" {
-					flag := service.RenderResult(render, user.Username) + " \\(Activity events\\)" // <<<<<<
+					flag := service.RenderResult(render, user.Username) + " \\(Activity events\\)" // <<<
 					var sendErr error
 					if checkSilent(user) {
 						sendErr = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
@@ -169,9 +169,9 @@ func issueTask() {
 
 			// render and send
 			if len(diff) != 0 {
-				render := service.RenderIssues(diff) // <<<<<<
+				render := service.RenderIssues(diff) // <<<
 				if render != "" {
-					flag := service.RenderResult(render, user.Username) + " \\(Issue events\\)" // <<<<<<
+					flag := service.RenderResult(render, user.Username) + " \\(Issue events\\)" // <<<
 					var sendErr error
 					if checkSilent(user) {
 						sendErr = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)

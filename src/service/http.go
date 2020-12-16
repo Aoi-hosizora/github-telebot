@@ -9,7 +9,6 @@ const (
 	UserApi          string = "https://api.github.com/users/%s"
 	ActivityEventApi string = "https://api.github.com/users/%s/received_events"
 	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline"
-	// IssueEventApi    string = "http://localhost:10014/github/users/%s/issues/timeline"
 )
 
 func HttpGet(url string, header *http.Header) (int, []byte, error) {

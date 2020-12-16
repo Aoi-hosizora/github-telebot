@@ -10,7 +10,7 @@ import (
 var Bot *BotServer
 
 type BotServer struct {
-	Bot           *telebot.Bot
+	bot           *telebot.Bot
 	UsersData     *xtelebot.UsersData
 	InlineButtons map[string]*telebot.InlineButton
 	ReplyButtons  map[string]*telebot.ReplyButton
@@ -18,7 +18,7 @@ type BotServer struct {
 
 func NewBotServer(bot *telebot.Bot) *BotServer {
 	return &BotServer{
-		Bot:           bot,
+		bot:           bot,
 		UsersData:     xtelebot.NewUsersData(fsm.None),
 		InlineButtons: make(map[string]*telebot.InlineButton),
 		ReplyButtons:  make(map[string]*telebot.ReplyButton),
@@ -26,36 +26,40 @@ func NewBotServer(bot *telebot.Bot) *BotServer {
 }
 
 func (b *BotServer) Start() {
-	b.Bot.Start()
+	b.bot.Start()
 }
 
 func (b *BotServer) Stop() {
-	b.Bot.Stop()
+	b.bot.Stop()
 }
 
 func (b *BotServer) Delete(msg telebot.Editable) error {
-	return b.Bot.Delete(msg)
+	return b.bot.Delete(msg)
 }
 
-// Handle text endpoint with Message handler.
+func (b *BotServer) ChatByID(id string) (*telebot.Chat, error) {
+	return b.bot.ChatByID(id)
+}
+
+// Handle string endpoint with telebot.Message handler.
 func (b *BotServer) HandleMessage(endpoint string, handler func(*telebot.Message)) {
-	b.Bot.Handle(endpoint, func(m *telebot.Message) {
+	b.bot.Handle(endpoint, func(m *telebot.Message) {
 		logger.Telebot.Receive(endpoint, m)
 		handler(m)
 	})
 }
 
-// Handle inline button endpoint with callback handler.
+// Handle telebot.InlineButton endpoint with telebot.Callback handler.
 func (b *BotServer) HandleInline(endpoint *telebot.InlineButton, handler func(*telebot.Callback)) {
-	b.Bot.Handle(endpoint, func(c *telebot.Callback) {
+	b.bot.Handle(endpoint, func(c *telebot.Callback) {
 		logger.Telebot.Receive(endpoint, c)
 		handler(c)
 	})
 }
 
-// Handle reply button endpoint with callback handler.
+// Handle telebot.ReplyButton endpoint with telebot.Message handler.
 func (b *BotServer) HandleReply(endpoint *telebot.ReplyButton, handler func(*telebot.Message)) {
-	b.Bot.Handle(endpoint, func(m *telebot.Message) {
+	b.bot.Handle(endpoint, func(m *telebot.Message) {
 		logger.Telebot.Receive(endpoint, m)
 		handler(m)
 	})
@@ -63,10 +67,10 @@ func (b *BotServer) HandleReply(endpoint *telebot.ReplyButton, handler func(*tel
 
 // Reply content to a specific message.
 func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
-	msg, err := b.Bot.Send(m.Chat, what, options...)
+	msg, err := b.bot.Send(m.Chat, what, options...)
 	logger.Telebot.Reply(m, msg, err)
 	if err != nil {
-		msg, err := b.Bot.Send(m.Chat, "Something went wrong, Please retry.")
+		msg, err := b.bot.Send(m.Chat, "Something went wrong, Please retry.")
 		logger.Telebot.Reply(m, msg, err)
 	}
 	return err
@@ -74,7 +78,7 @@ func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...inter
 
 // Send content to a specific chat (ByID).
 func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
-	msg, err := b.Bot.Send(c, what, options...)
+	msg, err := b.bot.Send(c, what, options...)
 	logger.Telebot.Send(c, msg, err)
 	return err
 }

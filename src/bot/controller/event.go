@@ -25,8 +25,7 @@ func AllowIssueCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	user.AllowIssue = true
-	status := database.UpdateUser(user)
+	status := database.UpdateUserAllowIssue(user.ChatID, true)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -50,8 +49,7 @@ func DisallowIssueCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	user.AllowIssue = false
-	status := database.UpdateUser(user)
+	status := database.UpdateUserAllowIssue(user.ChatID, false)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -98,7 +96,7 @@ func fromActivityNCtrl(m *telebot.Message) {
 		} else if render := service.RenderActivities(events); render == "" {
 			flag = GITHUB_EMPTY
 		} else {
-			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<<<<
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
 			v2 = true
 		}
 	}
@@ -154,7 +152,7 @@ func fromIssueNCtrl(m *telebot.Message) {
 			flag = GITHUB_EMPTY
 		} else {
 			v2 = true
-			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<<<<
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
 		}
 	}
 

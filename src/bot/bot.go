@@ -7,7 +7,6 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"gopkg.in/tucnak/telebot.v2"
-	"log"
 	"time"
 )
 
@@ -24,7 +23,7 @@ func Setup() error {
 	}
 
 	fmt.Println()
-	log.Println("[Telebot] Success to connect telegram bot:", b.Me.Username)
+	fmt.Println("[Telebot] Success to connect telegram bot:", b.Me.Username)
 	fmt.Println()
 
 	server.Bot = server.NewBotServer(b)
@@ -39,9 +38,6 @@ func initHandler(b *server.BotServer) {
 	b.HandleMessage("/help", controller.HelpCtrl)
 	b.HandleMessage("/cancel", controller.CancelCtrl)
 	b.HandleMessage(telebot.OnText, controller.OnTextCtrl)
-	// b.HandleMessage("/aaa", func(m *telebot.Message) {
-	// 	_ = server.Bot.Reply(m, m.Text, telebot.ModeMarkdownV2)
-	// })
 
 	// user
 	b.InlineButtons["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
@@ -64,7 +60,7 @@ func initHandler(b *server.BotServer) {
 }
 
 func SendToChat(chatId int64, what interface{}, options ...interface{}) error {
-	chat, err := server.Bot.Bot.ChatByID(xnumber.I64toa(chatId))
+	chat, err := server.Bot.ChatByID(xnumber.I64toa(chatId))
 	if err != nil {
 		return err
 	}

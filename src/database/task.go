@@ -45,7 +45,7 @@ func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct tim
 }
 
 func GetOldActivities(chatId int64) ([]*model.ActivityEvent, bool) {
-	conn, err := Rpool.Dial()
+	conn, err := Redis.Dial()
 	if err != nil {
 		return nil, false
 	}
@@ -71,7 +71,7 @@ func GetOldActivities(chatId int64) ([]*model.ActivityEvent, bool) {
 }
 
 func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
-	conn, err := Rpool.Dial()
+	conn, err := Redis.Dial()
 	if err != nil {
 		return false
 	}
@@ -97,7 +97,7 @@ func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 }
 
 func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
-	conn, err := Rpool.Dial()
+	conn, err := Redis.Dial()
 	if err != nil {
 		return nil, false
 	}
@@ -118,7 +118,7 @@ func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
 }
 
 func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
-	conn, err := Rpool.Dial()
+	conn, err := Redis.Dial()
 	if err != nil {
 		return false
 	}

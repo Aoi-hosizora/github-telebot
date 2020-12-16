@@ -27,15 +27,20 @@ func AddUser(user *model.User) xstatus.DbStatus {
 	return s
 }
 
-func UpdateUser(user *model.User) xstatus.DbStatus {
-	rdb := DB.Model(&model.User{}).Where(&model.User{ChatID: user.ChatID}).Updates(map[string]interface{}{
-		"username":     user.Username,
-		"token":        user.Token,
-		"allow_issue":  user.AllowIssue,
-		"silent":       user.Silent,
-		"silent_start": user.SilentStart,
-		"silent_end":   user.SilentEnd,
-		"time_zone":    user.TimeZone,
+func UpdateUserAllowIssue(chatID int64, allowIssue bool) xstatus.DbStatus {
+	rdb := DB.Model(&model.User{}).Where(&model.User{ChatID: chatID}).Updates(map[string]interface{}{
+		"allow_issue": allowIssue,
+	})
+	s, _ := xgorm.UpdateErr(rdb)
+	return s
+}
+
+func UpdateUserSilent(chatID int64, silent bool, silentStart, silentEnd int, timeZone string) xstatus.DbStatus {
+	rdb := DB.Model(&model.User{}).Where(&model.User{ChatID: chatID}).Updates(map[string]interface{}{
+		"silent":       silent,
+		"silent_start": silentStart,
+		"silent_end":   silentEnd,
+		"time_zone":    timeZone,
 	})
 	s, _ := xgorm.UpdateErr(rdb)
 	return s

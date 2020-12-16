@@ -47,7 +47,7 @@ func fromBindingCtrl(m *telebot.Message) {
 	} else if !ok {
 		flag = GITHUB_NOT_FOUND
 	} else {
-		status := database.AddUser(user)
+		status := database.AddUser(user) // id username token
 		if status == xstatus.DbExisted {
 			flag = BIND_ALREADY
 		} else if status == xstatus.DbFailed {
@@ -140,7 +140,6 @@ func fromSilentHourCtrl(m *telebot.Message) {
 		_ = server.Bot.Reply(m, SILENT_FORMAT_REQUIRED)
 		return
 	}
-
 	start, err1 := xnumber.ParseInt(sp[0], 10)
 	end, err2 := xnumber.ParseInt(sp[1], 10)
 	if (err1 != nil || start < 0 || start > 23) || (err2 != nil || end < 0 || end > 23) {
@@ -154,12 +153,7 @@ func fromSilentHourCtrl(m *telebot.Message) {
 		return
 	}
 
-	user.Silent = true
-	user.SilentStart = start
-	user.SilentEnd = end
-	user.TimeZone = zone
-	status := database.UpdateUser(user)
-
+	status := database.UpdateUserSilent(user.ChatID, true, start, end, zone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
@@ -193,11 +187,7 @@ func DisableSilentCtrl(m *telebot.Message) {
 		return
 	}
 
-	user.Silent = false
-	user.SilentStart = 0
-	user.SilentEnd = 0
-	status := database.UpdateUser(user)
-
+	status := database.UpdateUserSilent(user.ChatID, false, 0, 0, user.TimeZone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
