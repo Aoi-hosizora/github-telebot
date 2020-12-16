@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -26,7 +27,7 @@ func AllowIssueCtrl(m *telebot.Message) {
 
 	_ = server.Bot.Reply(m, ISSUE_ALLOW_Q, &telebot.ReplyMarkup{
 		InlineKeyboard: [][]telebot.InlineButton{
-			{*server.Bot.InlineButtons["btn_filter"]}, {*server.Bot.InlineButtons["btn_not_filter"]}, {*server.Bot.InlineButtons["btn_cancel"]},
+			{*button.InlineBtnFilter, *button.InlineBtnNotFilter}, {*button.InlineBtnCancel},
 		},
 	})
 }

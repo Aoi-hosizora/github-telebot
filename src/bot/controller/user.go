@@ -6,6 +6,7 @@ import (
 	"github.com/Aoi-hosizora/ahlib/xstatus"
 	"github.com/Aoi-hosizora/ahlib/xstring"
 	"github.com/Aoi-hosizora/ahlib/xzone"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -93,7 +94,7 @@ func UnbindCtrl(m *telebot.Message) {
 	flag := fmt.Sprintf(UNBIND_Q, user.Username)
 	_ = server.Bot.Reply(m, flag, &telebot.ReplyMarkup{
 		InlineKeyboard: [][]telebot.InlineButton{
-			{*server.Bot.InlineButtons["btn_unbind"]}, {*server.Bot.InlineButtons["btn_cancel"]},
+			{*button.InlineBtnUnbind}, {*button.InlineBtnCancel},
 		},
 	})
 }
