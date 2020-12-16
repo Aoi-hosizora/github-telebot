@@ -9,13 +9,11 @@ import (
 	"time"
 )
 
-var (
-	Rpool *redis.Pool
-)
+var Redis *redis.Pool
 
 func SetupRedis() error {
 	cfg := config.Configs.Redis
-	Rpool = &redis.Pool{
+	Redis = &redis.Pool{
 		MaxIdle:         int(cfg.MaxIdle),
 		MaxActive:       int(cfg.MaxActive),
 		MaxConnLifetime: time.Duration(cfg.MaxLifetime) * time.Second,
@@ -39,11 +37,14 @@ func SetupRedis() error {
 		},
 	}
 
-	conn := Rpool.Get()
-	defer conn.Close()
-	err := conn.Err()
-	if err != nil {
+	if conn, err := Redis.Dial(); err != nil {
 		return err
+	} else {
+		err = conn.Err()
+		if err != nil {
+			return err
+		}
+		conn.Close()
 	}
 
 	return nil

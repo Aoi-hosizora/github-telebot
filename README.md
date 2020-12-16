@@ -16,16 +16,16 @@
 /help - show help message
 /cancel - cancel the last action
 
-*Account*
+*Account related*
 /bind - bind with a new github account
 /unbind - unbind an old github account
 /me - show the bound user's information
 /enablesilent - enable client send
 /disablesilent - disable client send
 
-*Events*
+*Events related*
 /allowissue - allow bot to send issue
-/disallowissue - allow bot to send issue
+/disallowissue - disallow bot to send issue
 /activity - show the first page of activity events
 /activityn - show the nth page of activity events
 /issue - show the first page of issue events

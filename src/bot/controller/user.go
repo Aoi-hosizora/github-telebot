@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
+	"github.com/Aoi-hosizora/ahlib/xstring"
 	"github.com/Aoi-hosizora/ahlib/xzone"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -47,7 +49,7 @@ func fromBindingCtrl(m *telebot.Message) {
 	} else if !ok {
 		flag = GITHUB_NOT_FOUND
 	} else {
-		status := database.AddUser(user)
+		status := database.AddUser(user) // id username token
 		if status == xstatus.DbExisted {
 			flag = BIND_ALREADY
 		} else if status == xstatus.DbFailed {
@@ -73,7 +75,7 @@ func MeCtrl(m *telebot.Message) {
 		name := service.Markdown(user.Username)
 		n := fmt.Sprintf("[%s](https://github.com/%s)", name, user.Username)
 		if user.Token != "" {
-			flag = fmt.Sprintf(GITHUB_ME_TOKEN, n)
+			flag = fmt.Sprintf(GITHUB_ME_TOKEN, n, xstring.MaskToken(user.Token))
 		} else {
 			flag = fmt.Sprintf(GITHUB_ME, n)
 		}
@@ -92,22 +94,18 @@ func UnbindCtrl(m *telebot.Message) {
 	flag := fmt.Sprintf(UNBIND_Q, user.Username)
 	_ = server.Bot.Reply(m, flag, &telebot.ReplyMarkup{
 		InlineKeyboard: [][]telebot.InlineButton{
-			{*server.Bot.InlineButtons["btn_unbind"]}, {*server.Bot.InlineButtons["btn_cancel"]},
+			{*button.InlineBtnUnbind}, {*button.InlineBtnCancel},
 		},
 	})
 }
 
-// inl:btn_cancel
-func InlBtnCancelCtrl(c *telebot.Callback) {
-	_ = server.Bot.Delete(c.Message)
-	_ = server.Bot.Reply(c.Message, ACTION_CANCELED)
-}
-
 // inl:btn_unbind
 func InlBtnUnbindCtrl(c *telebot.Callback) {
-	_ = server.Bot.Delete(c.Message)
+	m := c.Message
+	_ = server.Bot.Delete(m)
+
 	flag := ""
-	status := database.DeleteUser(c.Message.Chat.ID)
+	status := database.DeleteUser(m.Chat.ID)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -116,7 +114,7 @@ func InlBtnUnbindCtrl(c *telebot.Callback) {
 		flag = UNBIND_SUCCESS
 	}
 
-	_ = server.Bot.Reply(c.Message, flag)
+	_ = server.Bot.Reply(m, flag)
 }
 
 // /enablesilent
@@ -140,7 +138,6 @@ func fromSilentHourCtrl(m *telebot.Message) {
 		_ = server.Bot.Reply(m, SILENT_FORMAT_REQUIRED)
 		return
 	}
-
 	start, err1 := xnumber.ParseInt(sp[0], 10)
 	end, err2 := xnumber.ParseInt(sp[1], 10)
 	if (err1 != nil || start < 0 || start > 23) || (err2 != nil || end < 0 || end > 23) {
@@ -154,12 +151,7 @@ func fromSilentHourCtrl(m *telebot.Message) {
 		return
 	}
 
-	user.Silent = true
-	user.SilentStart = start
-	user.SilentEnd = end
-	user.TimeZone = zone
-	status := database.UpdateUser(user)
-
+	status := database.UpdateUserSilent(user.ChatID, true, start, end, zone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
@@ -193,11 +185,7 @@ func DisableSilentCtrl(m *telebot.Message) {
 		return
 	}
 
-	user.Silent = false
-	user.SilentStart = 0
-	user.SilentEnd = 0
-	status := database.UpdateUser(user)
-
+	status := database.UpdateUserSilent(user.ChatID, false, 0, 0, user.TimeZone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
@@ -24,15 +25,58 @@ func AllowIssueCtrl(m *telebot.Message) {
 		return
 	}
 
+	_ = server.Bot.Reply(m, ISSUE_ALLOW_Q, &telebot.ReplyMarkup{
+		InlineKeyboard: [][]telebot.InlineButton{
+			{*button.InlineBtnFilter, *button.InlineBtnNotFilter}, {*button.InlineBtnCancel},
+		},
+	})
+}
+
+// inl:btn_filter
+func InlBtnFilterCtrl(c *telebot.Callback) {
+	m := c.Message
+	_ = server.Bot.Delete(m)
+
 	flag := ""
-	user.AllowIssue = true
-	status := database.UpdateUser(user)
-	if status == xstatus.DbNotFound {
+	user := database.GetUser(m.Chat.ID)
+	if user == nil {
 		flag = BIND_NOT_YET
-	} else if status == xstatus.DbFailed {
-		flag = ISSUE_ALLOW_FAILED
+	} else if user.Token == "" {
+		flag = ISSUE_ONLY_FOR_TOKEN
 	} else {
-		flag = ISSUE_ALLOW_SUCCESS
+		status := database.UpdateUserAllowIssue(user.ChatID, true, true)
+		if status == xstatus.DbNotFound {
+			flag = BIND_NOT_YET
+		} else if status == xstatus.DbFailed {
+			flag = ISSUE_ALLOW_FAILED
+		} else {
+			flag = ISSUE_ALLOW_FILTER_SUCCESS
+		}
+	}
+
+	_ = server.Bot.Reply(m, flag)
+}
+
+// inl:btn_not_filter
+func InlBtnNotFilterCtrl(c *telebot.Callback) {
+	m := c.Message
+	_ = server.Bot.Delete(m)
+
+	flag := ""
+	user := database.GetUser(m.Chat.ID)
+	if user == nil {
+		flag = BIND_NOT_YET
+	} else if user.Token == "" {
+		flag = ISSUE_ONLY_FOR_TOKEN
+	} else {
+		status := database.UpdateUserAllowIssue(user.ChatID, true, false)
+		if status == xstatus.DbNotFound {
+			flag = BIND_NOT_YET
+		} else if status == xstatus.DbFailed {
+			flag = ISSUE_ALLOW_FAILED
+		} else {
+			flag = ISSUE_ALLOW_NOT_FILTER_SUCCESS
+		}
 	}
 
 	_ = server.Bot.Reply(m, flag)
@@ -50,8 +94,7 @@ func DisallowIssueCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	user.AllowIssue = false
-	status := database.UpdateUser(user)
+	status := database.UpdateUserAllowIssue(user.ChatID, false, user.FilterMe)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -98,7 +141,7 @@ func fromActivityNCtrl(m *telebot.Message) {
 		} else if render := service.RenderActivities(events); render == "" {
 			flag = GITHUB_EMPTY
 		} else {
-			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<<<<
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
 			v2 = true
 		}
 	}
@@ -154,7 +197,7 @@ func fromIssueNCtrl(m *telebot.Message) {
 			flag = GITHUB_EMPTY
 		} else {
 			v2 = true
-			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<<<<
+			flag = service.RenderResult(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
 		}
 	}
 

@@ -11,6 +11,7 @@ type User struct {
 	Username    string `gorm:"type:varchar(255);not_null"`
 	Token       string `gorm:"type:varchar(255);not_null"`
 	AllowIssue  bool   `gorm:"type:tinyint;not_null;default:0"`
+	FilterMe    bool   `gorm:"type:tinyint;not_null;default:1"`
 	Silent      bool   `gorm:"type:tinyint;non_null;default:0"`
 	SilentStart int    `gorm:"non_null;default:0"`
 	SilentEnd   int    `gorm:"non_null;default:0"`
