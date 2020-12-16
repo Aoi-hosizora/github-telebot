@@ -152,16 +152,25 @@ func issueTask() {
 			if err != nil {
 				return
 			}
+			if user.FilterMe {
+				tempEvents := make([]*model.IssueEvent, 0)
+				for _, e := range events {
+					if e.Actor.Login != user.Username {
+						tempEvents = append(tempEvents, e)
+					}
+				}
+				events = tempEvents
+			}
 
 			// check events and get diff
 			oldEvents, ok := database.GetOldIssues(user.ChatID)
-			logger.Logger.Infof("Get old ativities: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
+			logger.Logger.Infof("Get old issues: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
 			diff := model.IssueSliceDiff(events, oldEvents)
-			logger.Logger.Infof("Get diff ativities: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
+			logger.Logger.Infof("Get diff issues: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
 
 			// update old events
 			ok = database.SetOldIssues(user.ChatID, events)
-			logger.Logger.Infof("Set new ativities: #%d | (%d %s)", len(events), user.ChatID, user.Username)
+			logger.Logger.Infof("Set new issues: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 			if !ok {
 				wg.Done()
 				return

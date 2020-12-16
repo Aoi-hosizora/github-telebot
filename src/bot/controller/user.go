@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
+	"github.com/Aoi-hosizora/ahlib/xstring"
 	"github.com/Aoi-hosizora/ahlib/xzone"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
@@ -73,7 +74,7 @@ func MeCtrl(m *telebot.Message) {
 		name := service.Markdown(user.Username)
 		n := fmt.Sprintf("[%s](https://github.com/%s)", name, user.Username)
 		if user.Token != "" {
-			flag = fmt.Sprintf(GITHUB_ME_TOKEN, n)
+			flag = fmt.Sprintf(GITHUB_ME_TOKEN, n, xstring.MaskToken(user.Token))
 		} else {
 			flag = fmt.Sprintf(GITHUB_ME, n)
 		}
@@ -97,17 +98,13 @@ func UnbindCtrl(m *telebot.Message) {
 	})
 }
 
-// inl:btn_cancel
-func InlBtnCancelCtrl(c *telebot.Callback) {
-	_ = server.Bot.Delete(c.Message)
-	_ = server.Bot.Reply(c.Message, ACTION_CANCELED)
-}
-
 // inl:btn_unbind
 func InlBtnUnbindCtrl(c *telebot.Callback) {
-	_ = server.Bot.Delete(c.Message)
+	m := c.Message
+	_ = server.Bot.Delete(m)
+
 	flag := ""
-	status := database.DeleteUser(c.Message.Chat.ID)
+	status := database.DeleteUser(m.Chat.ID)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -116,7 +113,7 @@ func InlBtnUnbindCtrl(c *telebot.Callback) {
 		flag = UNBIND_SUCCESS
 	}
 
-	_ = server.Bot.Reply(c.Message, flag)
+	_ = server.Bot.Reply(m, flag)
 }
 
 // /enablesilent

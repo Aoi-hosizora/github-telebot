@@ -34,25 +34,29 @@ func Setup() error {
 
 func initHandler(b *server.BotServer) {
 	// start
+	b.InlineButtons["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
 	b.HandleMessage("/start", controller.StartCtrl)
 	b.HandleMessage("/help", controller.HelpCtrl)
 	b.HandleMessage("/cancel", controller.CancelCtrl)
+	b.HandleInline(b.InlineButtons["btn_cancel"], controller.InlBtnCancelCtrl)
 	b.HandleMessage(telebot.OnText, controller.OnTextCtrl)
 
 	// user
 	b.InlineButtons["btn_unbind"] = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
-	b.InlineButtons["btn_cancel"] = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
 	b.HandleMessage("/bind", controller.BindCtrl)
 	b.HandleMessage("/unbind", controller.UnbindCtrl)
 	b.HandleInline(b.InlineButtons["btn_unbind"], controller.InlBtnUnbindCtrl)
-	b.HandleInline(b.InlineButtons["btn_cancel"], controller.InlBtnCancelCtrl)
 	b.HandleMessage("/me", controller.MeCtrl)
 	b.HandleMessage("/enablesilent", controller.EnableSilentCtrl)
 	b.HandleMessage("/disablesilent", controller.DisableSilentCtrl)
 
 	// event
+	b.InlineButtons["btn_filter"] = &telebot.InlineButton{Unique: "btn_filter", Text: "Filter"}
+	b.InlineButtons["btn_not_filter"] = &telebot.InlineButton{Unique: "btn_not_filter", Text: "Not Filter"}
 	b.HandleMessage("/allowissue", controller.AllowIssueCtrl)
 	b.HandleMessage("/disallowissue", controller.DisallowIssueCtrl)
+	b.HandleInline(b.InlineButtons["btn_filter"], controller.InlBtnFilterCtrl)
+	b.HandleInline(b.InlineButtons["btn_not_filter"], controller.InlBtnNotFilterCtrl)
 	b.HandleMessage("/activity", controller.ActivityCtrl)
 	b.HandleMessage("/activityn", controller.ActivityNCtrl)
 	b.HandleMessage("/issue", controller.IssueCtrl)

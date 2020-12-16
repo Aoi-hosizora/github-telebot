@@ -27,9 +27,10 @@ func AddUser(user *model.User) xstatus.DbStatus {
 	return s
 }
 
-func UpdateUserAllowIssue(chatID int64, allowIssue bool) xstatus.DbStatus {
+func UpdateUserAllowIssue(chatID int64, allowIssue, filterMe bool) xstatus.DbStatus {
 	rdb := DB.Model(&model.User{}).Where(&model.User{ChatID: chatID}).Updates(map[string]interface{}{
 		"allow_issue": allowIssue,
+		"filter_me":   filterMe,
 	})
 	s, _ := xgorm.UpdateErr(rdb)
 	return s
