@@ -35,7 +35,6 @@ func Setup() error {
 
 func initHandler(b *server.BotServer) {
 	// start
-	b.InlineButtons[button.InlineBtnCancel.Unique] = button.InlineBtnCancel
 	b.HandleMessage("/start", controller.StartCtrl)
 	b.HandleMessage("/help", controller.HelpCtrl)
 	b.HandleMessage("/cancel", controller.CancelCtrl)
@@ -43,7 +42,6 @@ func initHandler(b *server.BotServer) {
 	b.HandleMessage(telebot.OnText, controller.OnTextCtrl)
 
 	// user
-	b.InlineButtons[button.InlineBtnUnbind.Unique] = button.InlineBtnUnbind
 	b.HandleMessage("/bind", controller.BindCtrl)
 	b.HandleMessage("/unbind", controller.UnbindCtrl)
 	b.HandleInline(button.InlineBtnUnbind, controller.InlBtnUnbindCtrl)
@@ -52,8 +50,6 @@ func initHandler(b *server.BotServer) {
 	b.HandleMessage("/disablesilent", controller.DisableSilentCtrl)
 
 	// event
-	b.InlineButtons[button.InlineBtnFilter.Unique] = button.InlineBtnFilter
-	b.InlineButtons[button.InlineBtnNotFilter.Unique] = button.InlineBtnNotFilter
 	b.HandleMessage("/allowissue", controller.AllowIssueCtrl)
 	b.HandleInline(button.InlineBtnFilter, controller.InlBtnFilterCtrl)
 	b.HandleInline(button.InlineBtnNotFilter, controller.InlBtnNotFilterCtrl)

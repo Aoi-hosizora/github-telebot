@@ -10,18 +10,14 @@ import (
 var Bot *BotServer
 
 type BotServer struct {
-	bot           *telebot.Bot
-	UsersData     *xtelebot.UsersData
-	InlineButtons map[string]*telebot.InlineButton
-	ReplyButtons  map[string]*telebot.ReplyButton
+	bot       *telebot.Bot
+	UsersData *xtelebot.UsersData
 }
 
 func NewBotServer(bot *telebot.Bot) *BotServer {
 	return &BotServer{
-		bot:           bot,
-		UsersData:     xtelebot.NewUsersData(fsm.None),
-		InlineButtons: make(map[string]*telebot.InlineButton),
-		ReplyButtons:  make(map[string]*telebot.ReplyButton),
+		bot:       bot,
+		UsersData: xtelebot.NewUsersData(fsm.None),
 	}
 }
 
