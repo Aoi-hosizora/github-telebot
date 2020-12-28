@@ -22,13 +22,13 @@ func BindCtrl(m *telebot.Message) {
 	if user != nil {
 		_ = server.Bot.Reply(m, BIND_ALREADY)
 	} else {
-		server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.Binding)
+		server.Bot.SetStatus(m.Chat.ID, fsm.Binding)
 		_ = server.Bot.Reply(m, BIND_Q)
 	}
 }
 
 // /bind -> x
-func fromBindingCtrl(m *telebot.Message) {
+func FromBindingCtrl(m *telebot.Message) {
 	text := strings.TrimSpace(m.Text)
 	if text == "" {
 		_ = server.Bot.Reply(m, BIND_EMPTY)
@@ -61,7 +61,7 @@ func fromBindingCtrl(m *telebot.Message) {
 		}
 	}
 
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
+	server.Bot.SetStatus(m.Chat.ID, fsm.None)
 	_ = server.Bot.Reply(m, flag)
 }
 
@@ -125,14 +125,14 @@ func EnableSilentCtrl(m *telebot.Message) {
 		return
 	}
 
-	server.Bot.UsersData.SetCache(m.Chat.ID, "user", user)
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.SilentHour)
+	server.Bot.SetCache(m.Chat.ID, "user", user)
+	server.Bot.SetStatus(m.Chat.ID, fsm.SilentHour)
 	_ = server.Bot.Reply(m, SILENT_Q)
 }
 
 // /enablesilent -> x
-func fromSilentHourCtrl(m *telebot.Message) {
-	user := server.Bot.UsersData.GetCache(m.Chat.ID, "user").(*model.User)
+func FromSilentHourCtrl(m *telebot.Message) {
+	user := server.Bot.GetCache(m.Chat.ID, "user").(*model.User)
 	sp := strings.Split(strings.TrimSpace(m.Text), " ")
 	if len(sp) < 3 || sp[0] == sp[1] {
 		_ = server.Bot.Reply(m, SILENT_FORMAT_REQUIRED)
@@ -167,8 +167,8 @@ func fromSilentHourCtrl(m *telebot.Message) {
 		flag = fmt.Sprintf(SILENT_SUCCESS, f)
 	}
 
-	server.Bot.UsersData.DeleteCache(m.Chat.ID, "user")
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
+	server.Bot.DeleteCache(m.Chat.ID, "user")
+	server.Bot.SetStatus(m.Chat.ID, fsm.None)
 	_ = server.Bot.Reply(m, flag)
 }
 

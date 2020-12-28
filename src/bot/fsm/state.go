@@ -7,15 +7,9 @@ import (
 const (
 	None xtelebot.UserStatus = iota
 
-	// Start binding, need to send username and token.
-	Binding
+	Binding    // controller.BindCtrl -> controller.FromBindingCtrl
+	SilentHour // controller.EnableSilentCtrl -> controller.FromSilentHourCtrl
 
-	// Want to send activity events, need to send page number.
-	ActivityPage
-
-	// Want to send issue events, need to send page number.
-	IssuePage
-
-	// Want to setup silent, need to send 2 hour numbers.
-	SilentHour
+	ActivityPage // controller.ActivityNCtrl -> controller.FromActivityNCtrl
+	IssuePage    // controller.IssueNCtrl -> controller.FromIssueNCtrl
 )

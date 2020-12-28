@@ -2,7 +2,6 @@ package bot
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/controller"
 	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
@@ -58,13 +57,4 @@ func initHandler(b *server.BotServer) {
 	b.HandleMessage("/activityn", controller.ActivityNCtrl)
 	b.HandleMessage("/issue", controller.IssueCtrl)
 	b.HandleMessage("/issuen", controller.IssueNCtrl)
-}
-
-func SendToChat(chatId int64, what interface{}, options ...interface{}) error {
-	chat, err := server.Bot.ChatByID(xnumber.I64toa(chatId))
-	if err != nil {
-		return err
-	}
-
-	return server.Bot.Send(chat, what, options...)
 }

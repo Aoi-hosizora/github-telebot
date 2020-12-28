@@ -109,17 +109,17 @@ func DisallowIssueCtrl(m *telebot.Message) {
 // /activity
 func ActivityCtrl(m *telebot.Message) {
 	m.Text = "1"
-	fromActivityNCtrl(m)
+	FromActivityNCtrl(m)
 }
 
 // /activityn
 func ActivityNCtrl(m *telebot.Message) {
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.ActivityPage)
+	server.Bot.SetStatus(m.Chat.ID, fsm.ActivityPage)
 	_ = server.Bot.Reply(m, GITHUB_SEND_PAGE_Q)
 }
 
 // /activityn -> x
-func fromActivityNCtrl(m *telebot.Message) {
+func FromActivityNCtrl(m *telebot.Message) {
 	page, err := xnumber.Atoi(m.Text)
 	if err != nil {
 		_ = server.Bot.Reply(m, NUM_REQUIRED)
@@ -146,7 +146,7 @@ func fromActivityNCtrl(m *telebot.Message) {
 		}
 	}
 
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
+	server.Bot.SetStatus(m.Chat.ID, fsm.None)
 	if !v2 {
 		_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
 	} else {
@@ -162,17 +162,17 @@ func fromActivityNCtrl(m *telebot.Message) {
 // /issue
 func IssueCtrl(m *telebot.Message) {
 	m.Text = "1"
-	fromIssueNCtrl(m)
+	FromIssueNCtrl(m)
 }
 
 // /issuen
 func IssueNCtrl(m *telebot.Message) {
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.IssuePage)
+	server.Bot.SetStatus(m.Chat.ID, fsm.IssuePage)
 	_ = server.Bot.Reply(m, GITHUB_SEND_PAGE_Q)
 }
 
 // /issuen -> x
-func fromIssueNCtrl(m *telebot.Message) {
+func FromIssueNCtrl(m *telebot.Message) {
 	page, err := xnumber.Atoi(m.Text)
 	if err != nil {
 		_ = server.Bot.Reply(m, NUM_REQUIRED)
@@ -201,7 +201,7 @@ func fromIssueNCtrl(m *telebot.Message) {
 		}
 	}
 
-	server.Bot.UsersData.SetStatus(m.Chat.ID, fsm.None)
+	server.Bot.SetStatus(m.Chat.ID, fsm.None)
 	if !v2 {
 		_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
 	} else {

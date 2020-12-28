@@ -1,7 +1,7 @@
 package task
 
 import (
-	"github.com/Aoi-hosizora/github-telebot/src/bot"
+	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/src/config"
 	"github.com/Aoi-hosizora/github-telebot/src/database"
 	"github.com/Aoi-hosizora/github-telebot/src/logger"
@@ -76,17 +76,17 @@ func activityTask() {
 		flag := service.RenderResult(render, user.Username) + " \\(Activity events\\)" // <<<
 		var sendErr error
 		if checkSilent(user) {
-			sendErr = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
+			sendErr = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
 		} else {
-			sendErr = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
+			sendErr = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
 		}
 		if sendErr != nil && strings.Contains(sendErr.Error(), "must be escaped") {
 			flag = strings.ReplaceAll(flag, "\\", "")
 			flag += "\n\nPlease contact with the developer with the message:\n" + sendErr.Error()
 			if checkSilent(user) {
-				_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
+				_ = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
 			} else {
-				_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+				_ = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
 			}
 		}
 	})
@@ -149,17 +149,17 @@ func issueTask() {
 		flag := service.RenderResult(render, user.Username) + " \\(Issue events\\)" // <<<
 		var sendErr error
 		if checkSilent(user) {
-			sendErr = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
+			sendErr = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
 		} else {
-			sendErr = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
+			sendErr = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
 		}
 		if sendErr != nil && strings.Contains(sendErr.Error(), "must be escaped") {
 			flag = strings.ReplaceAll(flag, "\\", "")
 			flag += "\n\nPlease contact with the developer with the message:\n" + sendErr.Error()
 			if checkSilent(user) {
-				_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
+				_ = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
 			} else {
-				_ = bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
+				_ = server.Bot.SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
 			}
 		}
 	})
