@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/Aoi-hosizora/github-telebot/src/bot"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
-	"github.com/Aoi-hosizora/github-telebot/src/config"
-	"github.com/Aoi-hosizora/github-telebot/src/database"
-	"github.com/Aoi-hosizora/github-telebot/src/logger"
-	"github.com/Aoi-hosizora/github-telebot/src/task"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/database"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
+	"github.com/Aoi-hosizora/github-telebot/internal/task"
 	"log"
 )
 
@@ -39,6 +39,7 @@ func run() {
 		log.Fatalln("Failed to connect mysql:", err)
 	}
 	err = database.SetupRedis()
+	err = database.SetupRedis()
 	if err != nil {
 		log.Fatalln("Failed to connect redis:", err)
 	}
@@ -52,9 +53,9 @@ func run() {
 		log.Fatalln("Failed to setup cron:", err)
 	}
 
-	defer task.Cron.Stop()
-	task.Cron.Start()
+	defer task.Cron().Stop()
+	task.Cron().Start()
 
-	defer server.Bot.Stop()
-	server.Bot.Start()
+	defer server.Bot().Stop()
+	server.Bot().Start()
 }

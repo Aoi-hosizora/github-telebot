@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/github-telebot/src/model"
+	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"strings"
 )
 

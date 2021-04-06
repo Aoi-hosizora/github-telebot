@@ -6,29 +6,32 @@ meta:
 bot:
   token: xxx
   poller-timeout: 3600 # second
+  retry-count: 5
 
 mysql:
   host: 127.0.0.1
   port: 3306
-  name: db_github_bot
+  database: db_github_bot
   user: root
   password: 123
+  log-mode: true
+  max-open: 60
   max-idle: 10
-  max-active: 100
   max-lifetime: 3600 # second
+  max-idletime: 300  # second
 
 redis:
   host: 127.0.0.1
   port: 6379
   db: 1
   password: 123
-  connect-timeout: 5000 # microsecond
-  read-timeout: 5000 # microsecond
-  write-timeout: 5000 # microsecond
-  max-idle: 10
-  max-active: 100
+  log-mode: true
+  dial-timeout: 5  # second
+  read-timeout: 3  # second
+  write-timeout: 3 # second
+  max-open: 60
   max-lifetime: 3600 # second
-  idle-timeout: 300 # second
+  max-idletime: 300  # second
 
 task:
   activity: 0 */1 * * * *

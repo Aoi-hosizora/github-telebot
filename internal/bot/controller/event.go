@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/button"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
-	"github.com/Aoi-hosizora/github-telebot/src/database"
-	"github.com/Aoi-hosizora/github-telebot/src/model"
-	"github.com/Aoi-hosizora/github-telebot/src/service"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/button"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
+	"github.com/Aoi-hosizora/github-telebot/internal/model"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/database"
+	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"gopkg.in/tucnak/telebot.v2"
 	"strings"
 )
@@ -18,14 +18,14 @@ import (
 func AllowIssueCtrl(m *telebot.Message) {
 	user := database.GetUser(m.Chat.ID)
 	if user == nil {
-		_ = server.Bot.Reply(m, BIND_NOT_YET)
+		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
 	} else if user.Token == "" {
-		_ = server.Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		_ = server.Bot().Reply(m, ISSUE_ONLY_FOR_TOKEN)
 		return
 	}
 
-	_ = server.Bot.Reply(m, ISSUE_ALLOW_Q, &telebot.ReplyMarkup{
+	_ = server.Bot().Reply(m, ISSUE_ALLOW_Q, &telebot.ReplyMarkup{
 		InlineKeyboard: [][]telebot.InlineButton{
 			{*button.InlineBtnFilter, *button.InlineBtnNotFilter}, {*button.InlineBtnCancel},
 		},
@@ -35,7 +35,7 @@ func AllowIssueCtrl(m *telebot.Message) {
 // inl:btn_filter
 func InlBtnFilterCtrl(c *telebot.Callback) {
 	m := c.Message
-	_ = server.Bot.Delete(m)
+	_ = server.Bot().Delete(m)
 
 	flag := ""
 	user := database.GetUser(m.Chat.ID)
@@ -54,13 +54,13 @@ func InlBtnFilterCtrl(c *telebot.Callback) {
 		}
 	}
 
-	_ = server.Bot.Reply(m, flag)
+	_ = server.Bot().Reply(m, flag)
 }
 
 // inl:btn_not_filter
 func InlBtnNotFilterCtrl(c *telebot.Callback) {
 	m := c.Message
-	_ = server.Bot.Delete(m)
+	_ = server.Bot().Delete(m)
 
 	flag := ""
 	user := database.GetUser(m.Chat.ID)
@@ -79,17 +79,17 @@ func InlBtnNotFilterCtrl(c *telebot.Callback) {
 		}
 	}
 
-	_ = server.Bot.Reply(m, flag)
+	_ = server.Bot().Reply(m, flag)
 }
 
 // /disallowissue
 func DisallowIssueCtrl(m *telebot.Message) {
 	user := database.GetUser(m.Chat.ID)
 	if user == nil {
-		_ = server.Bot.Reply(m, BIND_NOT_YET)
+		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
 	} else if user.Token == "" {
-		_ = server.Bot.Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		_ = server.Bot().Reply(m, ISSUE_ONLY_FOR_TOKEN)
 		return
 	}
 
@@ -103,7 +103,7 @@ func DisallowIssueCtrl(m *telebot.Message) {
 		flag = ISSUE_DISALLOW_SUCCESS
 	}
 
-	_ = server.Bot.Reply(m, flag)
+	_ = server.Bot().Reply(m, flag)
 }
 
 // /activity
@@ -114,15 +114,15 @@ func ActivityCtrl(m *telebot.Message) {
 
 // /activityn
 func ActivityNCtrl(m *telebot.Message) {
-	server.Bot.SetStatus(m.Chat.ID, fsm.ActivityPage)
-	_ = server.Bot.Reply(m, GITHUB_SEND_PAGE_Q)
+	server.Bot().SetStatus(m.Chat.ID, fsm.ActivityPage)
+	_ = server.Bot().Reply(m, GITHUB_SEND_PAGE_Q)
 }
 
 // /activityn -> x
 func FromActivityNCtrl(m *telebot.Message) {
 	page, err := xnumber.Atoi(m.Text)
 	if err != nil {
-		_ = server.Bot.Reply(m, NUM_REQUIRED)
+		_ = server.Bot().Reply(m, NUM_REQUIRED)
 		return
 	} else if page <= 0 {
 		page = 1
@@ -146,15 +146,15 @@ func FromActivityNCtrl(m *telebot.Message) {
 		}
 	}
 
-	server.Bot.SetStatus(m.Chat.ID, fsm.None)
+	server.Bot().SetStatus(m.Chat.ID, fsm.None)
 	if !v2 {
-		_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
 	} else {
-		err := server.Bot.Reply(m, flag, telebot.ModeMarkdownV2)
+		err := server.Bot().Reply(m, flag, telebot.ModeMarkdownV2)
 		if err != nil && strings.Contains(err.Error(), "must be escaped") {
 			flag = strings.ReplaceAll(flag, "\\", "")
 			flag += "\n\nPlease contact with the developer with the message:\n" + err.Error()
-			_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+			_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
 		}
 	}
 }
@@ -167,15 +167,15 @@ func IssueCtrl(m *telebot.Message) {
 
 // /issuen
 func IssueNCtrl(m *telebot.Message) {
-	server.Bot.SetStatus(m.Chat.ID, fsm.IssuePage)
-	_ = server.Bot.Reply(m, GITHUB_SEND_PAGE_Q)
+	server.Bot().SetStatus(m.Chat.ID, fsm.IssuePage)
+	_ = server.Bot().Reply(m, GITHUB_SEND_PAGE_Q)
 }
 
 // /issuen -> x
 func FromIssueNCtrl(m *telebot.Message) {
 	page, err := xnumber.Atoi(m.Text)
 	if err != nil {
-		_ = server.Bot.Reply(m, NUM_REQUIRED)
+		_ = server.Bot().Reply(m, NUM_REQUIRED)
 		return
 	} else if page <= 0 {
 		page = 1
@@ -201,15 +201,15 @@ func FromIssueNCtrl(m *telebot.Message) {
 		}
 	}
 
-	server.Bot.SetStatus(m.Chat.ID, fsm.None)
+	server.Bot().SetStatus(m.Chat.ID, fsm.None)
 	if !v2 {
-		_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
 	} else {
-		err := server.Bot.Reply(m, flag, telebot.ModeMarkdownV2)
+		err := server.Bot().Reply(m, flag, telebot.ModeMarkdownV2)
 		if err != nil && strings.Contains(err.Error(), "must be escaped") {
 			flag = strings.ReplaceAll(flag, "\\", "")
 			flag += "\n\nPlease contact with the developer with the message:\n" + err.Error()
-			_ = server.Bot.Reply(m, flag, telebot.ModeMarkdown)
+			_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
 		}
 	}
 }

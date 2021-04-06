@@ -2,8 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/server"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
@@ -80,21 +80,21 @@ https://github.com/Aoi-hosizora/github-telebot/issues/new
 
 // /start
 func StartCtrl(m *telebot.Message) {
-	_ = server.Bot.Reply(m, START)
+	_ = server.Bot().Reply(m, START)
 }
 
 // /help
 func HelpCtrl(m *telebot.Message) {
-	_ = server.Bot.Reply(m, HELP, telebot.ModeMarkdown)
+	_ = server.Bot().Reply(m, HELP, telebot.ModeMarkdown)
 }
 
 // /cancel
 func CancelCtrl(m *telebot.Message) {
-	if server.Bot.GetStatus(m.Chat.ID) == fsm.None {
-		_ = server.Bot.Reply(m, NO_ACTION)
+	if server.Bot().GetStatus(m.Chat.ID) == fsm.None {
+		_ = server.Bot().Reply(m, NO_ACTION)
 	} else {
-		server.Bot.SetStatus(m.Chat.ID, fsm.None)
-		_ = server.Bot.Reply(m, ACTION_CANCELED, &telebot.ReplyMarkup{
+		server.Bot().SetStatus(m.Chat.ID, fsm.None)
+		_ = server.Bot().Reply(m, ACTION_CANCELED, &telebot.ReplyMarkup{
 			ReplyKeyboardRemove: true,
 		})
 	}
@@ -103,13 +103,13 @@ func CancelCtrl(m *telebot.Message) {
 // inl:btn_cancel
 func InlBtnCancelCtrl(c *telebot.Callback) {
 	m := c.Message
-	_ = server.Bot.Delete(m)
-	_ = server.Bot.Reply(m, ACTION_CANCELED)
+	_ = server.Bot().Delete(m)
+	_ = server.Bot().Reply(m, ACTION_CANCELED)
 }
 
 // $onText
 func OnTextCtrl(m *telebot.Message) {
-	switch server.Bot.GetStatus(m.Chat.ID) {
+	switch server.Bot().GetStatus(m.Chat.ID) {
 	case fsm.Binding:
 		FromBindingCtrl(m)
 	case fsm.ActivityPage:
@@ -119,6 +119,6 @@ func OnTextCtrl(m *telebot.Message) {
 	case fsm.SilentHour:
 		FromSilentHourCtrl(m)
 	default:
-		_ = server.Bot.Reply(m, fmt.Sprintf(UNKNOWN_COMMAND, m.Text))
+		_ = server.Bot().Reply(m, fmt.Sprintf(UNKNOWN_COMMAND, m.Text))
 	}
 }

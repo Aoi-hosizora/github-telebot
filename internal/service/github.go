@@ -2,30 +2,24 @@ package service
 
 import (
 	"fmt"
-	"github.com/Aoi-hosizora/github-telebot/src/model"
+	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"net/http"
 )
 
 func CheckUser(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
-	header := &http.Header{}
-	if token != "" {
-		header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	}
-
-	code, _, err := HttpGet(url, header)
+	code, _, err := HttpGet(url, func(r *http.Request) {
+		r.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
+	})
 	return code == 200, err
 }
 
 func GetActivityEvents(username string, token string, page int) ([]byte, error) {
 	url := fmt.Sprintf(ActivityEventApi, username)
 	url = fmt.Sprintf("%s?page=%d", url, page)
-	header := &http.Header{}
-	if token != "" {
-		header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	}
-
-	_, bs, err := HttpGet(url, header)
+	_, bs, err := HttpGet(url, func(r *http.Request) {
+		r.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -35,12 +29,9 @@ func GetActivityEvents(username string, token string, page int) ([]byte, error) 
 func GetIssueEvents(username string, token string, page int) ([]byte, error) {
 	url := fmt.Sprintf(IssueEventApi, username)
 	url = fmt.Sprintf("%s?page=%d", url, page)
-	header := &http.Header{}
-	if token != "" {
-		header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	}
-
-	_, bs, err := HttpGet(url, header)
+	_, bs, err := HttpGet(url, func(r *http.Request) {
+		r.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
+	})
 	if err != nil {
 		return nil, err
 	}

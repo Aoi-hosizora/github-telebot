@@ -11,12 +11,14 @@ const (
 	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline"
 )
 
-func HttpGet(url string, header *http.Header) (int, []byte, error) {
+func HttpGet(url string, fn func(r *http.Request)) (int, []byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, nil, err
 	}
-	req.Header = *header
+	if fn != nil {
+		fn(req)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

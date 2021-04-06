@@ -3,23 +3,32 @@ package server
 import (
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
-	"github.com/Aoi-hosizora/github-telebot/src/bot/fsm"
-	"github.com/Aoi-hosizora/github-telebot/src/logger"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
-// Bot is a global variable.
-var Bot *BotServer
+// _bot represents the global BotServer.
+var _bot *BotServer
+
+func Bot() *BotServer {
+	return _bot
+}
+
+func SetupBot(b *BotServer) {
+	_bot = b
+}
 
 type BotServer struct {
 	bot  *telebot.Bot
-	data *xtelebot.UsersData
+	data *xtelebot.BotData
 }
 
 func NewBotServer(bot *telebot.Bot) *BotServer {
 	return &BotServer{
 		bot:  bot,
-		data: xtelebot.NewUsersData(fsm.None),
+		data: xtelebot.NewBotData(xtelebot.WithInitialStatus(fsm.None)),
 	}
 }
 
@@ -39,12 +48,20 @@ func (b *BotServer) Delete(msg telebot.Editable) error {
 	return b.bot.Delete(msg)
 }
 
+func (b *BotServer) Edit(msg telebot.Editable, what interface{}, options ...interface{}) (*telebot.Message, error) {
+	return b.bot.Edit(msg, what, options...)
+}
+
+func (b *BotServer) Respond(c *telebot.Callback, resp ...*telebot.CallbackResponse) error {
+	return b.bot.Respond(c, resp...)
+}
+
 func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
 	var msg *telebot.Message
 	var err error
-	for i := 0; i < 5; i++ { // retry
+	for i := 0; i < int(config.Configs().Bot.RetryCount); i++ { // retry
 		msg, err = b.bot.Send(m.Chat, what, options...)
-		logger.Telebot.Reply(m, msg, err)
+		logger.Reply(m, msg, err)
 		if err == nil {
 			break
 		}
@@ -53,8 +70,15 @@ func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...inter
 }
 
 func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
-	msg, err := b.bot.Send(c, what, options...)
-	logger.Telebot.Send(c, msg, err)
+	var msg *telebot.Message
+	var err error
+	for i := 0; i < int(config.Configs().Bot.RetryCount); i++ { // retry
+		msg, err = b.bot.Send(c, what, options...)
+		logger.Send(c, msg, err)
+		if err == nil {
+			break
+		}
+	}
 	return err
 }
 
@@ -71,59 +95,65 @@ func (b *BotServer) SendToChat(chatId int64, what interface{}, options ...interf
 // Handle
 // ======
 
-// Handle string endpoint with telebot.Message handler.
 func (b *BotServer) HandleMessage(endpoint string, handler func(*telebot.Message)) {
 	if handler == nil {
 		panic("nil handler")
 	}
 	b.bot.Handle(endpoint, func(m *telebot.Message) {
-		logger.Telebot.Receive(endpoint, m)
+		logger.Receive(endpoint, m)
 		handler(m)
 	})
 }
 
-// Handle telebot.InlineButton endpoint with telebot.Callback handler.
 func (b *BotServer) HandleInline(endpoint *telebot.InlineButton, handler func(*telebot.Callback)) {
 	if handler == nil {
 		panic("nil handler")
 	}
 	b.bot.Handle(endpoint, func(c *telebot.Callback) {
-		logger.Telebot.Receive(endpoint, c)
+		logger.Receive(endpoint, c.Message)
 		handler(c)
 	})
 }
 
-// Handle telebot.ReplyButton endpoint with telebot.Message handler.
 func (b *BotServer) HandleReply(endpoint *telebot.ReplyButton, handler func(*telebot.Message)) {
 	if handler == nil {
 		panic("nil handler")
 	}
 	b.bot.Handle(endpoint, func(m *telebot.Message) {
-		logger.Telebot.Receive(endpoint, m)
+		logger.Receive(endpoint, m)
 		handler(m)
 	})
 }
 
-// =========
-// UsersData
-// =========
+func (b *BotServer) HandleQuery(endpoint interface{}, handler func(*telebot.Query)) {
+	if handler == nil {
+		panic("nil handler")
+	}
+	b.bot.Handle(endpoint, func(c *telebot.Query) {
+		handler(c)
+	})
+}
 
-func (b *BotServer) SetStatus(chatID int64, status xtelebot.UserStatus) {
+// =======
+// BotData
+// =======
+
+func (b *BotServer) SetStatus(chatID int64, status xtelebot.ChatStatus) {
 	b.data.SetStatus(chatID, status)
 }
 
-func (b *BotServer) GetStatus(chatID int64) xtelebot.UserStatus {
-	return b.data.GetStatus(chatID)
+func (b *BotServer) GetStatus(chatID int64) xtelebot.ChatStatus {
+	return b.data.GetStatusOrInit(chatID)
 }
 
 func (b *BotServer) SetCache(chatID int64, key string, value interface{}) {
 	b.data.SetCache(chatID, key, value)
 }
 
-func (b *BotServer) GetCache(chatID int64, key string) interface{} {
+func (b *BotServer) GetCache(chatID int64, key string) (interface{}, bool) {
 	return b.data.GetCache(chatID, key)
 }
 
-func (b *BotServer) DeleteCache(chatID int64, key string) {
-	b.data.DeleteCache(chatID, key)
+func (b *BotServer) RemoveCache(chatID int64, key string) {
+	b.data.RemoveCache(chatID, key)
 }

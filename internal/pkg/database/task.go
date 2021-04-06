@@ -1,11 +1,11 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-db/xredis"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
-	"github.com/Aoi-hosizora/github-telebot/src/model"
-	"github.com/gomodule/redigo/redis"
+	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"strings"
 	"time"
 )
@@ -45,14 +45,8 @@ func parseIssuePattern(key string) (chatId, id int64, event, repo string, ct tim
 }
 
 func GetOldActivities(chatId int64) ([]*model.ActivityEvent, bool) {
-	conn, err := Redis.Dial()
-	if err != nil {
-		return nil, false
-	}
-	defer conn.Close()
-
 	pattern := getActivityPattern(xnumber.I64toa(chatId), "*", "*", "*")
-	keys, err := redis.Strings(conn.Do("KEYS", pattern))
+	keys, err := Redis().Keys(context.Background(), pattern).Result()
 	if err != nil {
 		return nil, false
 	}
@@ -71,16 +65,10 @@ func GetOldActivities(chatId int64) ([]*model.ActivityEvent, bool) {
 }
 
 func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
-	conn, err := Redis.Dial()
-	if err != nil {
-		return false
-	}
-	defer conn.Close()
 	chatIdStr := xnumber.I64toa(chatId)
-
 	pattern := getActivityPattern(chatIdStr, "*", "*", "*")
-	tot, del, err := xredis.WithConn(conn).DeleteAll(pattern)
-	if err != nil || (tot != 0 && del == 0) {
+	_, err := xredis.DelAll(Redis(), context.Background(), pattern)
+	if err != nil {
 		return false
 	}
 
@@ -92,19 +80,13 @@ func SetOldActivities(chatId int64, evs []*model.ActivityEvent) bool {
 		values = append(values, chatIdStr)
 	}
 
-	tot, add, err := xredis.WithConn(conn).SetAll(keys, values)
-	return err == nil && (tot == 0 || add >= 1)
+	_, err = xredis.SetAll(Redis(), context.Background(), keys, values)
+	return err == nil
 }
 
 func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
-	conn, err := Redis.Dial()
-	if err != nil {
-		return nil, false
-	}
-	defer conn.Close()
-
 	pattern := getIssuePattern(xnumber.I64toa(chatId), "*", "*", "*", "*", "*")
-	keys, err := redis.Strings(conn.Do("KEYS", pattern))
+	keys, err := Redis().Keys(context.Background(), pattern).Result()
 	if err != nil {
 		return nil, false
 	}
@@ -118,16 +100,10 @@ func GetOldIssues(chatId int64) ([]*model.IssueEvent, bool) {
 }
 
 func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
-	conn, err := Redis.Dial()
-	if err != nil {
-		return false
-	}
-	defer conn.Close()
 	chatIdStr := xnumber.I64toa(chatId)
-
 	pattern := getIssuePattern(chatIdStr, "*", "*", "*", "*", "*")
-	tot, del, err := xredis.WithConn(conn).DeleteAll(pattern)
-	if err != nil || (tot != 0 && del == 0) {
+	_, err := xredis.DelAll(Redis(), context.Background(), pattern)
+	if err != nil {
 		return false
 	}
 
@@ -140,6 +116,6 @@ func SetOldIssues(chatId int64, evs []*model.IssueEvent) bool {
 		values = append(values, chatIdStr)
 	}
 
-	tot, add, err := xredis.WithConn(conn).SetAll(keys, values)
-	return err == nil && (tot == 0 || add >= 1)
+	_, err = xredis.SetAll(Redis(), context.Background(), keys, values)
+	return err == nil
 }
