@@ -13,11 +13,12 @@ func Configs() *Config {
 }
 
 type Config struct {
-	Meta  *MetaConfig  `yaml:"meta"`
-	Bot   *BotConfig   `yaml:"bot"`
-	MySQL *MySQLConfig `yaml:"mysql"`
-	Redis *RedisConfig `yaml:"redis"`
-	Task  *TaskConfig  `yaml:"task"`
+	Meta   *MetaConfig   `yaml:"meta"`
+	Bot    *BotConfig    `yaml:"bot"`
+	SQLite *SQLiteConfig `yaml:"sqlite"`
+	MySQL  *MySQLConfig  `yaml:"mysql"`
+	Redis  *RedisConfig  `yaml:"redis"`
+	Task   *TaskConfig   `yaml:"task"`
 }
 
 type MetaConfig struct {
@@ -29,6 +30,11 @@ type BotConfig struct {
 	Token         string `yaml:"token"`
 	PollerTimeout uint64 `yaml:"poller-timeout"`
 	RetryCount    uint8  `yaml:"retry-count"`
+}
+
+type SQLiteConfig struct {
+	Database string `yaml:"database"`
+	LogMode  bool   `yaml:"log-mode"`
 }
 
 type MySQLConfig struct {

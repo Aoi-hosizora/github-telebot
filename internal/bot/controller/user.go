@@ -10,15 +10,40 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
-	"github.com/Aoi-hosizora/github-telebot/internal/pkg/database"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
 	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"gopkg.in/tucnak/telebot.v2"
 	"strings"
 )
 
+const (
+	BIND_Q             = "Please send your github's username, and if you want to watch private events or issue events, please send your token after username (split by whitespace). /cancel to cancel."
+	BIND_ALREADY       = "You have already bound with a github account."
+	BIND_NOT_YET       = "You have not bound a github account yet."
+	BIND_EMPTY         = "Please resend a non-empty username again."
+	BIND_FAILED        = "Failed to bind github account, please retry later."
+	BIND_SUCCESS       = "Binding user '%s' without token success. /activity to get activity events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
+	BIND_TOKEN_SUCCESS = "Binding user '%s' with token success. /activity to get events, /issue to get issue events.\n" + BIND_SUCCESS_TIP
+	BIND_SUCCESS_TIP   = "(Tips: new activity events will be sent periodically, but issue events will not be sent in default. Use /allowissue to allow)"
+
+	UNBIND_Q       = "Sure to unbind the current github account '%s'?"
+	UNBIND_FAILED  = "Failed to unbind github account, please retry later."
+	UNBIND_SUCCESS = "Unbind user success."
+
+	SILENT_Q               = "Please send 2 different numbers as hour (in [0, 23]) you want to start and finish silent send, and with a timezone (such as +8:00 or -06:30), split by whitespace. Examples: 23 6 +8 or 0 8 -6."
+	SILENT_FORMAT_REQUIRED = "Excepted input, please send 2 different numbers as hour (in [0, 23]) you want to start and finish silent send, and with a timezone."
+	SILENT_HOUR_REQUIRED   = "Excepted hour, please send an integer in [0, 23]."
+	SILENT_ZONE_REQUIRED   = "Excepted timezone, please send a right time zone, such as +8:00 or -06:30"
+	SILENT_NOT_YET         = "You have not set silent yet, use /enablesilent to set."
+	SILENT_SUCCESS         = "Success. Now it will be silent when send message in %s."
+	SILENT_FAILED          = "Failed to set silent send, please retry later."
+	DISABLE_SILENT_SUCCESS = "Disable silent success. Any message will be sent directly now."
+	DISABLE_SILENT_FAILED  = "Failed to disable silent, please retry later."
+)
+
 // /bind
 func BindCtrl(m *telebot.Message) {
-	user := database.GetUser(m.Chat.ID)
+	user := dao.QueryUser(m.Chat.ID)
 	if user != nil {
 		_ = server.Bot().Reply(m, BIND_ALREADY)
 	} else {
@@ -27,7 +52,7 @@ func BindCtrl(m *telebot.Message) {
 	}
 }
 
-// /bind -> x
+// fsm.Binding
 func FromBindingCtrl(m *telebot.Message) {
 	text := strings.TrimSpace(m.Text)
 	if text == "" {
@@ -49,7 +74,7 @@ func FromBindingCtrl(m *telebot.Message) {
 	} else if !ok {
 		flag = GITHUB_NOT_FOUND
 	} else {
-		status := database.AddUser(user) // id username token
+		status := dao.CreateUser(user) // id username token
 		if status == xstatus.DbExisted {
 			flag = BIND_ALREADY
 		} else if status == xstatus.DbFailed {
@@ -67,7 +92,7 @@ func FromBindingCtrl(m *telebot.Message) {
 
 // /me
 func MeCtrl(m *telebot.Message) {
-	user := database.GetUser(m.Chat.ID)
+	user := dao.QueryUser(m.Chat.ID)
 	flag := ""
 	if user == nil {
 		flag = BIND_NOT_YET
@@ -85,7 +110,7 @@ func MeCtrl(m *telebot.Message) {
 
 // /unbind
 func UnbindCtrl(m *telebot.Message) {
-	user := database.GetUser(m.Chat.ID)
+	user := dao.QueryUser(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -99,13 +124,13 @@ func UnbindCtrl(m *telebot.Message) {
 	})
 }
 
-// inl:btn_unbind
-func InlBtnUnbindCtrl(c *telebot.Callback) {
+// button.InlineBtnUnbind
+func InlineBtnUnbindCtrl(c *telebot.Callback) {
 	m := c.Message
 	_ = server.Bot().Delete(m)
 
 	flag := ""
-	status := database.DeleteUser(m.Chat.ID)
+	status := dao.DeleteUser(m.Chat.ID)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -117,9 +142,15 @@ func InlBtnUnbindCtrl(c *telebot.Callback) {
 	_ = server.Bot().Reply(m, flag)
 }
 
+// button.InlineBtnCancel
+func InlineBtnCancelCtrl(c *telebot.Callback) {
+	m := c.Message
+	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (canceled)", m.Text))
+}
+
 // /enablesilent
 func EnableSilentCtrl(m *telebot.Message) {
-	user := database.GetUser(m.Chat.ID)
+	user := dao.QueryUser(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -130,7 +161,7 @@ func EnableSilentCtrl(m *telebot.Message) {
 	_ = server.Bot().Reply(m, SILENT_Q)
 }
 
-// /enablesilent -> x
+// fsm.SilentHour
 func FromSilentHourCtrl(m *telebot.Message) {
 	userItf, ok := server.Bot().GetCache(m.Chat.ID, "user")
 	if !ok {
@@ -156,7 +187,7 @@ func FromSilentHourCtrl(m *telebot.Message) {
 		return
 	}
 
-	status := database.UpdateUserSilent(user.ChatID, true, start, end, zone)
+	status := dao.UpdateUserSilent(user.ChatID, true, start, end, zone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
@@ -179,7 +210,7 @@ func FromSilentHourCtrl(m *telebot.Message) {
 
 // /disablesilent
 func DisableSilentCtrl(m *telebot.Message) {
-	user := database.GetUser(m.Chat.ID)
+	user := dao.QueryUser(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -190,7 +221,7 @@ func DisableSilentCtrl(m *telebot.Message) {
 		return
 	}
 
-	status := database.UpdateUserSilent(user.ChatID, false, 0, 0, user.TimeZone)
+	status := dao.UpdateUserSilent(user.ChatID, false, 0, 0, user.TimeZone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET

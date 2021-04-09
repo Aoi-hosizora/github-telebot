@@ -4,7 +4,7 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
-	"github.com/Aoi-hosizora/github-telebot/internal/pkg/database"
+	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
 	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"github.com/robfig/cron/v3"
@@ -38,7 +38,7 @@ func Setup() error {
 func activityTask() {
 	defer func() { recover() }()
 
-	users := database.GetUsers()
+	users := dao.QueryUsers()
 	if len(users) == 0 {
 		return
 	}
@@ -55,7 +55,7 @@ func activityTask() {
 		}
 
 		// check events and get diff
-		oldEvents, ok := database.GetOldActivities(user.ChatID)
+		oldEvents, ok := dao.GetOldActivities(user.ChatID)
 		if !ok {
 			return
 		}
@@ -64,7 +64,7 @@ func activityTask() {
 		logger.Logger().Infof("Get diff ativities: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
 
 		// update old events
-		ok = database.SetOldActivities(user.ChatID, events)
+		ok = dao.SetOldActivities(user.ChatID, events)
 		logger.Logger().Infof("Set new ativities: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 		if !ok {
 			return
@@ -100,7 +100,7 @@ func activityTask() {
 func issueTask() {
 	defer func() { recover() }()
 
-	users := database.GetUsers()
+	users := dao.QueryUsers()
 	if len(users) == 0 {
 		return
 	}
@@ -131,13 +131,13 @@ func issueTask() {
 		}
 
 		// check events and get diff
-		oldEvents, ok := database.GetOldIssues(user.ChatID)
+		oldEvents, ok := dao.GetOldIssues(user.ChatID)
 		logger.Logger().Infof("Get old issues: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
 		diff := model.IssueSliceDiff(events, oldEvents)
 		logger.Logger().Infof("Get diff issues: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
 
 		// update old events
-		ok = database.SetOldIssues(user.ChatID, events)
+		ok = dao.SetOldIssues(user.ChatID, events)
 		logger.Logger().Infof("Set new issues: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 		if !ok {
 			return

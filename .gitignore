@@ -6,9 +6,7 @@
 
 ### Build ###
 build/
-config.yaml
 logs/*
-logs/*.*
-**/logs/
-!logs/.gitkeep
-database_test.go
+!.gitkeep
+config.yaml
+config.server.yaml

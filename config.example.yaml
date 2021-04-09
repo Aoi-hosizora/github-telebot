@@ -1,12 +1,15 @@
 meta:
   run-mode: debug
-  log-path: ./logs/
-  log-name: console
+  log-name: ./logs/console
 
 bot:
   token: xxx
-  poller-timeout: 3600 # second
+  poller-timeout: 600 # second
   retry-count: 5
+
+sqlite:
+  database: database.db
+  log-mode: true
 
 mysql:
   host: 127.0.0.1

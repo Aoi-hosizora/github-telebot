@@ -125,15 +125,6 @@ func (b *BotServer) HandleReply(endpoint *telebot.ReplyButton, handler func(*tel
 	})
 }
 
-func (b *BotServer) HandleQuery(endpoint interface{}, handler func(*telebot.Query)) {
-	if handler == nil {
-		panic("nil handler")
-	}
-	b.bot.Handle(endpoint, func(c *telebot.Query) {
-		handler(c)
-	})
-}
-
 // =======
 // BotData
 // =======

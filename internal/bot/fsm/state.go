@@ -9,11 +9,13 @@ const (
 
 	// controller.BindCtrl -> controller.FromBindingCtrl
 	Binding
+
 	// controller.EnableSilentCtrl -> controller.FromSilentHourCtrl
 	SilentHour
 
-	// controller.ActivityNCtrl -> controller.FromActivityNCtrl
+	// controller.ActivityPageCtrl -> controller.FromActivityPageCtrl
 	ActivityPage
-	// controller.IssueNCtrl -> controller.FromIssueNCtrl
+
+	// controller.IssuePageCtrl -> controller.FromIssuePageCtrl
 	IssuePage
 )

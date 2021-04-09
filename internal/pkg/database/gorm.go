@@ -1,14 +1,12 @@
 package database
 
 import (
-	"fmt"
 	"github.com/Aoi-hosizora/ahlib-db/xgorm"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"time"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 // _db represents the global gorm.DB.
@@ -19,12 +17,8 @@ func DB() *gorm.DB {
 }
 
 func SetupGorm() error {
-	cfg := config.Configs().MySQL
-	dsl := fmt.Sprintf(
-		"%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Database,
-	)
-	db, err := gorm.Open("mysql", dsl)
+	cfg := config.Configs().SQLite
+	db, err := gorm.Open("sqlite3", cfg.Database)
 	if err != nil {
 		return err
 	}
@@ -40,11 +34,6 @@ func SetupGorm() error {
 		return "tbl_" + defaultTableName
 	}
 	xgorm.HookDeletedAt(db, xgorm.DefaultDeletedAtTimestamp)
-
-	db.DB().SetMaxOpenConns(int(cfg.MaxOpen))                                // defaults to unlimited
-	db.DB().SetMaxIdleConns(int(cfg.MaxIdle))                                // defaults to 2
-	db.DB().SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Second) // defaults to unlimited
-	db.DB().SetConnMaxIdleTime(time.Duration(cfg.MaxIdletime) * time.Second) // defaults to unlimited
 
 	err = migrate(db)
 	if err != nil {
