@@ -11,18 +11,6 @@ sqlite:
   database: database.db
   log-mode: true
 
-mysql:
-  host: 127.0.0.1
-  port: 3306
-  database: db_github_bot
-  user: root
-  password: 123
-  log-mode: true
-  max-open: 60
-  max-idle: 10
-  max-lifetime: 3600 # second
-  max-idletime: 300  # second
-
 redis:
   host: 127.0.0.1
   port: 6379
@@ -37,5 +25,5 @@ redis:
   max-idletime: 300  # second
 
 task:
-  activity: 0 */1 * * * *
-  issue: 0 */5 * * * *
+  activity: 0 */2 * * * *
+  issue: 0 */10 * * * *

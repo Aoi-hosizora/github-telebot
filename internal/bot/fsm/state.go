@@ -7,11 +7,14 @@ import (
 const (
 	None xtelebot.ChatStatus = iota
 
-	// controller.BindCtrl -> controller.FromBindingCtrl
-	Binding
+	// controller.BindCtrl -> controller.FromBindingUsernameCtrl
+	BindingUsername
 
-	// controller.EnableSilentCtrl -> controller.FromSilentHourCtrl
-	SilentHour
+	// controller.FromBindingUsernameCtrl -> controller.FromBindingTokenCtrl
+	BindingToken
+
+	// controller.EnableSilentCtrl -> controller.FromEnablingSilentCtrl
+	EnablingSilent
 
 	// controller.ActivityPageCtrl -> controller.FromActivityPageCtrl
 	ActivityPage

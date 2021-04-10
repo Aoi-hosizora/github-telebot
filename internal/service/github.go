@@ -3,23 +3,27 @@ package service
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
-	"net/http"
+	"strings"
 )
 
-func CheckUser(username string, token string) (bool, error) {
+const (
+	UserApi          string = "https://api.github.com/users/%s"
+	ActivityEventApi string = "https://api.github.com/users/%s/received_events?page=%d"
+	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline?page=%d"
+)
+
+func CheckUserExist(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
-	code, _, err := HttpGet(url, func(r *http.Request) {
-		r.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	})
-	return code == 200, err
+	_, resp, err := httpGet(url, githubToken(token))
+	if err != nil {
+		return false, err
+	}
+	return resp.StatusCode == 200, nil
 }
 
 func GetActivityEvents(username string, token string, page int) ([]byte, error) {
-	url := fmt.Sprintf(ActivityEventApi, username)
-	url = fmt.Sprintf("%s?page=%d", url, page)
-	_, bs, err := HttpGet(url, func(r *http.Request) {
-		r.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	})
+	url := fmt.Sprintf(ActivityEventApi, username, page)
+	bs, _, err := httpGet(url, githubToken(token))
 	if err != nil {
 		return nil, err
 	}
@@ -27,49 +31,46 @@ func GetActivityEvents(username string, token string, page int) ([]byte, error) 
 }
 
 func GetIssueEvents(username string, token string, page int) ([]byte, error) {
-	url := fmt.Sprintf(IssueEventApi, username)
-	url = fmt.Sprintf("%s?page=%d", url, page)
-	_, bs, err := HttpGet(url, func(r *http.Request) {
-		r.Header.Add("Authorization", fmt.Sprintf("Token %s", token))
-	})
+	url := fmt.Sprintf(IssueEventApi, username, page)
+	bs, _, err := httpGet(url, githubToken(token))
 	if err != nil {
 		return nil, err
 	}
 	return bs, nil
 }
 
-func RenderActivities(objs []*model.ActivityEvent) string {
-	if len(objs) == 1 {
-		return RenderActivity(objs[0]) // <<<
+func RenderActivityEvents(events []*model.ActivityEvent) string {
+	if len(events) == 1 {
+		return RenderActivity(events[0]) // <<<
 	}
 
-	result := ""
-	for idx, obj := range objs {
+	sb := strings.Builder{}
+	for idx, obj := range events {
 		if r := RenderActivity(obj); r != "" { // <<<
-			result += fmt.Sprintf("%d\\. %s\n", idx+1, r) // <<<
+			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, r)) // <<<
 		}
 	}
 
-	if result == "" {
+	if sb.Len() == 0 {
 		return ""
 	}
-	return result[:len(result)-1]
+	return sb.String()[:sb.Len()-1]
 }
 
-func RenderIssues(objs []*model.IssueEvent) string {
-	if len(objs) == 1 {
-		return RenderIssue(objs[0]) // <<<
+func RenderIssueEvents(events []*model.IssueEvent) string {
+	if len(events) == 1 {
+		return RenderIssue(events[0]) // <<<
 	}
 
-	result := ""
-	for idx, obj := range objs {
+	sb := strings.Builder{}
+	for idx, obj := range events {
 		if r := RenderIssue(obj); r != "" { // <<<
-			result += fmt.Sprintf("%d\\. %s\n", idx+1, r) // <<<
+			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, r)) // <<<
 		}
 	}
 
-	if result == "" {
+	if sb.Len() == 0 {
 		return ""
 	}
-	return result[:len(result)-1]
+	return sb.String()[:sb.Len()-1]
 }

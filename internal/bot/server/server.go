@@ -7,6 +7,7 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
 	"gopkg.in/tucnak/telebot.v2"
+	"strings"
 )
 
 // _bot represents the global BotServer.
@@ -44,29 +45,8 @@ func (b *BotServer) Stop() {
 	b.bot.Stop()
 }
 
-func (b *BotServer) Delete(msg telebot.Editable) error {
-	return b.bot.Delete(msg)
-}
-
 func (b *BotServer) Edit(msg telebot.Editable, what interface{}, options ...interface{}) (*telebot.Message, error) {
 	return b.bot.Edit(msg, what, options...)
-}
-
-func (b *BotServer) Respond(c *telebot.Callback, resp ...*telebot.CallbackResponse) error {
-	return b.bot.Respond(c, resp...)
-}
-
-func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
-	var msg *telebot.Message
-	var err error
-	for i := 0; i < int(config.Configs().Bot.RetryCount); i++ { // retry
-		msg, err = b.bot.Send(m.Chat, what, options...)
-		logger.Reply(m, msg, err)
-		if err == nil {
-			break
-		}
-	}
-	return err
 }
 
 func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
@@ -78,8 +58,29 @@ func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface
 		if err == nil {
 			break
 		}
+
+		if strings.Contains(err.Error(), "must be escaped") {
+			if flag, ok := what.(string); ok {
+				flag = strings.ReplaceAll(flag, "\\", "")
+				flag += "\n\nPlease contact to the developer with the message:\n" + err.Error()
+
+				newOptions := make([]interface{}, 1, len(options))
+				newOptions[0] = telebot.ModeMarkdown
+				for _, opt := range options {
+					if opt != telebot.ModeMarkdownV2 {
+						newOptions = append(newOptions, opt)
+					}
+				}
+				_, _ = b.bot.Send(c, flag, newOptions...)
+				break
+			}
+		}
 	}
 	return err
+}
+
+func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
+	return b.Send(m.Chat, what, options...)
 }
 
 func (b *BotServer) SendToChat(chatId int64, what interface{}, options ...interface{}) error {

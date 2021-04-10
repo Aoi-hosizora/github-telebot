@@ -7,6 +7,19 @@ import (
 	"time"
 )
 
+func foreachUsers(users []*model.User, fn func(user *model.User)) {
+	wg := &sync.WaitGroup{}
+	for _, user := range users {
+		wg.Add(1)
+		go func(user *model.User) {
+			defer func() { recover() }()
+			fn(user)
+			wg.Done()
+		}(user)
+	}
+	wg.Wait()
+}
+
 func checkSilent(user *model.User) bool {
 	if !user.Silent {
 		return false
@@ -31,16 +44,4 @@ func checkSilent(user *model.User) bool {
 		}
 	}
 	return false
-}
-
-func foreachUsers(users []*model.User, fn func(user *model.User)) {
-	wg := sync.WaitGroup{}
-	for _, user := range users {
-		wg.Add(1)
-		go func(user *model.User) {
-			fn(user)
-			wg.Done()
-		}(user)
-	}
-	wg.Wait()
 }

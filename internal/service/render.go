@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func RenderResult(list, username string) string {
+func ConcatListAndUsername(list, username string) string {
 	res := fmt.Sprintf("From [%s](https://github.com/%s)\\.", Markdown(username), username)
 	return fmt.Sprintf("%s\n\\=\\=\\=\\=\n%s", list, res)
 }
@@ -36,6 +36,13 @@ func Markdown(s string) string {
 	return s
 }
 
+func ifThenElse(cond bool, s1, s2 string) string {
+	if cond {
+		return s1
+	}
+	return s2
+}
+
 func RenderActivity(obj *model.ActivityEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
@@ -46,10 +53,10 @@ func RenderActivity(obj *model.ActivityEvent) string {
 	message := ""
 	switch obj.Type {
 	case "PushEvent":
-		cnt := IfThenElse(pl.Size <= 1, "1 commit", fmt.Sprintf("%d commits", pl.Size))
+		cnt := ifThenElse(pl.Size <= 1, "1 commit", fmt.Sprintf("%d commits", pl.Size))
 		commitUrl := fmt.Sprintf("%s/commits/%s", repoUrl, pl.Commits[0].Sha)
 		detail := fmt.Sprintf("[%s](%s)", pl.Commits[0].Sha[0:7], commitUrl)
-		detail = IfThenElse(pl.Size <= 1, detail, detail+"\\.\\.\\.")
+		detail = ifThenElse(pl.Size <= 1, detail, detail+"\\.\\.\\.")
 		message = fmt.Sprintf("%s pushed %s \\(%s\\) to %s", userMd, cnt, detail, repoMd)
 	case "WatchEvent":
 		message = fmt.Sprintf("%s starred %s", userMd, repoMd)
@@ -62,7 +69,7 @@ func RenderActivity(obj *model.ActivityEvent) string {
 			tagUrl := fmt.Sprintf("%s/tree/%s", repoUrl, pl.Ref)
 			message = fmt.Sprintf("%s created tag [%s](%s) at %s", userMd, Markdown(pl.Ref), tagUrl, repoMd)
 		case "repository":
-			message = fmt.Sprintf("%s created %s repository %s", userMd, IfThenElse(obj.Public, "public", "private"), repoMd)
+			message = fmt.Sprintf("%s created %s repository %s", userMd, ifThenElse(obj.Public, "public", "private"), repoMd)
 		default:
 			message = fmt.Sprintf("%s created %s at %s", userMd, Markdown(pl.RefType), repoMd)
 		}
@@ -71,7 +78,7 @@ func RenderActivity(obj *model.ActivityEvent) string {
 	case "DeleteEvent":
 		message = fmt.Sprintf("%s delete %s %s at %s", userMd, Markdown(pl.RefType), Markdown(pl.Ref), repoMd)
 	case "PublicEvent":
-		message = fmt.Sprintf("%s made %s %s", userMd, repoMd, IfThenElse(obj.Public, "public", "private"))
+		message = fmt.Sprintf("%s made %s %s", userMd, repoMd, ifThenElse(obj.Public, "public", "private"))
 
 	case "IssuesEvent":
 		message = fmt.Sprintf("%s %s issue [\\#%d](%s) in %s", userMd, pl.Action, pl.Issue.Number, pl.Issue.HtmlUrl, repoMd)
@@ -93,7 +100,7 @@ func RenderActivity(obj *model.ActivityEvent) string {
 	case "ReleaseEvent":
 		message = fmt.Sprintf("%s release [%s](%s) at %s", userMd, Markdown(pl.Release.TagName), pl.Release.HtmlUrl, repoMd)
 	case "GollumEvent":
-		cnt := IfThenElse(len(pl.Page) <= 1, "1 wiki page", fmt.Sprintf("%d wiki pages", len(pl.Page)))
+		cnt := ifThenElse(len(pl.Page) <= 1, "1 wiki page", fmt.Sprintf("%d wiki pages", len(pl.Page)))
 		message = fmt.Sprintf("%s updated %s at %s", userMd, cnt, repoMd)
 	default:
 		event := strings.TrimRight(obj.Type, "Event")
@@ -191,11 +198,4 @@ func RenderIssue(obj *model.IssueEvent) string {
 	}
 
 	return message
-}
-
-func IfThenElse(cond bool, s1, s2 string) string {
-	if cond {
-		return s1
-	}
-	return s2
 }

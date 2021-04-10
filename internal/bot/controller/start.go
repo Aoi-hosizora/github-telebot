@@ -18,8 +18,8 @@ const (
 /bind - bind with a new github account
 /unbind - unbind an old github account
 /me - show the bind user's information
-/enablesilent - enable bot silent send 
-/disablesilent - disable bot silent send
+/enablesilent - enable bot silence send
+/disablesilent - disable bot silence send
 
 *Events*
 /allowissue - allow bot to send issue events
@@ -64,15 +64,18 @@ func CancelCtrl(m *telebot.Message) {
 // $on_text
 func OnTextCtrl(m *telebot.Message) {
 	switch server.Bot().GetStatus(m.Chat.ID) {
-	case fsm.Binding:
-		FromBindingCtrl(m)
+	case fsm.BindingUsername:
+		FromBindingUsernameCtrl(m)
+	case fsm.BindingToken:
+		FromBindingTokenCtrl(m)
+	case fsm.EnablingSilent:
+		FromEnablingSilentCtrl(m)
 	case fsm.ActivityPage:
 		FromActivityPageCtrl(m)
 	case fsm.IssuePage:
 		FromIssuePageCtrl(m)
-	case fsm.SilentHour:
-		FromSilentHourCtrl(m)
 	default:
-		_ = server.Bot().Reply(m, fmt.Sprintf(UNKNOWN_COMMAND, m.Text))
+		msg := fmt.Sprintf(UNKNOWN_COMMAND, m.Text)
+		_ = server.Bot().Reply(m, msg)
 	}
 }

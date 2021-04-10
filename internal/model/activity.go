@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/Aoi-hosizora/ahlib/xslice"
 	"time"
 )
 
@@ -25,7 +26,7 @@ type ActivityPayload struct {
 	Size    uint32 `json:"size"` // 1
 	Commits []*struct {
 		Sha string `json:"sha"` // 073f349775f412746a0494426a3c66d877c8033d
-	}
+	} `json:"commits"`
 	Ref     string `json:"ref"`      // refs/heads/master null 1.1
 	RefType string `json:"ref_type"` // branch repository tag
 	Forkee  *struct { // fork
@@ -50,12 +51,12 @@ type ActivityPayload struct {
 	Member *struct { // member
 		HtmlUrl string `json:"html_url"`
 		Login   string `json:"login"`
-	}
+	} `json:"member"`
 	Release *struct { // release
 		HtmlUrl string `json:"html_url"`
 		TagName string `json:"tag_name"` // 1.1
-	}
-	Page []interface{} // gollum
+	} `json:"release"`
+	Page []interface{} `json:"page"` // gollum
 }
 
 func UnmarshalActivityEvents(bs []byte) ([]*ActivityEvent, error) {
@@ -67,24 +68,13 @@ func UnmarshalActivityEvents(bs []byte) ([]*ActivityEvent, error) {
 	return out, nil
 }
 
-func ActivityEventEqual(e1, e2 *ActivityEvent) bool {
-	// use event id is enough
+func ActivityEventEquals(e1, e2 *ActivityEvent) bool {
+	// checking type and repo is dummy
 	return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
 }
 
 func ActivitySliceDiff(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEvent {
-	result := make([]*ActivityEvent, 0)
-	for _, item1 := range s1 {
-		exist := false
-		for _, item2 := range s2 {
-			if ActivityEventEqual(item1, item2) {
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			result = append(result, item1)
-		}
-	}
-	return result
+	return xslice.DiffWithG(s1, s2, func(i, j interface{}) bool {
+		return ActivityEventEquals(i.(*ActivityEvent), j.(*ActivityEvent))
+	}).([]*ActivityEvent)
 }

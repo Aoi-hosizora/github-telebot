@@ -9,7 +9,6 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"github.com/robfig/cron/v3"
 	"gopkg.in/tucnak/telebot.v2"
-	"strings"
 )
 
 // _cron represents the global cron.Cron.
@@ -44,7 +43,7 @@ func activityTask() {
 	}
 
 	foreachUsers(users, func(user *model.User) {
-		// get event and unmarshal
+		// get events and unmarshal
 		resp, err := service.GetActivityEvents(user.Username, user.Token, 1)
 		if err != nil {
 			return
@@ -65,34 +64,26 @@ func activityTask() {
 
 		// update old events
 		ok = dao.SetOldActivities(user.ChatID, events)
-		logger.Logger().Infof("Set new ativities: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 		if !ok {
 			return
 		}
+		logger.Logger().Infof("Set new ativities: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 
-		// render and send
+		// render
 		if len(diff) == 0 {
 			return
 		}
-		render := service.RenderActivities(diff) // <<<
+		render := service.RenderActivityEvents(diff) // <<<
 		if render == "" {
 			return
 		}
-		flag := service.RenderResult(render, user.Username) + " \\(Activity events\\)" // <<<
-		var sendErr error
+		flag := service.ConcatListAndUsername(render, user.Username) + " \\(Activity events\\)" // <<<
+
+		// send
 		if checkSilent(user) {
-			sendErr = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
+			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
 		} else {
-			sendErr = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
-		}
-		if sendErr != nil && strings.Contains(sendErr.Error(), "must be escaped") {
-			flag = strings.ReplaceAll(flag, "\\", "")
-			flag += "\n\nPlease contact with the developer with the message:\n" + sendErr.Error()
-			if checkSilent(user) {
-				_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
-			} else {
-				_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
-			}
+			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
 		}
 	})
 }
@@ -111,7 +102,7 @@ func issueTask() {
 			return
 		}
 
-		// get event and unmarshal
+		// get events and unmarshal
 		resp, err := service.GetIssueEvents(user.Username, user.Token, 1)
 		if err != nil {
 			return
@@ -132,40 +123,35 @@ func issueTask() {
 
 		// check events and get diff
 		oldEvents, ok := dao.GetOldIssues(user.ChatID)
+		if !ok {
+			return
+		}
 		logger.Logger().Infof("Get old issues: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
 		diff := model.IssueSliceDiff(events, oldEvents)
 		logger.Logger().Infof("Get diff issues: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
 
 		// update old events
 		ok = dao.SetOldIssues(user.ChatID, events)
-		logger.Logger().Infof("Set new issues: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 		if !ok {
 			return
 		}
+		logger.Logger().Infof("Set new issues: #%d | (%d %s)", len(events), user.ChatID, user.Username)
 
-		// render and send
+		// render
 		if len(diff) == 0 {
 			return
 		}
-		render := service.RenderIssues(diff) // <<<
+		render := service.RenderIssueEvents(diff) // <<<
 		if render == "" {
 			return
 		}
-		flag := service.RenderResult(render, user.Username) + " \\(Issue events\\)" // <<<
-		var sendErr error
+		flag := service.ConcatListAndUsername(render, user.Username) + " \\(Issue events\\)" // <<<
+
+		// send
 		if checkSilent(user) {
-			sendErr = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
+			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
 		} else {
-			sendErr = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
-		}
-		if sendErr != nil && strings.Contains(sendErr.Error(), "must be escaped") {
-			flag = strings.ReplaceAll(flag, "\\", "")
-			flag += "\n\nPlease contact with the developer with the message:\n" + sendErr.Error()
-			if checkSilent(user) {
-				_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdown, telebot.Silent)
-			} else {
-				_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdown)
-			}
+			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
 		}
 	})
 }

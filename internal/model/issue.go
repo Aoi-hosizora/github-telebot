@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"github.com/Aoi-hosizora/ahlib/xslice"
 	"time"
 )
 
@@ -61,18 +62,7 @@ func IssueEventEqual(e1, e2 *IssueEvent) bool {
 }
 
 func IssueSliceDiff(s1 []*IssueEvent, s2 []*IssueEvent) []*IssueEvent {
-	result := make([]*IssueEvent, 0)
-	for _, item1 := range s1 {
-		exist := false
-		for _, item2 := range s2 {
-			if IssueEventEqual(item1, item2) {
-				exist = true
-				break
-			}
-		}
-		if !exist {
-			result = append(result, item1)
-		}
-	}
-	return result
+	return xslice.DiffWithG(s1, s2, func(i, j interface{}) bool {
+		return IssueEventEqual(i.(*IssueEvent), j.(*IssueEvent))
+	}).([]*IssueEvent)
 }
