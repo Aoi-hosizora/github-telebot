@@ -12,20 +12,17 @@ import (
 )
 
 var (
+	fConfig = flag.String("config", "./config.yaml", "config file path")
 	fHelp   = flag.Bool("h", false, "show help")
-	fConfig = flag.String("config", "./config.yaml", "change the config path")
 )
 
 func main() {
 	flag.Parse()
 	if *fHelp {
 		flag.Usage()
-	} else {
-		run()
+		return
 	}
-}
 
-func run() {
 	err := config.Load(*fConfig)
 	if err != nil {
 		log.Fatalln("Failed to load config:", err)
@@ -36,17 +33,16 @@ func run() {
 	}
 	err = database.SetupGorm()
 	if err != nil {
-		log.Fatalln("Failed to connect mysql:", err)
+		log.Fatalln("Failed to setup gorm:", err)
 	}
 	err = database.SetupRedis()
-	err = database.SetupRedis()
 	if err != nil {
-		log.Fatalln("Failed to connect redis:", err)
+		log.Fatalln("Failed to setup redis:", err)
 	}
 
 	err = bot.Setup()
 	if err != nil {
-		log.Fatalln("Failed to load telebot:", err)
+		log.Fatalln("Failed to setup telebot:", err)
 	}
 	err = task.Setup()
 	if err != nil {

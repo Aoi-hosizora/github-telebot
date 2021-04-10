@@ -49,38 +49,45 @@ func (b *BotServer) Edit(msg telebot.Editable, what interface{}, options ...inte
 	return b.bot.Edit(msg, what, options...)
 }
 
-func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
+func (b *BotServer) sendTo(c *telebot.Chat, what interface{}, cb func(*telebot.Message, error), options ...interface{}) error {
 	var msg *telebot.Message
 	var err error
+
 	for i := 0; i < int(config.Configs().Bot.RetryCount); i++ { // retry
 		msg, err = b.bot.Send(c, what, options...)
-		logger.Send(c, msg, err)
+		cb(msg, err)
 		if err == nil {
-			break
+			return nil
 		}
 
-		if strings.Contains(err.Error(), "must be escaped") {
-			if flag, ok := what.(string); ok {
-				flag = strings.ReplaceAll(flag, "\\", "")
-				flag += "\n\nPlease contact to the developer with the message:\n" + err.Error()
-
-				newOptions := make([]interface{}, 1, len(options))
-				newOptions[0] = telebot.ModeMarkdown
-				for _, opt := range options {
-					if opt != telebot.ModeMarkdownV2 {
-						newOptions = append(newOptions, opt)
-					}
+		if flag, ok := what.(string); ok && strings.Contains(err.Error(), "must be escaped") {
+			flag = strings.ReplaceAll(flag, "\\", "")
+			flag += "\n\nPlease contact to the developer with the message:\n" + err.Error()
+			newOptions := make([]interface{}, 1, len(options))
+			newOptions[0] = telebot.ModeMarkdown
+			for _, opt := range options {
+				if opt != telebot.ModeMarkdownV2 {
+					newOptions = append(newOptions, opt)
 				}
-				_, _ = b.bot.Send(c, flag, newOptions...)
-				break
 			}
+			_, _ = b.bot.Send(c, flag, newOptions...)
+			return err
 		}
 	}
+
 	return err
 }
 
+func (b *BotServer) Send(c *telebot.Chat, what interface{}, options ...interface{}) error {
+	return b.sendTo(c, what, func(msg *telebot.Message, err error) {
+		logger.Send(c, msg, err)
+	}, options...)
+}
+
 func (b *BotServer) Reply(m *telebot.Message, what interface{}, options ...interface{}) error {
-	return b.Send(m.Chat, what, options...)
+	return b.sendTo(m.Chat, what, func(msg *telebot.Message, err error) {
+		logger.Reply(m, msg, err)
+	}, options...)
 }
 
 func (b *BotServer) SendToChat(chatId int64, what interface{}, options ...interface{}) error {

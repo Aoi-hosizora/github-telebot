@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+type Repo struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
+
 type ActivityEvent struct {
 	Id    string `json:"id"`
 	Type  string `json:"type"`
@@ -13,10 +18,7 @@ type ActivityEvent struct {
 		Login string `json:"login"`
 		Url   string `json:"url"`
 	} `json:"actor"`
-	Repo *struct {
-		Name string `json:"name"`
-		Url  string `json:"url"`
-	} `json:"repo"`
+	Repo      *Repo            `json:"repo"`
 	Payload   *ActivityPayload `json:"payload"`
 	Public    bool             `json:"public"`
 	CreatedAt time.Time        `json:"created_at"`
@@ -68,13 +70,10 @@ func UnmarshalActivityEvents(bs []byte) ([]*ActivityEvent, error) {
 	return out, nil
 }
 
-func ActivityEventEquals(e1, e2 *ActivityEvent) bool {
-	// checking type and repo is dummy
-	return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
-}
-
 func ActivitySliceDiff(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEvent {
 	return xslice.DiffWithG(s1, s2, func(i, j interface{}) bool {
-		return ActivityEventEquals(i.(*ActivityEvent), j.(*ActivityEvent))
+		// checking type and repo is dummy
+		e1, e2 := i.(*ActivityEvent), j.(*ActivityEvent)
+		return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
 	}).([]*ActivityEvent)
 }

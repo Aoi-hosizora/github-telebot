@@ -9,7 +9,6 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
-	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
 	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"gopkg.in/tucnak/telebot.v2"
@@ -18,7 +17,7 @@ import (
 
 const (
 	BIND_ALREADY        = "You have already bind with a github account: %s."
-	BIND_USERNAME_Q     = "Please send the github's username (which is show in your profile page url) which you want to bind. Send /cancel to cancel."
+	BIND_USERNAME_Q     = "Please send the github's username which you want to bind. Send /cancel to cancel."
 	BIND_TOKEN_Q        = "Do you want to watch private events? Send your token if you want, otherwise send 'no'. Send /cancel to cancel."
 	BIND_EMPTY_USERNAME = "Please send a non-empty username (without whitespace). Send /cancel to cancel."
 	BIND_EMPTY_TOKEN    = "Please send a non-empty token (without whitespace), or send 'no' to ignore. Send /cancel to cancel."
@@ -34,12 +33,12 @@ const (
 	UNBIND_SUCCESS = "Unbind user success."
 
 	GITHUB_FAILED    = "Failed to get github information, please retry later."
-	GITHUB_NOT_FOUND = "Github user not found."
+	GITHUB_NOT_FOUND = "Github user is not found, or the token in invalid."
 	GITHUB_ME_NOTOK  = "You have bound with user '%s' without token."
 	GITHUB_ME_TOKEN  = "You have bound with user '%s' with token '%s'."
 
 	SILENT_Q = "Please send two different numbers to represent hours that you want to start and finish silent send (numbers are in range of [0, 23]), " +
-		"and with a timezone (such as +8:00 or -06:30), split by whitespace. Examples: 23 6 +8:00 or 0 8 -6. Send /cancel to cancel."
+		"and with a timezone (such as +8:00 or -06:30), split by whitespace. Examples: '23 6 +8:00' or '0 8 -6'. Send /cancel to cancel."
 	SILENT_UNEXPECTED_FORMAT   = "Unexpected input, please send two different numbers in range of [0, 23] and with a timezone string. Send /cancel to cancel."
 	SILENT_UNEXPECTED_HOUR     = "Unexpected hour value, please send two different integers in range of [0, 23]. Send /cancel to cancel."
 	SILENT_UNEXPECTED_TIMEZONE = "Unexpected timezone string, please send a valid one, such as +8:00 or -06:30. Send /cancel to cancel."
@@ -83,19 +82,18 @@ func FromBindingTokenCtrl(m *telebot.Message) {
 	}
 
 	username, _ := server.Bot().GetCache(m.Chat.ID, "username")
-	user := &model.User{ChatID: m.Chat.ID, Username: username.(string)}
-	if strings.ToLower(token) != "no" {
-		user.Token = token
+	if strings.ToLower(token) == "no" {
+		token = ""
 	}
 
 	flag := ""
-	ok, err := service.CheckUserExist(user.Username, user.Token)
+	ok, err := service.CheckUserExist(username.(string), token)
 	if err != nil {
 		flag = GITHUB_FAILED
 	} else if !ok {
 		flag = GITHUB_NOT_FOUND
 	} else {
-		status := dao.CreateUser(user) // id username token
+		status := dao.CreateUser(m.Chat.ID, username.(string), token)
 		if status == xstatus.DbExisted {
 			if existed := dao.QueryUser(m.Chat.ID); existed != nil {
 				flag = fmt.Sprintf(BIND_ALREADY, existed.Username)
@@ -104,7 +102,7 @@ func FromBindingTokenCtrl(m *telebot.Message) {
 			}
 		} else if status == xstatus.DbFailed {
 			flag = BIND_FAILED
-		} else if user.Token != "" {
+		} else if token != "" {
 			flag = fmt.Sprintf(BIND_TOKEN_SUCCESS, username)
 		} else {
 			flag = fmt.Sprintf(BIND_NOTOK_SUCCESS, username)
@@ -165,8 +163,7 @@ func MeCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	name := service.Markdown(user.Username)
-	url := fmt.Sprintf("[%s](https://github.com/%s)", name, user.Username)
+	url := fmt.Sprintf("[%s](https://github.com/%s)", user.Username, user.Username)
 	if user.Token == "" {
 		flag = fmt.Sprintf(GITHUB_ME_NOTOK, url)
 	} else {

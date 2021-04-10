@@ -40,6 +40,9 @@ func GetIssueEvents(username string, token string, page int) ([]byte, error) {
 }
 
 func RenderActivityEvents(events []*model.ActivityEvent) string {
+	if len(events) == 0 {
+		return ""
+	}
 	if len(events) == 1 {
 		return RenderActivity(events[0]) // <<<
 	}
@@ -50,7 +53,6 @@ func RenderActivityEvents(events []*model.ActivityEvent) string {
 			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, r)) // <<<
 		}
 	}
-
 	if sb.Len() == 0 {
 		return ""
 	}
@@ -58,6 +60,9 @@ func RenderActivityEvents(events []*model.ActivityEvent) string {
 }
 
 func RenderIssueEvents(events []*model.IssueEvent) string {
+	if len(events) == 0 {
+		return ""
+	}
 	if len(events) == 1 {
 		return RenderIssue(events[0]) // <<<
 	}
@@ -68,9 +73,13 @@ func RenderIssueEvents(events []*model.IssueEvent) string {
 			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, r)) // <<<
 		}
 	}
-
 	if sb.Len() == 0 {
 		return ""
 	}
 	return sb.String()[:sb.Len()-1]
+}
+
+func ConcatListAndUsername(list, username string) string {
+	res := fmt.Sprintf("From [%s](https://github.com/%s)\\.", Markdown(username), username)
+	return fmt.Sprintf("%s\n%s\n%s", list, `\=\=\=\=`, res)
 }

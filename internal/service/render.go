@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-func ConcatListAndUsername(list, username string) string {
-	res := fmt.Sprintf("From [%s](https://github.com/%s)\\.", Markdown(username), username)
-	return fmt.Sprintf("%s\n\\=\\=\\=\\=\n%s", list, res)
-}
-
 func Markdown(s string) string {
 	s = strings.ReplaceAll(s, `\`, `\\`)
 	s = strings.ReplaceAll(s, `*`, `\*`)

@@ -21,7 +21,7 @@ func Setup() error {
 			Timeout: time.Second * time.Duration(config.Configs().Bot.PollerTimeout),
 		},
 		Reporter: func(err error) {
-			xrecovery.LogToLogrus(logger.Logger(), err, xruntime.RuntimeTraceStack(0))
+			xrecovery.LogToLogrus(logger.Logger(), err, xruntime.RuntimeTraceStack(4))
 		},
 	})
 	if err != nil {
@@ -44,8 +44,8 @@ func setupHandler(b *server.BotServer) {
 
 	// user
 	b.HandleMessage("/bind", controller.BindCtrl)
-	b.HandleMessage("/me", controller.MeCtrl)
 	b.HandleMessage("/unbind", controller.UnbindCtrl)
+	b.HandleMessage("/me", controller.MeCtrl)
 	b.HandleInline(button.InlineBtnUnbind, controller.InlineBtnUnbindCtrl)
 	b.HandleInline(button.InlineBtnCancel, controller.InlineBtnCancelCtrl)
 	b.HandleMessage("/enablesilent", controller.EnableSilentCtrl)

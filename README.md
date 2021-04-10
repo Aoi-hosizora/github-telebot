@@ -13,23 +13,23 @@
 ```text
 *Commands*
 /start - show start message
-/help - show help message
+/help - show this help message
 /cancel - cancel the last action
 
-*Account related*
+*Account*
 /bind - bind with a new github account
 /unbind - unbind an old github account
-/me - show the bound user's information
-/enablesilent - enable client send
-/disablesilent - disable client send
+/me - show the bind user's information
+/enablesilent - enable bot silence send
+/disablesilent - disable bot silence send
 
-*Events related*
-/allowissue - allow bot to send issue
-/disallowissue - disallow bot to send issue
+*Events*
+/allowissue - allow bot to send issue events
+/disallowissue - disallow bot to send issue events
 /activity - show the first page of activity events
-/activityn - show the nth page of activity events
+/activitypage - show the nth page of activity events
 /issue - show the first page of issue events
-/issuen - show the nth page of issue events
+/issuepage - show the nth page of issue events
 ```
 
 ### References

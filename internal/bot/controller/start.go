@@ -25,9 +25,9 @@ const (
 /allowissue - allow bot to send issue events
 /disallowissue - disallow bot to send issue events
 /activity - show the first page of activity events
-/activities - show the nth page of activity events
+/activitypage - show the nth page of activity events
 /issue - show the first page of issue events
-/issues - show the nth page of issue events
+/issuepage - show the nth page of issue events
 
 *Bug report*
 https://github.com/Aoi-hosizora/github-telebot/issues/new`

@@ -22,8 +22,12 @@ func QueryUser(chatID int64) *model.User {
 	return user
 }
 
-func CreateUser(user *model.User) xstatus.DbStatus {
-	rdb := database.DB().Model(&model.User{}).Create(user)
+func CreateUser(chatID int64, username, token string) xstatus.DbStatus {
+	rdb := database.DB().Model(&model.User{}).Create(&model.User{
+		ChatID:   chatID,
+		Username: username,
+		Token:    token,
+	})
 	sts, _ := xgorm.CreateErr(rdb)
 	return sts
 }

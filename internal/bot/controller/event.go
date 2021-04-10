@@ -196,6 +196,10 @@ func FromIssuePageCtrl(m *telebot.Message) {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
 	}
+	if user.Token == "" {
+		_ = server.Bot().Reply(m, ISSUE_ONLY_FOR_TOKEN)
+		return
+	}
 
 	flag := ""
 	v2md := false

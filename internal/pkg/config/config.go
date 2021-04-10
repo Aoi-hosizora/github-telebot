@@ -16,7 +16,6 @@ type Config struct {
 	Meta   *MetaConfig   `yaml:"meta"`
 	Bot    *BotConfig    `yaml:"bot"`
 	SQLite *SQLiteConfig `yaml:"sqlite"`
-	MySQL  *MySQLConfig  `yaml:"mysql"`
 	Redis  *RedisConfig  `yaml:"redis"`
 	Task   *TaskConfig   `yaml:"task"`
 }
@@ -35,20 +34,6 @@ type BotConfig struct {
 type SQLiteConfig struct {
 	Database string `yaml:"database"`
 	LogMode  bool   `yaml:"log-mode"`
-}
-
-type MySQLConfig struct {
-	Host     string `yaml:"host"`
-	Port     int32  `yaml:"port"`
-	Database string `yaml:"database"`
-	User     string `yaml:"user"`
-	Password string `yaml:"password"`
-	LogMode  bool   `yaml:"log-mode"`
-
-	MaxOpen     int32 `yaml:"max-open"`
-	MaxIdle     int32 `yaml:"max-idle"`
-	MaxLifetime int32 `yaml:"max-lifetime"`
-	MaxIdletime int32 `yaml:"max-idletime"`
 }
 
 type RedisConfig struct {

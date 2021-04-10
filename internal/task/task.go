@@ -31,6 +31,7 @@ func Setup() error {
 		return err
 	}
 
+	_cron = cr
 	return nil
 }
 
@@ -43,36 +44,36 @@ func activityTask() {
 	}
 
 	foreachUsers(users, func(user *model.User) {
-		// get events and unmarshal
+		// get new events
 		resp, err := service.GetActivityEvents(user.Username, user.Token, 1)
 		if err != nil {
 			return
 		}
-		events, err := model.UnmarshalActivityEvents(resp)
-		if err != nil {
+		newEvents, err := model.UnmarshalActivityEvents(resp)
+		if err != nil || len(newEvents) == 0 {
 			return
 		}
 
-		// check events and get diff
+		// get old events and calc diff
 		oldEvents, ok := dao.GetOldActivities(user.ChatID)
 		if !ok {
 			return
 		}
 		logger.Logger().Infof("Get old ativities: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
-		diff := model.ActivitySliceDiff(events, oldEvents)
+		diff := model.ActivitySliceDiff(newEvents, oldEvents)
 		logger.Logger().Infof("Get diff ativities: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
-
-		// update old events
-		ok = dao.SetOldActivities(user.ChatID, events)
-		if !ok {
-			return
-		}
-		logger.Logger().Infof("Set new ativities: #%d | (%d %s)", len(events), user.ChatID, user.Username)
-
-		// render
 		if len(diff) == 0 {
 			return
 		}
+
+		// update old events
+		ok = dao.SetOldActivities(user.ChatID, newEvents)
+		if !ok {
+			return
+		}
+		logger.Logger().Infof("Set new ativities: #%d | (%d %s)", len(newEvents), user.ChatID, user.Username)
+
+		// render
 		render := service.RenderActivityEvents(diff) // <<<
 		if render == "" {
 			return
@@ -102,45 +103,48 @@ func issueTask() {
 			return
 		}
 
-		// get events and unmarshal
+		// get new events
 		resp, err := service.GetIssueEvents(user.Username, user.Token, 1)
 		if err != nil {
 			return
 		}
-		events, err := model.UnmarshalIssueEvents(resp)
+		newEvents, err := model.UnmarshalIssueEvents(resp)
 		if err != nil {
 			return
 		}
 		if user.FilterMe {
 			tempEvents := make([]*model.IssueEvent, 0)
-			for _, e := range events {
+			for _, e := range newEvents {
 				if e.Actor.Login != user.Username {
 					tempEvents = append(tempEvents, e)
 				}
 			}
-			events = tempEvents
+			newEvents = tempEvents
+		}
+		if len(newEvents) == 0 {
+			return
 		}
 
-		// check events and get diff
+		// get old events and calc diff
 		oldEvents, ok := dao.GetOldIssues(user.ChatID)
 		if !ok {
 			return
 		}
 		logger.Logger().Infof("Get old issues: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
-		diff := model.IssueSliceDiff(events, oldEvents)
+		diff := model.IssueSliceDiff(newEvents, oldEvents)
 		logger.Logger().Infof("Get diff issues: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
-
-		// update old events
-		ok = dao.SetOldIssues(user.ChatID, events)
-		if !ok {
-			return
-		}
-		logger.Logger().Infof("Set new issues: #%d | (%d %s)", len(events), user.ChatID, user.Username)
-
-		// render
 		if len(diff) == 0 {
 			return
 		}
+
+		// update old events
+		ok = dao.SetOldIssues(user.ChatID, newEvents)
+		if !ok {
+			return
+		}
+		logger.Logger().Infof("Set new issues: #%d | (%d %s)", len(newEvents), user.ChatID, user.Username)
+
+		// render
 		render := service.RenderIssueEvents(diff) // <<<
 		if render == "" {
 			return

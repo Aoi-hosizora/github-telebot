@@ -8,7 +8,7 @@ import (
 )
 
 func foreachUsers(users []*model.User, fn func(user *model.User)) {
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	for _, user := range users {
 		wg.Add(1)
 		go func(user *model.User) {

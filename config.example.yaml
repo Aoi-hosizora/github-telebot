@@ -25,5 +25,5 @@ redis:
   max-idletime: 300  # second
 
 task:
-  activity: 0 */2 * * * *
-  issue: 0 */10 * * * *
+  activity: 0 0/2 * * * *
+  issue: 0 0/10 * * * *

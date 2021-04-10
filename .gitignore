@@ -10,3 +10,4 @@ logs/*
 !.gitkeep
 config.yaml
 config.server.yaml
+*.db
