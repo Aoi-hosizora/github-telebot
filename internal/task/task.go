@@ -55,7 +55,7 @@ func activityTask() {
 		}
 
 		// get old events and calc diff
-		oldEvents, ok := dao.GetOldActivities(user.ChatID)
+		oldEvents, ok := dao.GetActivities(user.ChatID)
 		if !ok {
 			return
 		}
@@ -67,7 +67,7 @@ func activityTask() {
 		}
 
 		// update old events
-		ok = dao.SetOldActivities(user.ChatID, newEvents)
+		ok = dao.SetActivities(user.ChatID, newEvents)
 		if !ok {
 			return
 		}
@@ -126,7 +126,7 @@ func issueTask() {
 		}
 
 		// get old events and calc diff
-		oldEvents, ok := dao.GetOldIssues(user.ChatID)
+		oldEvents, ok := dao.GetIssues(user.ChatID)
 		if !ok {
 			return
 		}
@@ -138,7 +138,7 @@ func issueTask() {
 		}
 
 		// update old events
-		ok = dao.SetOldIssues(user.ChatID, newEvents)
+		ok = dao.SetIssues(user.ChatID, newEvents)
 		if !ok {
 			return
 		}

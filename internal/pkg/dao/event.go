@@ -47,7 +47,7 @@ func parseIssuePattern(key string) (chatID, id int64, event, repo string, num in
 	return
 }
 
-func GetOldActivities(chatID int64) ([]*model.ActivityEvent, bool) {
+func GetActivities(chatID int64) ([]*model.ActivityEvent, bool) {
 	pattern := getActivityPattern(xnumber.I64toa(chatID), "*", "*", "*")
 	keys, err := database.Redis().Keys(context.Background(), pattern).Result()
 	if err != nil {
@@ -62,7 +62,7 @@ func GetOldActivities(chatID int64) ([]*model.ActivityEvent, bool) {
 	return events, true
 }
 
-func GetOldIssues(chatID int64) ([]*model.IssueEvent, bool) {
+func GetIssues(chatID int64) ([]*model.IssueEvent, bool) {
 	pattern := getIssuePattern(xnumber.I64toa(chatID), "*", "*", "*", "*", "*")
 	keys, err := database.Redis().Keys(context.Background(), pattern).Result()
 	if err != nil {
@@ -77,7 +77,7 @@ func GetOldIssues(chatID int64) ([]*model.IssueEvent, bool) {
 	return events, true
 }
 
-func SetOldActivities(chatID int64, events []*model.ActivityEvent) bool {
+func SetActivities(chatID int64, events []*model.ActivityEvent) bool {
 	chatIDStr := xnumber.I64toa(chatID)
 	pattern := getActivityPattern(chatIDStr, "*", "*", "*")
 	_, err := xredis.DelAll(database.Redis(), context.Background(), pattern)
@@ -97,7 +97,7 @@ func SetOldActivities(chatID int64, events []*model.ActivityEvent) bool {
 	return err == nil
 }
 
-func SetOldIssues(chatID int64, events []*model.IssueEvent) bool {
+func SetIssues(chatID int64, events []*model.IssueEvent) bool {
 	chatIDStr := xnumber.I64toa(chatID)
 	pattern := getIssuePattern(chatIDStr, "*", "*", "*", "*", "*")
 	_, err := xredis.DelAll(database.Redis(), context.Background(), pattern)

@@ -33,7 +33,7 @@ func CreateUser(chatID int64, username, token string) xstatus.DbStatus {
 }
 
 func UpdateUserAllowIssue(chatID int64, allowIssue, filterMe bool) xstatus.DbStatus {
-	rdb := database.DB().Model(&model.User{}).Where("chat_id = ?", chatID).Updates(map[string]interface{}{
+	rdb := database.DB().Model(&model.User{}).Where("chat_id = ?", chatID).Update(map[string]interface{}{
 		"allow_issue": allowIssue,
 		"filter_me":   filterMe,
 	})
@@ -42,7 +42,7 @@ func UpdateUserAllowIssue(chatID int64, allowIssue, filterMe bool) xstatus.DbSta
 }
 
 func UpdateUserSilent(chatID int64, silent bool, silentStart, silentEnd int, timeZone string) xstatus.DbStatus {
-	rdb := database.DB().Model(&model.User{}).Where("chat_id = ?", chatID).Updates(map[string]interface{}{
+	rdb := database.DB().Model(&model.User{}).Where("chat_id = ?", chatID).Update(map[string]interface{}{
 		"silent":       silent,
 		"silent_start": silentStart,
 		"silent_end":   silentEnd,
