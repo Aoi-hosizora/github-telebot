@@ -61,6 +61,7 @@ func setupHandler(b *server.BotServer) {
 	b.HandleMessage("/deletefilter", controller.DeleteFilterCtrl)
 
 	// event
+	b.HandleMessage("/supportedevents", controller.SupportedEventCtrl)
 	b.HandleMessage("/activity", controller.ActivityCtrl)
 	b.HandleMessage("/activitypage", controller.ActivityPageCtrl)
 	b.HandleMessage("/issue", controller.IssueCtrl)

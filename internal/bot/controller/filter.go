@@ -3,9 +3,12 @@ package controller
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
+	"github.com/Aoi-hosizora/ahlib/xstring"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/button"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
+	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"gopkg.in/tucnak/telebot.v2"
 	"strings"
 )
@@ -18,6 +21,9 @@ const (
 
 	DISALLOW_ISSUE_FAILED  = "Failed to disallow bot to send issue events periodically."
 	DISALLOW_ISSUE_SUCCESS = "Success to disallow bot to send issue events periodically."
+
+	FILTER_NONE   = "You have not any notify filters yet, please send /addfilter to add one."
+	FILTER_RESULT = "Filters (all for %d):%s"
 )
 
 // /allowissue
@@ -112,9 +118,14 @@ func DisallowIssueCtrl(m *telebot.Message) {
 
 // /listfilter
 func ListFilterCtrl(m *telebot.Message) {
+	user := dao.QueryUser(m.Chat.ID)
+	if user == nil {
+		_ = server.Bot().Reply(m, BIND_NOT_YET)
+		return
+	}
 	filters := dao.QueryFilters(m.Chat.ID)
 	if len(filters) == 0 {
-		_ = server.Bot().Reply(m, "You have not any notify filters, please send /addfilter to add one.")
+		_ = server.Bot().Reply(m, FILTER_NONE)
 		return
 	}
 
@@ -124,31 +135,91 @@ func ListFilterCtrl(m *telebot.Message) {
 		sb.WriteString(filter.RepoName)
 		sb.WriteString(" - ")
 		sb.WriteString(filter.EventType)
-		if filter.IsActivity {
+		if service.IsActivityEvent(filter.EventType) { // end with "Event"
 			sb.WriteString(" (activity event)")
 		} else {
 			sb.WriteString(" (issue event)")
 		}
 	}
-	_ = server.Bot().Reply(m, fmt.Sprintf("Filters (all for %d):%s", len(filters), sb.String()))
+	_ = server.Bot().Reply(m, fmt.Sprintf(FILTER_RESULT, len(filters), sb.String()))
 }
 
 // /addfilter
 func AddFilterCtrl(m *telebot.Message) {
-
+	user := dao.QueryUser(m.Chat.ID)
+	if user == nil {
+		_ = server.Bot().Reply(m, BIND_NOT_YET)
+		return
+	}
+	server.Bot().SetStatus(m.Chat.ID, fsm.AddingFilter)
+	_ = server.Bot().Reply(m, `Please send the filter pattern, format: "$username $reponame $event_type", splitted by whitespace.
+Here $reponame and $event_type can be "*" as all repos and all events.
+Send /supportedevents to see all supported events, send /cancel to cancel`)
 }
 
 // fsm.AddingFilter
 func FromAddingFilterCtrl(m *telebot.Message) {
+	sp := strings.Split(m.Text, " ")
+	if len(sp) != 3 {
+		_ = server.Bot().Reply(m, `Please send the correct filter pattern, format: "$username $reponame $event_type".`)
+		return
+	}
+	if strings.Contains(sp[1], "/") {
+		_ = server.Bot().Reply(m, "Please send the correct repo name, this name could not conclude user's name.")
+		return
+	}
 
+	username := sp[0]
+	reponame := sp[1]
+	eventType := sp[2]
+
+	dao.CreateFilter(m.Chat.ID, username, reponame, eventType)
+	eventFlag := "all events"
+	repoFlag := fmt.Sprintf("repository %s/%s", username, reponame)
+	if eventType != "*" {
+		if service.IsActivityEvent(eventType) {
+			eventFlag = xstring.SnakeCase(strings.TrimSuffix(eventType, "Event"))
+		} else {
+			eventFlag = xstring.SnakeCase(eventType)
+		}
+		eventFlag = fmt.Sprintf("the %s event", eventFlag)
+	}
+	if reponame == "*" {
+		repoFlag = fmt.Sprintf("all repositories by user %s", username)
+	}
+	server.Bot().SetStatus(m.Chat.ID, fsm.None)
+	_ = server.Bot().Reply(m, fmt.Sprintf("Success to create a new filter, you will not receive %s from %s.", eventFlag, repoFlag))
 }
 
 // /deletefilter
 func DeleteFilterCtrl(m *telebot.Message) {
-
+	user := dao.QueryUser(m.Chat.ID)
+	if user == nil {
+		_ = server.Bot().Reply(m, BIND_NOT_YET)
+		return
+	}
+	server.Bot().SetStatus(m.Chat.ID, fsm.DeletingFilter)
+	_ = server.Bot().Reply(m, `Please send the filter pattern, format: "$username $reponame $event_type", splitted by whitespace.
+Send /supportedevents to see all supported events, send /cancel to cancel`)
 }
 
 // fsm.DeletingFilter
 func FromDeletingFilterCtrl(m *telebot.Message) {
+	sp := strings.Split(m.Text, " ")
+	if len(sp) != 3 {
+		_ = server.Bot().Reply(m, `Please send the correct filter pattern, format: "$username $reponame $event_type".`)
+		return
+	}
+	if strings.Contains(sp[1], "/") {
+		_ = server.Bot().Reply(m, "Please send the correct repo name, this name could not conclude user's name.")
+		return
+	}
 
+	username := sp[0]
+	reponame := sp[1]
+	eventType := sp[2]
+
+	dao.DeleteFilter(m.Chat.ID, username, reponame, eventType)
+	server.Bot().SetStatus(m.Chat.ID, fsm.None)
+	_ = server.Bot().Reply(m, fmt.Sprintf("Success to delete filter, pattern: %s %s %s.", username, reponame, eventType))
 }

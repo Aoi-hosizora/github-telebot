@@ -19,6 +19,14 @@ const (
 	ISSUE_ONLY_FOR_TOKEN = "Send issue can only be allowed for users that bind with token."
 )
 
+// /supportedevents
+func SupportedEventCtrl(m *telebot.Message) {
+	_ = server.Bot().Reply(m, "Supported activity and issue events:\n"+
+		"1. Activity events: PushEvent, WatchEvent, CreateEvent, ForkEvent, DeleteEvent, PublicEvent, IssuesEvent, IssueCommentEvent, PullRequestEvent, PullRequestReviewEvent, PullRequestReviewCommentEvent, CommitCommentEvent, MemberEvent, ReleaseEvent, GollumEvent.\n"+
+		"2. Issue events: mentioned, opened, closed, reopened, renamed, labeled, unlabeled, locked, unlocked, milestoned, demilestoned, pinned, unpinned, assigned, commented, merged, head_ref_deleted, head_ref_restored, added_to_project, removed_from_project, moved_columns_in_project, cross-referenced, referenced.",
+	)
+}
+
 // /activity
 func ActivityCtrl(m *telebot.Message) {
 	m.Text = "1"

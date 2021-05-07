@@ -57,7 +57,7 @@ func activityTask() {
 		// filter and check empty
 		tempEvents := make([]*model.ActivityEvent, 0)
 		for _, e := range newEvents {
-			if !dao.CheckFilter(user.ChatID, true, e.Repo.Name, e.Type) {
+			if !dao.CheckFilter(user.ChatID, e.Actor.Login, e.Repo.Name, e.Type) {
 				tempEvents = append(tempEvents, e)
 			}
 		}
@@ -128,7 +128,7 @@ func issueTask() {
 		// filter and check empty
 		tempEvents := make([]*model.IssueEvent, 0)
 		for _, e := range newEvents {
-			if !dao.CheckFilter(user.ChatID, false, e.Repo, e.Event) {
+			if !dao.CheckFilter(user.ChatID, e.Actor.Login, e.Repo, e.Event) {
 				tempEvents = append(tempEvents, e)
 			}
 		}

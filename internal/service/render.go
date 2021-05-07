@@ -38,6 +38,10 @@ func ifThenElse(cond bool, s1, s2 string) string {
 	return s2
 }
 
+func IsActivityEvent(ev string) bool {
+	return strings.HasSuffix(ev, "Event")
+}
+
 func RenderActivity(obj *model.ActivityEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
