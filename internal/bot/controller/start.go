@@ -21,9 +21,14 @@ const (
 /enablesilent - enable bot silence send
 /disablesilent - disable bot silence send
 
-*Events*
+*Filter*
 /allowissue - allow bot to send issue events
 /disallowissue - disallow bot to send issue events
+/listfilter - list all notify filters
+/addfilter - add a notify filter
+/deletefilter - delete a notify filter
+
+*Events*
 /activity - show the first page of activity events
 /activitypage - show the nth page of activity events
 /issue - show the first page of issue events
@@ -61,6 +66,12 @@ func CancelCtrl(m *telebot.Message) {
 	}
 }
 
+// button.InlineBtnCancel
+func InlineBtnCancelCtrl(c *telebot.Callback) {
+	m := c.Message
+	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (canceled)", m.Text))
+}
+
 // $on_text
 func OnTextCtrl(m *telebot.Message) {
 	switch server.Bot().GetStatus(m.Chat.ID) {
@@ -70,6 +81,10 @@ func OnTextCtrl(m *telebot.Message) {
 		FromBindingTokenCtrl(m)
 	case fsm.EnablingSilent:
 		FromEnablingSilentCtrl(m)
+	case fsm.AddingFilter:
+		FromAddingFilterCtrl(m)
+	case fsm.DeletingFilter:
+		FromDeletingFilterCtrl(m)
 	case fsm.ActivityPage:
 		FromActivityPageCtrl(m)
 	case fsm.IssuePage:

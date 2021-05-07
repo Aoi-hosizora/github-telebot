@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	// controller.UnbindCtrl -> controller.InlineBtnUnbindCtrl
-	InlineBtnUnbind = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
-
 	// controller.UnbindCtrl & controller.AllowIssueCtrl -> controller.InlineBtnCancelCtrl
 	InlineBtnCancel = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
+
+	// controller.UnbindCtrl -> controller.InlineBtnUnbindCtrl
+	InlineBtnUnbind = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
 
 	// controller.AllowIssueCtrl -> controller.InlineBtnFilterCtrl
 	InlineBtnFilter = &telebot.InlineButton{Unique: "btn_filter", Text: "Filter"}

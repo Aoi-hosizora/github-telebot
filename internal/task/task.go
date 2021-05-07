@@ -50,7 +50,19 @@ func activityTask() {
 			return
 		}
 		newEvents, err := model.UnmarshalActivityEvents(resp)
-		if err != nil || len(newEvents) == 0 {
+		if err != nil {
+			return
+		}
+
+		// filter and check empty
+		tempEvents := make([]*model.ActivityEvent, 0)
+		for _, e := range newEvents {
+			if !dao.CheckFilter(user.ChatID, true, e.Repo.Name, e.Type) {
+				tempEvents = append(tempEvents, e)
+			}
+		}
+		newEvents = tempEvents
+		if len(newEvents) == 0 {
 			return
 		}
 
@@ -112,8 +124,17 @@ func issueTask() {
 		if err != nil {
 			return
 		}
+
+		// filter and check empty
+		tempEvents := make([]*model.IssueEvent, 0)
+		for _, e := range newEvents {
+			if !dao.CheckFilter(user.ChatID, false, e.Repo, e.Event) {
+				tempEvents = append(tempEvents, e)
+			}
+		}
+		newEvents = tempEvents
 		if user.FilterMe {
-			tempEvents := make([]*model.IssueEvent, 0)
+			tempEvents = make([]*model.IssueEvent, 0)
 			for _, e := range newEvents {
 				if e.Actor.Login != user.Username {
 					tempEvents = append(tempEvents, e)

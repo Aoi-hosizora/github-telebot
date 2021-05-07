@@ -16,6 +16,12 @@ const (
 	// controller.EnableSilentCtrl -> controller.FromEnablingSilentCtrl
 	EnablingSilent
 
+	// controller.AddFilterCtrl -> controller.FromAddingFilterCtrl
+	AddingFilter
+
+	// controller.DeleteFilterCtrl -> controller.FromDeletingFilterCtrl
+	DeletingFilter
+
 	// controller.ActivityPageCtrl -> controller.FromActivityPageCtrl
 	ActivityPage
 

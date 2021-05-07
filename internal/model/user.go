@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	Id          uint32 `gorm:"primary_key; auto_increment"`
+	Uid         uint64 `gorm:"primary_key; auto_increment"`
 	ChatID      int64  `gorm:"type:bigint(20);   not_null; unique_index:uk_chat_id"`
 	Username    string `gorm:"type:varchar(255); not_null"`
 	Token       string `gorm:"type:varchar(255); not_null"`
@@ -23,7 +23,7 @@ type User struct {
 
 /*
 CREATE TABLE IF NOT EXISTS "tbl_user" (
-    "id"           integer primary key autoincrement,
+    "uid"          integer primary key autoincrement,
     "chat_id"      bigint(20),
     "username"     varchar(255),
     "token"        varchar(255),

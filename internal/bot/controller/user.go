@@ -148,12 +148,6 @@ func InlineBtnUnbindCtrl(c *telebot.Callback) {
 	_ = server.Bot().Reply(m, flag)
 }
 
-// button.InlineBtnCancel
-func InlineBtnCancelCtrl(c *telebot.Callback) {
-	m := c.Message
-	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (canceled)", m.Text))
-}
-
 // /me
 func MeCtrl(m *telebot.Message) {
 	user := dao.QueryUser(m.Chat.ID)

@@ -40,6 +40,7 @@ func setupHandler(b *server.BotServer) {
 	b.HandleMessage("/start", controller.StartCtrl)
 	b.HandleMessage("/help", controller.HelpCtrl)
 	b.HandleMessage("/cancel", controller.CancelCtrl)
+	b.HandleInline(button.InlineBtnCancel, controller.InlineBtnCancelCtrl)
 	b.HandleMessage(telebot.OnText, controller.OnTextCtrl)
 
 	// user
@@ -47,15 +48,19 @@ func setupHandler(b *server.BotServer) {
 	b.HandleMessage("/unbind", controller.UnbindCtrl)
 	b.HandleMessage("/me", controller.MeCtrl)
 	b.HandleInline(button.InlineBtnUnbind, controller.InlineBtnUnbindCtrl)
-	b.HandleInline(button.InlineBtnCancel, controller.InlineBtnCancelCtrl)
 	b.HandleMessage("/enablesilent", controller.EnableSilentCtrl)
 	b.HandleMessage("/disablesilent", controller.DisableSilentCtrl)
 
-	// event
+	// filter
 	b.HandleMessage("/allowissue", controller.AllowIssueCtrl)
 	b.HandleInline(button.InlineBtnFilter, controller.InlineBtnFilterCtrl)
 	b.HandleInline(button.InlineBtnNotFilter, controller.InlineBtnNotFilterCtrl)
 	b.HandleMessage("/disallowissue", controller.DisallowIssueCtrl)
+	b.HandleMessage("/listfilter", controller.ListFilterCtrl)
+	b.HandleMessage("/addfilter", controller.AddFilterCtrl)
+	b.HandleMessage("/deletefilter", controller.DeleteFilterCtrl)
+
+	// event
 	b.HandleMessage("/activity", controller.ActivityCtrl)
 	b.HandleMessage("/activitypage", controller.ActivityPageCtrl)
 	b.HandleMessage("/issue", controller.IssueCtrl)
