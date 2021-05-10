@@ -56,12 +56,8 @@ func setupHandler(b *server.BotServer) {
 	b.HandleInline(button.InlineBtnFilter, controller.InlineBtnFilterCtrl)
 	b.HandleInline(button.InlineBtnNotFilter, controller.InlineBtnNotFilterCtrl)
 	b.HandleMessage("/disallowissue", controller.DisallowIssueCtrl)
-	b.HandleMessage("/listfilter", controller.ListFilterCtrl)
-	b.HandleMessage("/addfilter", controller.AddFilterCtrl)
-	b.HandleMessage("/deletefilter", controller.DeleteFilterCtrl)
 
 	// event
-	b.HandleMessage("/supportedevents", controller.SupportedEventCtrl)
 	b.HandleMessage("/activity", controller.ActivityCtrl)
 	b.HandleMessage("/activitypage", controller.ActivityPageCtrl)
 	b.HandleMessage("/issue", controller.IssueCtrl)
