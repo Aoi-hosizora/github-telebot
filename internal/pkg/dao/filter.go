@@ -5,53 +5,42 @@ import (
 	"github.com/Aoi-hosizora/ahlib/xstatus"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/database"
-	"strings"
 )
 
 func QueryFilters(chatID int64) []*model.Filter {
 	filters := make([]*model.Filter, 0)
-	database.DB().Model(&model.Filter{}).Where("chat_id = ?", chatID).Where(&filters)
+	database.DB().Model(&model.Filter{}).Where("chat_id = ?", chatID).Find(&filters)
 	return filters
 }
 
-func CheckFilter(chatID int64, username, repoName, eventType string) bool {
-	if strings.Contains(repoName, "/") {
-		repoName = strings.Split(repoName, "/")[1]
-	}
+func CheckFilter(chatID int64, repoName, actor, eventType string) bool {
 	filters := make([]*model.Filter, 0)
-	database.DB().Model(&model.Filter{}).Where("chat_id = ? AND username = ?", chatID, username).Find(&filters)
-
+	database.DB().Model(&model.Filter{}).Where("chat_id = ? AND repo_name = ?", chatID, repoName).Find(&filters)
 	for _, filter := range filters {
-		if filter.RepoName == "*" {
+		if filter.Actor == "*" || filter.Actor == actor {
 			return true
 		}
-		if filter.RepoName == repoName {
-			return false
-		}
-		if filter.EventType == "*" {
+		if filter.EventType == "*" || filter.EventType == eventType {
 			return true
-		}
-		if filter.EventType == eventType {
-			return false
 		}
 	}
 	return false
 }
 
-func CreateFilter(chatID int64, username, repoName, eventType string) xstatus.DbStatus {
+func CreateFilter(chatID int64, repoName, actor, eventType string) xstatus.DbStatus {
 	rdb := database.DB().Model(&model.Filter{}).Create(&model.Filter{
 		ChatID:    chatID,
-		Username:  username,  // Actor.Login
-		RepoName:  repoName,  // Repo.Name (trim username part)
-		EventType: eventType, // xxxEvent or xxx_yyy
+		Actor:     actor,
+		RepoName:  repoName,
+		EventType: eventType,
 	})
 	sts, _ := xgorm.CreateErr(rdb)
 	return sts
 }
 
-func DeleteFilter(chatID int64, username, repoName, eventType string) xstatus.DbStatus {
-	rdb := database.DB().Model(&model.Filter{}).Where("chat_id = ? AND username = ? AND repo_name = ? AND event_type = ?",
-		chatID, username, repoName, eventType).Delete(&model.Filter{})
+func DeleteFilter(chatID int64, repoName, actor, eventType string) xstatus.DbStatus {
+	rdb := database.DB().Model(&model.Filter{}).Where("chat_id = ? AND actor = ? AND repo_name = ? AND event_type = ?",
+		chatID, actor, repoName, eventType).Delete(&model.Filter{})
 	sts, _ := xgorm.DeleteErr(rdb)
 	return sts
 }

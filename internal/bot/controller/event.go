@@ -12,19 +12,20 @@ import (
 )
 
 const (
+	SUPPORTED_EVENTS = "Supported activity and issue events:\n\n" +
+		"1. Activity events: PushEvent, WatchEvent, CreateEvent, ForkEvent, DeleteEvent, PublicEvent, IssuesEvent, IssueCommentEvent, " +
+		"PullRequestEvent, PullRequestReviewEvent, PullRequestReviewCommentEvent, CommitCommentEvent, MemberEvent, ReleaseEvent, GollumEvent.\n\n" +
+		"2. Issue events: mentioned, opened, closed, reopened, renamed, labeled, unlabeled, locked, unlocked, milestoned, demilestoned, pinned, unpinned, " +
+		"assigned, commented, merged, head_ref_deleted, head_ref_restored, added_to_project, removed_from_project, moved_columns_in_project, cross-referenced, referenced."
+
 	GITHUB_PAGE_Q     = "Please send the page number you want to get. Send /cancel to cancel."
 	UNEXPECTED_NUMBER = "Unexpected page number. Please send an integer value. Send /cancel to cancel."
 	EMPTY_EVENT       = "You have empty event."
-
-	ISSUE_ONLY_FOR_TOKEN = "Send issue can only be allowed for users that bind with token."
 )
 
 // /supportedevents
 func SupportedEventCtrl(m *telebot.Message) {
-	_ = server.Bot().Reply(m, "Supported activity and issue events:\n"+
-		"1. Activity events: PushEvent, WatchEvent, CreateEvent, ForkEvent, DeleteEvent, PublicEvent, IssuesEvent, IssueCommentEvent, PullRequestEvent, PullRequestReviewEvent, PullRequestReviewCommentEvent, CommitCommentEvent, MemberEvent, ReleaseEvent, GollumEvent.\n"+
-		"2. Issue events: mentioned, opened, closed, reopened, renamed, labeled, unlabeled, locked, unlocked, milestoned, demilestoned, pinned, unpinned, assigned, commented, merged, head_ref_deleted, head_ref_restored, added_to_project, removed_from_project, moved_columns_in_project, cross-referenced, referenced.",
-	)
+	_ = server.Bot().Reply(m, SUPPORTED_EVENTS)
 }
 
 // /activity
@@ -62,11 +63,20 @@ func FromActivityPageCtrl(m *telebot.Message) {
 		flag = GITHUB_FAILED
 	} else if events, err := model.UnmarshalActivityEvents(resp); err != nil {
 		flag = GITHUB_FAILED
-	} else if render := service.RenderActivityEvents(events); render == "" {
-		flag = EMPTY_EVENT
 	} else {
-		flag = service.ConcatListAndUsername(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
-		v2md = true
+		tempEvents := make([]*model.ActivityEvent, 0)
+		for _, e := range events {
+			if !dao.CheckFilter(user.ChatID, e.Repo.Name, e.Actor.Login, e.Type) {
+				tempEvents = append(tempEvents, e)
+			}
+		}
+		events = tempEvents
+		if render := service.RenderActivityEvents(events); render == "" {
+			flag = EMPTY_EVENT
+		} else {
+			flag = service.ConcatListAndUsername(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
+			v2md = true
+		}
 	}
 
 	server.Bot().SetStatus(m.Chat.ID, fsm.None)

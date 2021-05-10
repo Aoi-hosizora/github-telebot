@@ -8,6 +8,7 @@ import (
 
 const (
 	UserApi          string = "https://api.github.com/users/%s"
+	RepoApi          string = "https://api.github.com/repos/%s"
 	ActivityEventApi string = "https://api.github.com/users/%s/received_events?page=%d"
 	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline?page=%d"
 )
@@ -15,6 +16,24 @@ const (
 func CheckUserExist(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
 	_, resp, err := httpGet(url, githubToken(token))
+	if err != nil {
+		return false, err
+	}
+	return resp.StatusCode == 200, nil
+}
+
+func CheckActorExist(actor string) (bool, error) {
+	url := fmt.Sprintf(UserApi, actor)
+	_, resp, err := httpGet(url, nil)
+	if err != nil {
+		return false, err
+	}
+	return resp.StatusCode == 200, nil
+}
+
+func CheckRepoExist(repo string) (bool, error) {
+	url := fmt.Sprintf(RepoApi, repo)
+	_, resp, err := httpGet(url, nil)
 	if err != nil {
 		return false, err
 	}

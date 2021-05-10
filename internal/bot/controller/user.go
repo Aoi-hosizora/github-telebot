@@ -32,10 +32,12 @@ const (
 	UNBIND_FAILED  = "Failed to unbind github account, please retry later."
 	UNBIND_SUCCESS = "Unbind user success."
 
-	GITHUB_FAILED    = "Failed to get github information, please retry later."
-	GITHUB_NOT_FOUND = "Github user is not found, or the token in invalid."
-	GITHUB_ME_NOTOK  = "You have bound with user '%s' without token."
-	GITHUB_ME_TOKEN  = "You have bound with user '%s' with token '%s'."
+	GITHUB_FAILED          = "Failed to query information from github, please retry later."
+	GITHUB_USER_NOT_FOUND  = "Github user is not found, or the token is invalid."
+	GITHUB_ME_NOTOK        = "You have bound with user '%s' without token."
+	GITHUB_ME_TOKEN        = "You have bound with user '%s' with token '%s'."
+	GITHUB_ACTOR_NOT_FOUND = "Github actor is not found."
+	GITHUB_REPO_NOT_FOUND  = "Github repo is not found."
 
 	SILENT_Q = "Please send two different numbers to represent hours that you want to start and finish silent send (numbers are in range of [0, 23]), " +
 		"and with a timezone (such as +8:00 or -06:30), split by whitespace. Examples: '23 6 +8:00' or '0 8 -6'. Send /cancel to cancel."
@@ -91,7 +93,7 @@ func FromBindingTokenCtrl(m *telebot.Message) {
 	if err != nil {
 		flag = GITHUB_FAILED
 	} else if !ok {
-		flag = GITHUB_NOT_FOUND
+		flag = GITHUB_USER_NOT_FOUND
 	} else {
 		status := dao.CreateUser(m.Chat.ID, username.(string), token)
 		if status == xstatus.DbExisted {

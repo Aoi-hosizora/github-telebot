@@ -8,7 +8,7 @@ import (
 type Filter struct {
 	Fid       uint64 `gorm:"primary_key; auto_increment"`
 	ChatID    int64  `gorm:"type:bigint(20);   not_null; unique_index:uk_chat_user_repo_event"`
-	Username  string `gorm:"type:varchar(255); not_null; unique_index:uk_chat_user_repo_event"`
+	Actor     string `gorm:"type:varchar(255); not_null; unique_index:uk_chat_user_repo_event"`
 	RepoName  string `gorm:"type:varchar(255); not_null; unique_index:uk_chat_user_repo_event"`
 	EventType string `gorm:"type:varchar(255); not_null; unique_index:uk_chat_user_repo_event"`
 
@@ -20,7 +20,7 @@ type Filter struct {
 CREATE TABLE "tbl_filter" (
     "fid"        integer primary key autoincrement,
     "chat_id"    bigint(20),
-    "username"   varchar(255),
+    "actor"      varchar(255),
     "repo_name"  varchar(255),
     "event_type" varchar(255),
     "created_at" datetime,

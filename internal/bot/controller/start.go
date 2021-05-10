@@ -29,6 +29,7 @@ const (
 /deletefilter - delete a notify filter
 
 *Events*
+/supportedevents - show the supported events
 /activity - show the first page of activity events
 /activitypage - show the nth page of activity events
 /issue - show the first page of issue events
