@@ -4,7 +4,6 @@ import (
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 	"github.com/Aoi-hosizora/ahlib/xnumber"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
-	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
 	"gopkg.in/tucnak/telebot.v2"
 	"strings"
@@ -50,29 +49,23 @@ func (b *BotServer) Edit(msg telebot.Editable, what interface{}, options ...inte
 }
 
 func (b *BotServer) sendTo(c *telebot.Chat, what interface{}, cb func(*telebot.Message, error), options ...interface{}) error {
-	var msg *telebot.Message
-	var err error
+	msg, err := b.bot.Send(c, what, options...)
+	cb(msg, err)
+	if err == nil {
+		return nil
+	}
 
-	for i := 0; i < int(config.Configs().Bot.RetryCount); i++ { // retry
-		msg, err = b.bot.Send(c, what, options...)
-		cb(msg, err)
-		if err == nil {
-			return nil
-		}
-
-		if flag, ok := what.(string); ok && strings.Contains(err.Error(), "must be escaped") {
-			flag = strings.ReplaceAll(flag, "\\", "")
-			flag += "\n\nPlease contact to the developer with the message:\n" + err.Error()
-			newOptions := make([]interface{}, 1, len(options))
-			newOptions[0] = telebot.ModeMarkdown
-			for _, opt := range options {
-				if opt != telebot.ModeMarkdownV2 {
-					newOptions = append(newOptions, opt)
-				}
+	if flag, ok := what.(string); ok && strings.Contains(err.Error(), "must be escaped") {
+		flag = strings.ReplaceAll(flag, "\\", "")
+		flag += "\n\nPlease contact to the developer with the message:\n" + err.Error()
+		newOptions := make([]interface{}, 1, len(options))
+		newOptions[0] = telebot.ModeMarkdown
+		for _, opt := range options {
+			if opt != telebot.ModeMarkdownV2 {
+				newOptions = append(newOptions, opt)
 			}
-			_, _ = b.bot.Send(c, flag, newOptions...)
-			return err
 		}
+		_, _ = b.bot.Send(c, flag, newOptions...)
 	}
 
 	return err
@@ -95,7 +88,6 @@ func (b *BotServer) SendToChat(chatId int64, what interface{}, options ...interf
 	if err != nil {
 		return err
 	}
-
 	return b.Send(chat, what, options...)
 }
 

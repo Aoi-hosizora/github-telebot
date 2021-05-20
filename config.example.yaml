@@ -5,7 +5,6 @@ meta:
 bot:
   token: xxx
   poller-timeout: 600 # second
-  retry-count: 5
 
 sqlite:
   database: database.db

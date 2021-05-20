@@ -28,7 +28,6 @@ type MetaConfig struct {
 type BotConfig struct {
 	Token         string `yaml:"token"`
 	PollerTimeout uint64 `yaml:"poller-timeout"`
-	RetryCount    uint8  `yaml:"retry-count"`
 }
 
 type SQLiteConfig struct {
