@@ -9,8 +9,8 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
-	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
 	"github.com/Aoi-hosizora/github-telebot/internal/service"
+	"github.com/Aoi-hosizora/github-telebot/internal/service/dao"
 	"gopkg.in/tucnak/telebot.v2"
 	"strings"
 )
@@ -53,7 +53,7 @@ const (
 
 // /bind
 func BindCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user != nil {
 		_ = server.Bot().Reply(m, fmt.Sprintf(BIND_ALREADY, user.Username))
 	} else {
@@ -89,15 +89,15 @@ func FromBindingTokenCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	ok, err := service.CheckUserExist(username.(string), token)
+	ok, err := service.CheckUserExistence(username.(string), token)
 	if err != nil {
 		flag = GITHUB_FAILED
 	} else if !ok {
 		flag = GITHUB_USER_NOT_FOUND
 	} else {
-		status := dao.CreateUser(m.Chat.ID, username.(string), token)
+		status := dao.CreateChat(m.Chat.ID, username.(string), token)
 		if status == xstatus.DbExisted {
-			if existed := dao.QueryUser(m.Chat.ID); existed != nil {
+			if existed := dao.QueryChat(m.Chat.ID); existed != nil {
 				flag = fmt.Sprintf(BIND_ALREADY, existed.Username)
 			} else {
 				flag = fmt.Sprintf(BIND_ALREADY, "?")
@@ -118,7 +118,7 @@ func FromBindingTokenCtrl(m *telebot.Message) {
 
 // /unbind
 func UnbindCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -138,7 +138,7 @@ func InlineBtnUnbindCtrl(c *telebot.Callback) {
 	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (unbind)", m.Text))
 
 	flag := ""
-	status := dao.DeleteUser(m.Chat.ID)
+	status := dao.DeleteChat(m.Chat.ID)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -152,7 +152,7 @@ func InlineBtnUnbindCtrl(c *telebot.Callback) {
 
 // /me
 func MeCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -163,14 +163,14 @@ func MeCtrl(m *telebot.Message) {
 	if user.Token == "" {
 		flag = fmt.Sprintf(GITHUB_ME_NOTOK, url)
 	} else {
-		flag = fmt.Sprintf(GITHUB_ME_TOKEN, url, xstring.DefaultMaskToken(user.Token))
+		flag = fmt.Sprintf(GITHUB_ME_TOKEN, url, xstring.MaskTokenR(user.Token, 1, 2, 3, -1, -2, -3))
 	}
 	_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
 }
 
 // /enablesilent
 func EnableSilentCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -202,7 +202,7 @@ func FromEnablingSilentCtrl(m *telebot.Message) {
 	}
 
 	chatID, _ := server.Bot().GetCache(m.Chat.ID, "chatID")
-	status := dao.UpdateUserSilent(chatID.(int64), true, start, end, zone)
+	status := dao.UpdateChatSilent(chatID.(int64), true, start, end, zone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
@@ -225,7 +225,7 @@ func FromEnablingSilentCtrl(m *telebot.Message) {
 
 // /disablesilent
 func DisableSilentCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -236,7 +236,7 @@ func DisableSilentCtrl(m *telebot.Message) {
 		return
 	}
 
-	status := dao.UpdateUserSilent(user.ChatID, false, 0, 0, user.TimeZone)
+	status := dao.UpdateChatSilent(user.ChatID, false, 0, 0, user.TimeZone)
 	flag := ""
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET

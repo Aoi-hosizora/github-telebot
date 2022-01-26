@@ -38,11 +38,7 @@ func ifThenElse(cond bool, s1, s2 string) string {
 	return s2
 }
 
-func IsActivityEvent(ev string) bool {
-	return strings.HasSuffix(ev, "Event")
-}
-
-func RenderActivity(obj *model.ActivityEvent) string {
+func formatActivityEvent(obj *model.ActivityEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo.Name)
 	userMd := fmt.Sprintf("[%s](%s)", Markdown(obj.Actor.Login), userUrl)
@@ -112,7 +108,7 @@ func RenderActivity(obj *model.ActivityEvent) string {
 	return message
 }
 
-func RenderIssue(obj *model.IssueEvent) string {
+func formatIssueEvent(obj *model.IssueEvent) string {
 	userUrl := fmt.Sprintf("https://github.com/%s", obj.Actor.Login)
 	repoUrl := fmt.Sprintf("https://github.com/%s", obj.Repo)
 	issueUrl := fmt.Sprintf("https://github.com/%s/issues/%d", obj.Repo, obj.Number)

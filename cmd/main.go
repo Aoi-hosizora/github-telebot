@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
@@ -31,27 +32,26 @@ func main() {
 	if err != nil {
 		log.Fatalln("Failed to setup logger:", err)
 	}
-	err = database.SetupGorm()
+	err = database.SetupGormDB()
 	if err != nil {
-		log.Fatalln("Failed to setup gorm:", err)
+		log.Fatalln("Failed to setup gorm db:", err)
 	}
-	err = database.SetupRedis()
+	err = database.SetupRedisClient()
 	if err != nil {
-		log.Fatalln("Failed to setup redis:", err)
+		log.Fatalln("Failed to setup redis client:", err)
 	}
 
 	err = bot.Setup()
 	if err != nil {
 		log.Fatalln("Failed to setup telebot:", err)
 	}
-	err = task.Setup()
+	t, err := task.NewTask(server.Bot())
 	if err != nil {
-		log.Fatalln("Failed to setup cron:", err)
+		log.Fatalln("Failed to create task:", err)
 	}
 
-	defer task.Cron().Stop()
-	task.Cron().Start()
-
-	defer server.Bot().Stop()
+	fmt.Println()
+	t.Start()
+	defer t.Finish()
 	server.Bot().Start()
 }

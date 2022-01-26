@@ -12,11 +12,11 @@ import (
 // _db represents the global gorm.DB.
 var _db *gorm.DB
 
-func DB() *gorm.DB {
+func GormDB() *gorm.DB {
 	return _db
 }
 
-func SetupGorm() error {
+func SetupGormDB() error {
 	cfg := config.Configs().SQLite
 	db, err := gorm.Open("sqlite3", cfg.Database)
 	if err != nil {
@@ -46,7 +46,7 @@ func SetupGorm() error {
 
 func migrate(db *gorm.DB) error {
 	for _, m := range []interface{}{
-		&model.User{},
+		&model.Chat{},
 	} {
 		rdb := db.AutoMigrate(m)
 		if rdb.Error != nil {

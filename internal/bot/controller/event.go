@@ -7,9 +7,8 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/button"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
-	"github.com/Aoi-hosizora/github-telebot/internal/model"
-	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
 	"github.com/Aoi-hosizora/github-telebot/internal/service"
+	"github.com/Aoi-hosizora/github-telebot/internal/service/dao"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
@@ -30,7 +29,7 @@ const (
 
 // /allowissue
 func AllowIssueCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -53,13 +52,13 @@ func InlineBtnFilterCtrl(c *telebot.Callback) {
 	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (filter)", m.Text))
 
 	flag := ""
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else if user.Token == "" {
 		flag = ISSUE_ONLY_FOR_TOKEN
 	} else {
-		status := dao.UpdateUserAllowIssue(user.ChatID, true, true)
+		status := dao.UpdateChatIssue(user.ChatID, true, true)
 		if status == xstatus.DbNotFound {
 			flag = BIND_NOT_YET
 		} else if status == xstatus.DbFailed {
@@ -77,13 +76,13 @@ func InlineBtnNotFilterCtrl(c *telebot.Callback) {
 	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (not filter)", m.Text))
 
 	flag := ""
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		flag = BIND_NOT_YET
 	} else if user.Token == "" {
 		flag = ISSUE_ONLY_FOR_TOKEN
 	} else {
-		status := dao.UpdateUserAllowIssue(user.ChatID, true, false)
+		status := dao.UpdateChatIssue(user.ChatID, true, false)
 		if status == xstatus.DbNotFound {
 			flag = BIND_NOT_YET
 		} else if status == xstatus.DbFailed {
@@ -97,7 +96,7 @@ func InlineBtnNotFilterCtrl(c *telebot.Callback) {
 
 // /disallowissue
 func DisallowIssueCtrl(m *telebot.Message) {
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
 		return
@@ -107,7 +106,7 @@ func DisallowIssueCtrl(m *telebot.Message) {
 	}
 
 	flag := ""
-	status := dao.UpdateUserAllowIssue(user.ChatID, false, false)
+	status := dao.UpdateChatIssue(user.ChatID, false, false)
 	if status == xstatus.DbNotFound {
 		flag = BIND_NOT_YET
 	} else if status == xstatus.DbFailed {
@@ -140,7 +139,7 @@ func FromActivityPageCtrl(m *telebot.Message) {
 	if page <= 0 {
 		page = 1
 	}
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		server.Bot().SetStatus(m.Chat.ID, fsm.None)
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
@@ -149,11 +148,9 @@ func FromActivityPageCtrl(m *telebot.Message) {
 
 	flag := ""
 	v2md := false
-	if resp, err := service.GetActivityEvents(user.Username, user.Token, page); err != nil {
+	if events, err := service.GetActivityEvents(user.Username, user.Token, page); err != nil {
 		flag = GITHUB_FAILED
-	} else if events, err := model.UnmarshalActivityEvents(resp); err != nil {
-		flag = GITHUB_FAILED
-	} else if render := service.RenderActivityEvents(events); render == "" {
+	} else if render := service.FormatActivityEvents(events); render == "" {
 		flag = EMPTY_EVENT
 	} else {
 		flag = service.ConcatListAndUsername(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
@@ -162,9 +159,9 @@ func FromActivityPageCtrl(m *telebot.Message) {
 
 	server.Bot().SetStatus(m.Chat.ID, fsm.None)
 	if !v2md {
-		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
+		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown, telebot.NoPreview)
 	} else {
-		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdownV2)
+		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdownV2, telebot.NoPreview)
 	}
 }
 
@@ -190,7 +187,7 @@ func FromIssuePageCtrl(m *telebot.Message) {
 	if page <= 0 {
 		page = 1
 	}
-	user := dao.QueryUser(m.Chat.ID)
+	user := dao.QueryChat(m.Chat.ID)
 	if user == nil {
 		server.Bot().SetStatus(m.Chat.ID, fsm.None)
 		_ = server.Bot().Reply(m, BIND_NOT_YET)
@@ -203,11 +200,9 @@ func FromIssuePageCtrl(m *telebot.Message) {
 
 	flag := ""
 	v2md := false
-	if resp, err := service.GetIssueEvents(user.Username, user.Token, page); err != nil {
+	if events, err := service.GetIssueEvents(user.Username, user.Token, page); err != nil {
 		flag = GITHUB_FAILED
-	} else if events, err := model.UnmarshalIssueEvents(resp); err != nil {
-		flag = GITHUB_FAILED
-	} else if render := service.RenderIssueEvents(events); render == "" {
+	} else if render := service.FormatIssueEvents(events); render == "" {
 		flag = EMPTY_EVENT
 	} else {
 		flag = service.ConcatListAndUsername(render, user.Username) + fmt.Sprintf(" \\(page %d\\)", page) // <<<
@@ -216,8 +211,8 @@ func FromIssuePageCtrl(m *telebot.Message) {
 
 	server.Bot().SetStatus(m.Chat.ID, fsm.None)
 	if !v2md {
-		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown)
+		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdown, telebot.NoPreview)
 	} else {
-		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdownV2)
+		_ = server.Bot().Reply(m, flag, telebot.ModeMarkdownV2, telebot.NoPreview)
 	}
 }

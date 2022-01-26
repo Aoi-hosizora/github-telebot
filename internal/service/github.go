@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
 	"strings"
@@ -8,12 +9,11 @@ import (
 
 const (
 	UserApi          string = "https://api.github.com/users/%s"
-	RepoApi          string = "https://api.github.com/repos/%s"
 	ActivityEventApi string = "https://api.github.com/users/%s/received_events?page=%d"
 	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline?page=%d"
 )
 
-func CheckUserExist(username string, token string) (bool, error) {
+func CheckUserExistence(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
 	_, resp, err := httpGet(url, githubToken(token))
 	if err != nil {
@@ -22,83 +22,101 @@ func CheckUserExist(username string, token string) (bool, error) {
 	return resp.StatusCode == 200, nil
 }
 
-func CheckActorExist(actor string) (bool, error) {
-	url := fmt.Sprintf(UserApi, actor)
-	_, resp, err := httpGet(url, nil)
-	if err != nil {
-		return false, err
-	}
-	return resp.StatusCode == 200, nil
-}
-
-func CheckRepoExist(repo string) (bool, error) {
-	url := fmt.Sprintf(RepoApi, repo)
-	_, resp, err := httpGet(url, nil)
-	if err != nil {
-		return false, err
-	}
-	return resp.StatusCode == 200, nil
-}
-
-func GetActivityEvents(username string, token string, page int) ([]byte, error) {
+func GetActivityEvents(username string, token string, page int) ([]*model.ActivityEvent, error) {
 	url := fmt.Sprintf(ActivityEventApi, username, page)
 	bs, _, err := httpGet(url, githubToken(token))
 	if err != nil {
 		return nil, err
 	}
-	return bs, nil
+
+	out := make([]*model.ActivityEvent, 0)
+	err = json.Unmarshal(bs, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func GetIssueEvents(username string, token string, page int) ([]byte, error) {
+func GetIssueEvents(username string, token string, page int) ([]*model.IssueEvent, error) {
 	url := fmt.Sprintf(IssueEventApi, username, page)
 	bs, _, err := httpGet(url, githubToken(token))
 	if err != nil {
 		return nil, err
 	}
-	return bs, nil
+
+	out := make([]*model.IssueEvent, 0)
+	err = json.Unmarshal(bs, &out)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
-func RenderActivityEvents(events []*model.ActivityEvent) string {
+// func FilterActivityEventSlice(events []*model.ActivityEvent) []*model.ActivityEvent {
+// 	out := make([]*model.ActivityEvent, 0, len(events))
+// 	for _, e := range events {
+// 		// ...
+// 		out = append(out, e)
+// 	}
+// 	return out
+// }
+
+func FilterIssueEventSlice(events []*model.IssueEvent, username string) []*model.IssueEvent {
+	out := make([]*model.IssueEvent, 0, len(events))
+	for _, e := range events {
+		if e.Actor.Login != username {
+			out = append(out, e)
+		}
+	}
+	return out
+}
+
+func FormatActivityEvents(events []*model.ActivityEvent, username string, page int) string {
 	if len(events) == 0 {
 		return ""
 	}
-	if len(events) == 1 {
-		return RenderActivity(events[0]) // <<<
-	}
 
 	sb := strings.Builder{}
-	for idx, obj := range events {
-		if r := RenderActivity(obj); r != "" { // <<<
-			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, r)) // <<<
+	if page <= 0 {
+		sb.WriteString(fmt.Sprintf(`*New activity events*`))
+	} else {
+		sb.WriteString(fmt.Sprintf(`*Activity events from page %d*`, page))
+	}
+
+	if len(events) == 1 {
+		sb.WriteString(formatActivityEvent(events[0])) // <<<
+	} else {
+		for idx, ev := range events {
+			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, formatActivityEvent(ev))) // <<<
 		}
 	}
-	if sb.Len() == 0 {
-		return ""
-	}
-	return sb.String()[:sb.Len()-1]
+
+	sb.WriteString(`\=\=\=\=` + "\n")
+	sb.WriteString(fmt.Sprintf(`From [%s](https://github.com/%s)\.`, Markdown(username), username))
+	return sb.String()
 }
 
-func RenderIssueEvents(events []*model.IssueEvent) string {
+func FormatIssueEvents(events []*model.IssueEvent, username string, page int) string {
 	if len(events) == 0 {
 		return ""
 	}
-	if len(events) == 1 {
-		return RenderIssue(events[0]) // <<<
-	}
 
 	sb := strings.Builder{}
-	for idx, obj := range events {
-		if r := RenderIssue(obj); r != "" { // <<<
-			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, r)) // <<<
+	if page <= 0 {
+		sb.WriteString(fmt.Sprintf(`*New issue events*`))
+	} else {
+		sb.WriteString(fmt.Sprintf(`*Issue events from page %d*`, page))
+	}
+
+	if len(events) == 1 {
+		sb.WriteString(formatIssueEvent(events[0])) // <<<
+	} else {
+		for idx, ev := range events {
+			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, formatIssueEvent(ev))) // <<<
 		}
 	}
-	if sb.Len() == 0 {
-		return ""
-	}
-	return sb.String()[:sb.Len()-1]
-}
 
-func ConcatListAndUsername(list, username string) string {
-	res := fmt.Sprintf("From [%s](https://github.com/%s)\\.", Markdown(username), username)
-	return fmt.Sprintf("%s\n%s\n%s", list, `\=\=\=\=`, res)
+	sb.WriteString(`\=\=\=\=` + "\n")
+	sb.WriteString(fmt.Sprintf(`From [%s](https://github.com/%s)\.`, Markdown(username), username))
+	return sb.String()
 }

@@ -13,7 +13,7 @@ import (
 
 const magicToken = "$$"
 
-func getActivityPattern(chatID, id, typ, repo string) string {
+func concatActivityPattern(chatID, id, typ, repo string) string {
 	repo = strings.ReplaceAll(repo, "-", magicToken)
 	return fmt.Sprintf("gh-activity-ev-%s-%s-%s-%s", chatID, id, typ, repo)
 	//                                         3  4  5  6
@@ -28,7 +28,7 @@ func parseActivityPattern(key string) (chatID int64, id, typ, repo string) {
 	return
 }
 
-func getIssuePattern(chatID, id, event, repo, num, ct string) string {
+func concatIssuePattern(chatID, id, event, repo, num, ct string) string {
 	event = strings.ReplaceAll(event, "-", magicToken)
 	repo = strings.ReplaceAll(repo, "-", magicToken)
 	return fmt.Sprintf("gh-issue-ev-%s-%s-%s-%s-%s-%s", chatID, id, event, repo, num, ct)
@@ -47,11 +47,11 @@ func parseIssuePattern(key string) (chatID, id int64, event, repo string, num in
 	return
 }
 
-func GetActivities(chatID int64) ([]*model.ActivityEvent, bool) {
-	pattern := getActivityPattern(xnumber.I64toa(chatID), "*", "*", "*")
-	keys, err := database.Redis().Keys(context.Background(), pattern).Result()
+func GetActivities(chatID int64) ([]*model.ActivityEvent, error) {
+	pattern := concatActivityPattern(xnumber.I64toa(chatID), "*", "*", "*")
+	keys, err := database.RedisClient().Keys(context.Background(), pattern).Result()
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	events := make([]*model.ActivityEvent, 0, len(keys))
@@ -59,14 +59,14 @@ func GetActivities(chatID int64) ([]*model.ActivityEvent, bool) {
 		_, id, typ, repo := parseActivityPattern(key)
 		events = append(events, &model.ActivityEvent{Id: id, Type: typ, Repo: &model.Repo{Name: repo}})
 	}
-	return events, true
+	return events, nil
 }
 
-func GetIssues(chatID int64) ([]*model.IssueEvent, bool) {
-	pattern := getIssuePattern(xnumber.I64toa(chatID), "*", "*", "*", "*", "*")
-	keys, err := database.Redis().Keys(context.Background(), pattern).Result()
+func GetIssues(chatID int64) ([]*model.IssueEvent, error) {
+	pattern := concatIssuePattern(xnumber.I64toa(chatID), "*", "*", "*", "*", "*")
+	keys, err := database.RedisClient().Keys(context.Background(), pattern).Result()
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
 
 	events := make([]*model.IssueEvent, 0, len(keys))
@@ -74,45 +74,39 @@ func GetIssues(chatID int64) ([]*model.IssueEvent, bool) {
 		_, id, event, repo, num, ct := parseIssuePattern(key)
 		events = append(events, &model.IssueEvent{Id: id, Event: event, Repo: repo, Number: num, CreatedAt: ct})
 	}
-	return events, true
+	return events, nil
 }
 
-func SetActivities(chatID int64, events []*model.ActivityEvent) bool {
-	chatIDStr := xnumber.I64toa(chatID)
-	pattern := getActivityPattern(chatIDStr, "*", "*", "*")
-	_, err := xredis.DelAll(database.Redis(), context.Background(), pattern)
+func SetActivities(chatID int64, events []*model.ActivityEvent) error {
+	pattern := concatActivityPattern(xnumber.I64toa(chatID), "*", "*", "*")
+	_, err := xredis.DelAll(context.Background(), database.RedisClient(), pattern)
 	if err != nil {
-		return false
+		return err
 	}
 
-	keys := make([]string, 0)
-	values := make([]string, 0)
+	kvs := make([]interface{}, 0, len(events)*2)
 	for _, ev := range events {
-		pattern = getActivityPattern(chatIDStr, ev.Id, ev.Type, ev.Repo.Name)
-		keys = append(keys, pattern)
-		values = append(values, chatIDStr)
+		idStr := xnumber.I64toa(chatID)
+		pattern = concatActivityPattern(idStr, ev.Id, ev.Type, ev.Repo.Name)
+		kvs = append(kvs, pattern, idStr)
 	}
-
-	_, err = xredis.SetAll(database.Redis(), context.Background(), keys, values)
-	return err == nil
+	err = database.RedisClient().MSet(context.Background(), kvs...).Err()
+	return err
 }
 
-func SetIssues(chatID int64, events []*model.IssueEvent) bool {
-	chatIDStr := xnumber.I64toa(chatID)
-	pattern := getIssuePattern(chatIDStr, "*", "*", "*", "*", "*")
-	_, err := xredis.DelAll(database.Redis(), context.Background(), pattern)
+func SetIssues(chatID int64, events []*model.IssueEvent) error {
+	pattern := concatIssuePattern(xnumber.I64toa(chatID), "*", "*", "*", "*", "*")
+	_, err := xredis.DelAll(context.Background(), database.RedisClient(), pattern)
 	if err != nil {
-		return false
+		return err
 	}
 
-	keys := make([]string, 0)
-	values := make([]string, 0)
+	kvs := make([]interface{}, 0, len(events)*2)
 	for _, ev := range events {
-		pattern = getIssuePattern(chatIDStr, xnumber.I64toa(ev.Id), ev.Event, ev.Repo, xnumber.I32toa(ev.Number), xnumber.I64toa(ev.CreatedAt.Unix()))
-		keys = append(keys, pattern)
-		values = append(values, chatIDStr)
+		idStr := xnumber.I64toa(chatID)
+		pattern = concatIssuePattern(idStr, xnumber.I64toa(ev.Id), ev.Event, ev.Repo, xnumber.I32toa(ev.Number), xnumber.I64toa(ev.CreatedAt.Unix()))
+		kvs = append(kvs, pattern, idStr)
 	}
-
-	_, err = xredis.SetAll(database.Redis(), context.Background(), keys, values)
-	return err == nil
+	err = database.RedisClient().MSet(context.Background(), kvs...).Err()
+	return err
 }

@@ -1,163 +1,73 @@
 package task
 
 import (
-	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
-	"github.com/Aoi-hosizora/github-telebot/internal/model"
+	"context"
+	"fmt"
+	"github.com/Aoi-hosizora/ahlib-web/xtask"
+	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
+	"github.com/Aoi-hosizora/ahlib/xcolor"
+	"github.com/Aoi-hosizora/ahlib/xgopool"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
-	"github.com/Aoi-hosizora/github-telebot/internal/pkg/dao"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
-	"github.com/Aoi-hosizora/github-telebot/internal/service"
 	"github.com/robfig/cron/v3"
-	"gopkg.in/tucnak/telebot.v2"
+	"github.com/sirupsen/logrus"
+	"log"
+	"runtime"
 )
 
-// _cron represents the global cron.Cron.
-var _cron *cron.Cron
-
-func Cron() *cron.Cron {
-	return _cron
+type Task struct {
+	task *xtask.CronTask
 }
 
-func Setup() error {
-	cr := cron.New(cron.WithSeconds())
+func NewTask(bw *xtelebot.BotWrapper) (*Task, error) {
+	task := xtask.NewCronTask(cron.New(cron.WithSeconds()))
+	task.SetJobAddedCallback(func(j *xtask.FuncJob) {
+		if config.IsDebugMode() {
+			fmt.Printf("[Task-debug] %s --> %s (EntryID: %d)\n", xcolor.Blue.AlignedSprintf(-31, "%s, %s",
+				j.Title(), j.ScheduleExpr()), j.Funcname(), j.EntryID())
+		}
+	})
+	pool := xgopool.New(int32(10 * runtime.NumCPU()))
+	setupLoggers(task, pool)
 
-	_, err := cr.AddFunc(config.Configs().Task.Activity, activityTask)
+	// tasks
+	jobs := NewJobSet(bw, pool)
+	cfg := config.Configs().Task
+	_, err := task.AddJobByCronSpec("activity", cfg.ActivityCron, jobs.activityJob)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	_, err = task.AddJobByCronSpec("activity", cfg.IssueCron, jobs.issueJob)
+	if err != nil {
+		return nil, err
 	}
 
-	_, err = cr.AddFunc(config.Configs().Task.Issue, issueTask)
-	if err != nil {
-		return err
-	}
-
-	_cron = cr
-	return nil
+	t := &Task{task: task}
+	return t, nil
 }
 
-func activityTask() {
-	defer func() { recover() }()
-
-	users := dao.QueryUsers()
-	if len(users) == 0 {
-		return
-	}
-
-	foreachUsers(users, func(user *model.User) {
-		// get new events
-		resp, err := service.GetActivityEvents(user.Username, user.Token, 1)
-		if err != nil {
-			return
-		}
-		newEvents, err := model.UnmarshalActivityEvents(resp)
-		if err != nil || len(newEvents) == 0 {
-			return
-		}
-
-		// get old events and calc diff
-		oldEvents, ok := dao.GetActivities(user.ChatID)
-		if !ok {
-			return
-		}
-		logger.Logger().Infof("Get old ativities: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
-		diff := model.ActivitySliceDiff(newEvents, oldEvents)
-		logger.Logger().Infof("Get diff ativities: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
-		if len(diff) == 0 {
-			return
-		}
-
-		// update old events
-		ok = dao.SetActivities(user.ChatID, newEvents)
-		if !ok {
-			return
-		}
-		logger.Logger().Infof("Set new ativities: #%d | (%d %s)", len(newEvents), user.ChatID, user.Username)
-
-		// render
-		render := service.RenderActivityEvents(diff) // <<<
-		if render == "" {
-			return
-		}
-		flag := service.ConcatListAndUsername(render, user.Username) + " \\(Activity events\\)" // <<<
-
-		// send
-		if checkSilent(user) {
-			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
-		} else {
-			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
-		}
+func setupLoggers(task *xtask.CronTask, pool *xgopool.GoPool) {
+	l := logger.Logger()
+	task.SetPanicHandler(func(j *xtask.FuncJob, v interface{}) {
+		fields := logrus.Fields{"module": "task", "type": "panic", "task": j.Title(), "panic": fmt.Sprintf("%v", v)}
+		l.WithFields(fields).Errorf("[Task] Job `%s` panics with `%v`", j.Title(), v)
+	})
+	pool.SetPanicHandler(func(ctx context.Context, v interface{}) {
+		f := ctx.Value(ctxFuncnameKey)
+		fields := logrus.Fields{"module": "task", "type": "panic", "function": f, "panic": fmt.Sprintf("%v", v)}
+		l.WithFields(fields).Errorf("[Task] Function `%s` in job panics with `%v`", f, v)
 	})
 }
 
-func issueTask() {
-	defer func() { recover() }()
+const ctxFuncnameKey = "funcname" // used by xgopool.Pool
 
-	users := dao.QueryUsers()
-	if len(users) == 0 {
-		return
-	}
+func (t *Task) Start() {
+	log.Printf("[Task] Starting %d cron jobs", len(t.task.Jobs()))
+	t.task.Cron().Start() // run with goroutine
+}
 
-	foreachUsers(users, func(user *model.User) {
-		// allow to send issue
-		if user.Token == "" || !user.AllowIssue {
-			return
-		}
-
-		// get new events
-		resp, err := service.GetIssueEvents(user.Username, user.Token, 1)
-		if err != nil {
-			return
-		}
-		newEvents, err := model.UnmarshalIssueEvents(resp)
-		if err != nil {
-			return
-		}
-
-		// filter and check empty
-		if user.FilterMe {
-			tempEvents := make([]*model.IssueEvent, 0)
-			for _, e := range newEvents {
-				if e.Actor.Login != user.Username {
-					tempEvents = append(tempEvents, e)
-				}
-			}
-			newEvents = tempEvents
-		}
-		if len(newEvents) == 0 {
-			return
-		}
-
-		// get old events and calc diff
-		oldEvents, ok := dao.GetIssues(user.ChatID)
-		if !ok {
-			return
-		}
-		logger.Logger().Infof("Get old issues: #%d | (%d %s)", len(oldEvents), user.ChatID, user.Username)
-		diff := model.IssueSliceDiff(newEvents, oldEvents)
-		logger.Logger().Infof("Get diff issues: #%d | (%d %s)", len(diff), user.ChatID, user.Username)
-		if len(diff) == 0 {
-			return
-		}
-
-		// update old events
-		ok = dao.SetIssues(user.ChatID, newEvents)
-		if !ok {
-			return
-		}
-		logger.Logger().Infof("Set new issues: #%d | (%d %s)", len(newEvents), user.ChatID, user.Username)
-
-		// render
-		render := service.RenderIssueEvents(diff) // <<<
-		if render == "" {
-			return
-		}
-		flag := service.ConcatListAndUsername(render, user.Username) + " \\(Issue events\\)" // <<<
-
-		// send
-		if checkSilent(user) {
-			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2, telebot.Silent)
-		} else {
-			_ = server.Bot().SendToChat(user.ChatID, flag, telebot.ModeMarkdownV2)
-		}
-	})
+func (t *Task) Finish() {
+	log.Printf("[Task] Stopping jobs...")
+	<-t.task.Cron().Stop().Done()
+	log.Println("[Task] Cron jobs are all finished successfully")
 }

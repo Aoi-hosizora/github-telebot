@@ -1,8 +1,10 @@
 package config
 
 import (
+	"github.com/Aoi-hosizora/ahlib-web/xvalidator"
+	"github.com/Aoi-hosizora/ahlib/xreflect"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"os"
 )
 
 // _configs represents the global config.Config.
@@ -13,60 +15,82 @@ func Configs() *Config {
 }
 
 type Config struct {
-	Meta   *MetaConfig   `yaml:"meta"`
-	Bot    *BotConfig    `yaml:"bot"`
-	SQLite *SQLiteConfig `yaml:"sqlite"`
-	Redis  *RedisConfig  `yaml:"redis"`
-	Task   *TaskConfig   `yaml:"task"`
+	Meta   *MetaConfig   `yaml:"meta"   validate:"required"`
+	Task   *TaskConfig   `yaml:"task"   validate:"required"`
+	SQLite *SQLiteConfig `yaml:"sqlite" validate:"required"`
+	Redis  *RedisConfig  `yaml:"redis"  validate:"required"`
 }
 
 type MetaConfig struct {
-	RunMode string `yaml:"run-mode"`
-	LogName string `yaml:"log-name"`
+	RunMode string `yaml:"run-mode" default:"debug"`
+	LogName string `yaml:"log-name" default:"./logs/console"`
+
+	Token         string `yaml:"token"          validate:"required"`
+	PollerTimeout uint64 `yaml:"poller-timeout" validate:"required"`
 }
 
-type BotConfig struct {
-	Token         string `yaml:"token"`
-	PollerTimeout uint64 `yaml:"poller-timeout"`
+type TaskConfig struct {
+	ActivityCron string `yaml:"activity-cron" validate:"required"`
+	IssueCron    string `yaml:"issue-cron"    validate:"required"`
 }
 
 type SQLiteConfig struct {
-	Database string `yaml:"database"`
+	Database string `yaml:"database" validate:"required"`
 	LogMode  bool   `yaml:"log-mode"`
 }
 
 type RedisConfig struct {
-	Host         string `yaml:"host"`
-	Port         int32  `yaml:"port"`
-	DB           int32  `yaml:"db"`
-	Password     string `yaml:"password"`
-	LogMode      bool   `yaml:"log-mode"`
-	DialTimeout  int32  `yaml:"dial-timeout"`
-	ReadTimeout  int32  `yaml:"read-timeout"`
-	WriteTimeout int32  `yaml:"write-timeout"`
+	Host     string `yaml:"host" default:"127.0.0.1"`
+	Port     int32  `yaml:"port" default:"6379"`
+	DB       int32  `yaml:"db"   validate:"required"`
+	Password string `yaml:"password"`
+	LogMode  bool   `yaml:"log-mode"`
 
-	MaxOpen     int32 `yaml:"max-open"`
-	MaxLifetime int32 `yaml:"max-lifetime"`
-	MaxIdletime int32 `yaml:"max-idletime"`
+	DialTimeout  *int32 `yaml:"dial-timeout"  validate:"omitempty,gt=0"`
+	ReadTimeout  *int32 `yaml:"read-timeout"  validate:"omitempty,gt=0"`
+	WriteTimeout *int32 `yaml:"write-timeout" validate:"omitempty,gt=0"`
+	MaxOpens     *int32 `yaml:"max-opens"     validate:"omitempty,gt=0"`
+	MinIdles     *int32 `yaml:"min-idles"     validate:"omitempty,gte=0"`
+	MaxLifetime  *int32 `yaml:"max-lifetime"  validate:"omitempty,gt=0"`
+	MaxIdletime  *int32 `yaml:"max-idletime"  validate:"omitempty,gt=0"`
 }
 
-type TaskConfig struct {
-	Activity string `yaml:"activity"`
-	Issue    string `yaml:"issue"`
+var _debugMode = true
+
+func IsDebugMode() bool {
+	return _debugMode
 }
 
-func Load(configPath string) error {
-	f, err := ioutil.ReadFile(configPath)
+func Load(path string) error {
+	f, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
 
 	cfg := &Config{}
-	err = yaml.Unmarshal(f, &cfg)
-	if err != nil {
+	if err = yaml.Unmarshal(f, cfg); err != nil {
+		return err
+	}
+	if _, err = xreflect.FillDefaultFields(cfg); err != nil {
+		return err
+	}
+	if err = validateConfig(cfg); err != nil {
 		return err
 	}
 
+	_debugMode = cfg.Meta.RunMode == "debug"
 	_configs = cfg
+	return nil
+}
+
+func validateConfig(cfg *Config) error {
+	val := xvalidator.NewCustomStructValidator()
+	val.SetValidatorTagName("validate")
+	val.SetMessageTagName("message")
+	val.SetFieldNameTag("yaml")
+	if err := val.ValidateStruct(cfg); err != nil {
+		ut, _ := xvalidator.ApplyTranslator(val.ValidateEngine(), xvalidator.EnLocaleTranslator(), xvalidator.EnTranslationRegisterFunc())
+		return xvalidator.FlattedMapToError(err.(*xvalidator.ValidateFieldsError).Translate(ut, false))
+	}
 	return nil
 }
