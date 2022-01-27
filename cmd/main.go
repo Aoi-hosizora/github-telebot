@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot"
-	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/database"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
@@ -41,11 +40,11 @@ func main() {
 		log.Fatalln("Failed to setup redis client:", err)
 	}
 
-	err = bot.Setup()
+	c, err := bot.NewConsumer()
 	if err != nil {
-		log.Fatalln("Failed to setup telebot:", err)
+		log.Fatalln("Failed to create consumer:", err)
 	}
-	t, err := task.NewTask(server.Bot())
+	t, err := task.NewTask(c.BotWrapper())
 	if err != nil {
 		log.Fatalln("Failed to create task:", err)
 	}
@@ -53,5 +52,5 @@ func main() {
 	fmt.Println()
 	t.Start()
 	defer t.Finish()
-	server.Bot().Start()
+	c.Start()
 }

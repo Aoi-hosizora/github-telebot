@@ -7,6 +7,8 @@ import (
 )
 
 func Markdown(s string) string {
+	// https://core.telegram.org/bots/api#markdownv2-style
+
 	s = strings.ReplaceAll(s, `\`, `\\`)
 	s = strings.ReplaceAll(s, `*`, `\*`)
 	s = strings.ReplaceAll(s, `[`, `\[`)

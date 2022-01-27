@@ -33,11 +33,3 @@ func httpGet(url string, fn func(r *http.Request)) ([]byte, *http.Response, erro
 
 	return bs, resp, nil
 }
-
-func githubToken(token string) func(*http.Request) {
-	return func(r *http.Request) {
-		if token != "" {
-			r.Header.Add("Authorization", "Token "+token)
-		}
-	}
-}

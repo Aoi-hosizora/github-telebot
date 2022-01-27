@@ -3,7 +3,9 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Aoi-hosizora/ahlib-web/xgin/headers"
 	"github.com/Aoi-hosizora/github-telebot/internal/model"
+	"net/http"
 	"strings"
 )
 
@@ -12,6 +14,14 @@ const (
 	ActivityEventApi string = "https://api.github.com/users/%s/received_events?page=%d"
 	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline?page=%d"
 )
+
+func githubToken(token string) func(*http.Request) {
+	return func(r *http.Request) {
+		if token != "" {
+			r.Header.Add(headers.Authorization, "Token "+token)
+		}
+	}
+}
 
 func CheckUserExistence(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
@@ -78,9 +88,9 @@ func FormatActivityEvents(events []*model.ActivityEvent, username string, page i
 
 	sb := strings.Builder{}
 	if page <= 0 {
-		sb.WriteString(fmt.Sprintf(`*New activity events*`))
+		sb.WriteString(fmt.Sprintf("*New activity events*"))
 	} else {
-		sb.WriteString(fmt.Sprintf(`*Activity events from page %d*`, page))
+		sb.WriteString(fmt.Sprintf("*Activity events from page %d*", page))
 	}
 
 	if len(events) == 1 {
@@ -91,8 +101,8 @@ func FormatActivityEvents(events []*model.ActivityEvent, username string, page i
 		}
 	}
 
-	sb.WriteString(`\=\=\=\=` + "\n")
-	sb.WriteString(fmt.Sprintf(`From [%s](https://github.com/%s)\.`, Markdown(username), username))
+	sb.WriteString(`\=\=\=\=`)
+	sb.WriteString(fmt.Sprintf("\nFrom [%s](https://github.com/%s)\\.", Markdown(username), username))
 	return sb.String()
 }
 
@@ -103,9 +113,9 @@ func FormatIssueEvents(events []*model.IssueEvent, username string, page int) st
 
 	sb := strings.Builder{}
 	if page <= 0 {
-		sb.WriteString(fmt.Sprintf(`*New issue events*`))
+		sb.WriteString(fmt.Sprintf("*New issue events*"))
 	} else {
-		sb.WriteString(fmt.Sprintf(`*Issue events from page %d*`, page))
+		sb.WriteString(fmt.Sprintf("*Issue events from page %d*", page))
 	}
 
 	if len(events) == 1 {
@@ -116,7 +126,7 @@ func FormatIssueEvents(events []*model.IssueEvent, username string, page int) st
 		}
 	}
 
-	sb.WriteString(`\=\=\=\=` + "\n")
-	sb.WriteString(fmt.Sprintf(`From [%s](https://github.com/%s)\.`, Markdown(username), username))
+	sb.WriteString(`\=\=\=\=`)
+	sb.WriteString(fmt.Sprintf("\nFrom [%s](https://github.com/%s)\\.", Markdown(username), username))
 	return sb.String()
 }

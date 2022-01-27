@@ -1,5 +1,6 @@
 package server
 
+//
 import (
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 	"github.com/Aoi-hosizora/ahlib/xnumber"

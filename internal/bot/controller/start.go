@@ -2,86 +2,75 @@ package controller
 
 import (
 	"fmt"
+	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
-	"github.com/Aoi-hosizora/github-telebot/internal/bot/server"
 	"gopkg.in/tucnak/telebot.v2"
 )
 
 const (
-	START = "Here is AoiHosizora's github telebot, developed by @AoiHosizora. Use /help to show help message."
-	HELP  = `*Commands*
+	_START = "Here is github events telebot, developed by @AoiHosizora, send /help for help."
+
+	_HELP = `*Start*
 /start - show start message
 /help - show this help message
 /cancel - cancel the last action
 
-*Account*
-/bind - bind with a new github account
-/unbind - unbind an old github account
-/me - show the bind user's information
-/enablesilent - enable bot silence send
-/disablesilent - disable bot silence send
+*Subscribe*
+/subscribe - subscribe with a new github account
+/unsubscribe - unsubscribe the current github account
+/me - show the subscribed user's information
 
-*Events*
+*Option*
 /allowissue - allow bot to send issue events
 /disallowissue - disallow bot to send issue events
+/enablesilent - send message with no notification
+/disablesilent - send message with notification
+/enablepreview - enable preview for links
+/disablepreview - disable preview for links
+
+*Event*
 /activity - show the first page of activity events
-/activitypage - show the nth page of activity events
+/activity N - show the N-th page of activity events
 /issue - show the first page of issue events
-/issuepage - show the nth page of issue events
+/issue N - show the N-th page of issue events
 
 *Bug report*
-https://github.com/Aoi-hosizora/github-telebot/issues/new`
+https://github.com/Aoi-hosizora/github-telebot/issues`
 
-	NO_ACTION       = "There is no action now."
-	ACTION_CANCELED = "Current action has been canceled."
-	UNKNOWN_COMMAND = "Unknown command: %s. Send /help to see help."
+	_NO_ACTION       = "There is no action now."
+	_ACTION_CANCELED = "Action \"%s\" has been canceled."
+
+	_UNKNOWN_COMMAND = "Unknown command: %s, send /help for help."
 )
 
-// /start
-func StartCtrl(m *telebot.Message) {
-	_ = server.Bot().Reply(m, START)
+// Start /start
+func Start(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	bw.ReplyTo(m, _START)
 }
 
-// /help
-func HelpCtrl(m *telebot.Message) {
-	_ = server.Bot().Reply(m, HELP, telebot.ModeMarkdown)
+// Help /help
+func Help(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	bw.ReplyTo(m, _HELP, telebot.ModeMarkdown)
 }
 
-// /cancel
-func CancelCtrl(m *telebot.Message) {
-	if server.Bot().GetStatus(m.Chat.ID) == fsm.None {
-		_ = server.Bot().Reply(m, NO_ACTION, &telebot.ReplyMarkup{
-			ReplyKeyboardRemove: true,
-		})
+// Cancel /cancel
+func Cancel(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	markup := &telebot.ReplyMarkup{ReplyKeyboardRemove: true}
+	if state := bw.Data().GetStateOr(m.Chat.ID, fsm.None); state == fsm.None {
+		bw.ReplyTo(m, _NO_ACTION, markup)
 	} else {
-		server.Bot().SetStatus(m.Chat.ID, fsm.None)
-		_ = server.Bot().Reply(m, ACTION_CANCELED, &telebot.ReplyMarkup{
-			ReplyKeyboardRemove: true,
-		})
+		bw.Data().SetState(m.Chat.ID, fsm.None)
+		bw.ReplyTo(m, fmt.Sprintf(_ACTION_CANCELED, fsm.StateString(state)), markup)
 	}
 }
 
-// button.InlineBtnCancel
-func InlineBtnCancelCtrl(c *telebot.Callback) {
-	m := c.Message
-	_, _ = server.Bot().Edit(m, fmt.Sprintf("%s (canceled)", m.Text))
-}
-
-// $on_text
-func OnTextCtrl(m *telebot.Message) {
-	switch server.Bot().GetStatus(m.Chat.ID) {
-	case fsm.BindingUsername:
-		FromBindingUsernameCtrl(m)
-	case fsm.BindingToken:
-		FromBindingTokenCtrl(m)
-	case fsm.EnablingSilent:
-		FromEnablingSilentCtrl(m)
-	case fsm.ActivityPage:
-		FromActivityPageCtrl(m)
-	case fsm.IssuePage:
-		FromIssuePageCtrl(m)
-	default:
-		msg := fmt.Sprintf(UNKNOWN_COMMAND, m.Text)
-		_ = server.Bot().Reply(m, msg)
+// OnText $on_text
+func OnText(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	state := bw.Data().GetStateOr(m.Chat.ID, fsm.None)
+	handler := fsm.GetStateHandler(state)
+	if handler != nil {
+		handler(bw, m)
+	} else {
+		bw.ReplyTo(m, fmt.Sprintf(_UNKNOWN_COMMAND, m.Text))
 	}
 }

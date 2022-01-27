@@ -5,15 +5,18 @@ import (
 )
 
 var (
-	// controller.UnbindCtrl & controller.AllowIssueCtrl -> controller.InlineBtnCancelCtrl
-	InlineBtnCancel = &telebot.InlineButton{Unique: "btn_cancel", Text: "Cancel"}
-
-	// controller.UnbindCtrl -> controller.InlineBtnUnbindCtrl
+	// InlineBtnUnbind (controller.Unsubscribe)
 	InlineBtnUnbind = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
 
-	// controller.AllowIssueCtrl -> controller.InlineBtnFilterCtrl
+	// InlineBtnCancelUnbind (controller.Unsubscribe)
+	InlineBtnCancelUnbind = &telebot.InlineButton{Unique: "btn_cancel_unbind", Text: "Cancel"}
+
+	// InlineBtnFilter (controller.AllowIssue)
 	InlineBtnFilter = &telebot.InlineButton{Unique: "btn_filter", Text: "Filter"}
 
-	// controller.AllowIssueCtrl -> controller.InlineBtnNotFilterCtrl
+	// InlineBtnNotFilter (controller.AllowIssue)
 	InlineBtnNotFilter = &telebot.InlineButton{Unique: "btn_not_filter", Text: "Not Filter"}
+
+	// InlineBtnCancelSetupIssue (controller.AllowIssue)
+	InlineBtnCancelSetupIssue = &telebot.InlineButton{Unique: "btn_cancel_setup_issue", Text: "Cancel"}
 )

@@ -48,6 +48,13 @@ func UpdateChatSilent(chatID int64, silent bool) (xstatus.DbStatus, error) {
 	return xgorm.UpdateErr(rdb)
 }
 
+func UpdateChatPreview(chatID int64, preview bool) (xstatus.DbStatus, error) {
+	rdb := database.GormDB().Model(&model.Chat{}).Where("chat_id = ?", chatID).Update(map[string]interface{}{
+		"preview": preview,
+	})
+	return xgorm.UpdateErr(rdb)
+}
+
 func DeleteChat(chatID int64) (xstatus.DbStatus, error) {
 	rdb := database.GormDB().Model(&model.Chat{}).Where("chat_id = ?", chatID).Delete(&model.Chat{})
 	return xgorm.DeleteErr(rdb)
