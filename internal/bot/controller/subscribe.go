@@ -33,8 +33,8 @@ const (
 
 	_GITHUB_FAILED         = "Failed to query information from github, please retry later."
 	_GITHUB_USER_NOT_FOUND = "Github user is not found, or the token is invalid."
-	_GITHUB_ME_NOTOK       = "You have bound with user '%s' without token."
-	_GITHUB_ME_TOKEN       = "You have bound with user '%s' with token '%s'."
+	_GITHUB_ME_NOTOK       = "You have bound with user '%s' without token, current options: %s"
+	_GITHUB_ME_TOKEN       = "You have bound with user '%s' with token '%s', current options: %s"
 )
 
 // Subscribe /subscribe
@@ -42,31 +42,31 @@ func Subscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	{
 		chat, _ := dao.QueryChat(m.Chat.ID)
 		if chat != nil {
-			bw.ReplyTo(m, _BIND_ALREADY)
+			bw.RespondReply(m, false, _BIND_ALREADY)
 		} else {
 			bw.Data().SetState(m.Chat.ID, fsm.BindingUsername)
-			bw.ReplyTo(m, _BIND_USERNAME_Q)
+			bw.RespondReply(m, false, _BIND_USERNAME_Q)
 		}
 	}
 
 	const usernameKey = "username"
-	if !fsm.IsHandlerRegistered(fsm.BindingUsername) {
-		fsm.RegisterHandler(fsm.BindingUsername, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	if !bw.Shs().IsRegistered(fsm.BindingUsername) {
+		bw.Shs().Register(fsm.BindingUsername, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
 			username := strings.TrimSpace(m.Text)
 			if username == "" {
-				bw.ReplyTo(m, _BIND_EMPTY_USERNAME)
+				bw.RespondReply(m, false, _BIND_EMPTY_USERNAME)
 			} else {
 				bw.Data().SetCache(m.Chat.ID, usernameKey, username)
 				bw.Data().SetState(m.Chat.ID, fsm.BindingToken)
-				bw.ReplyTo(m, _BIND_TOKEN_Q)
+				bw.RespondReply(m, false, _BIND_TOKEN_Q)
 			}
 		})
 	}
-	if !fsm.IsHandlerRegistered(fsm.BindingToken) {
-		fsm.RegisterHandler(fsm.BindingToken, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	if !bw.Shs().IsRegistered(fsm.BindingToken) {
+		bw.Shs().Register(fsm.BindingToken, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
 			token := strings.TrimSpace(m.Text)
 			if token == "" {
-				bw.ReplyTo(m, _BIND_EMPTY_TOKEN)
+				bw.RespondReply(m, false, _BIND_EMPTY_TOKEN)
 				return
 			}
 			v, _ := bw.Data().GetCache(m.Chat.ID, usernameKey)
@@ -98,7 +98,7 @@ func Subscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 				}
 			}
 			bw.Data().DeleteState(m.Chat.ID)
-			bw.ReplyTo(m, flag)
+			bw.RespondReply(m, false, flag)
 		})
 	}
 }
@@ -108,14 +108,12 @@ func Unsubscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	{
 		chat, _ := dao.QueryChat(m.Chat.ID)
 		if chat == nil {
-			bw.ReplyTo(m, _BIND_NOT_YET)
+			bw.RespondReply(m, false, _BIND_NOT_YET)
 		} else {
-			bw.ReplyTo(m, fmt.Sprintf(_UNBIND_Q, chat.Username), &telebot.ReplyMarkup{
-				InlineKeyboard: xtelebot.InlineKeyboard(
-					xtelebot.InlineRow{button.InlineBtnUnbind},
-					xtelebot.InlineRow{button.InlineBtnCancelUnbind},
-				),
-			})
+			bw.RespondReply(m, false, fmt.Sprintf(_UNBIND_Q, chat.Username), xtelebot.SetInlineKeyboard(xtelebot.InlineKeyboard(
+				xtelebot.InlineRow{button.InlineBtnUnbind},
+				xtelebot.InlineRow{button.InlineBtnCancelUnbind},
+			)))
 		}
 	}
 
@@ -133,12 +131,12 @@ func Unsubscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 			} else {
 				flag = _UNBIND_SUCCESS
 			}
-			bw.Bot().Edit(c.Message, flag, &telebot.ReplyMarkup{InlineKeyboard: nil})
+			bw.Bot().Edit(c.Message, flag, xtelebot.RemoveInlineKeyboard())
 		})
 	}
 	if !bw.IsHandled(button.InlineBtnCancelUnbind) {
 		bw.HandleInlineButton(button.InlineBtnCancelUnbind, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
-			bw.Bot().Edit(c.Message, fmt.Sprintf("%s (canceled)", c.Message.Text), &telebot.ReplyMarkup{InlineKeyboard: nil})
+			bw.Bot().Edit(c.Message, fmt.Sprintf("%s (canceled)", c.Message.Text), xtelebot.RemoveInlineKeyboard())
 		})
 	}
 }
@@ -154,8 +152,10 @@ func Me(bw *xtelebot.BotWrapper, m *telebot.Message) {
 		if chat.Token == "" {
 			flag = fmt.Sprintf(_GITHUB_ME_NOTOK, url)
 		} else {
-			flag = fmt.Sprintf(_GITHUB_ME_TOKEN, url, xstring.MaskTokenR(chat.Token, '*', 0, 1, 2, -1, -2, -3))
+			tok := xstring.MaskTokenR(chat.Token, '*', 0, 1, 2, -1, -2, -3)
+			tok = strings.ReplaceAll(tok, "*", "\\*")
+			flag = fmt.Sprintf(_GITHUB_ME_TOKEN, url, tok)
 		}
 	}
-	bw.ReplyTo(m, flag, telebot.ModeMarkdown)
+	bw.RespondReply(m, false, flag, telebot.ModeMarkdown)
 }

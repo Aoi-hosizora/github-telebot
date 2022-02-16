@@ -7,6 +7,7 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"time"
 )
 
 // _db represents the global gorm.DB.
@@ -17,26 +18,28 @@ func GormDB() *gorm.DB {
 }
 
 func SetupGormDB() error {
+	// open
 	cfg := config.Configs().SQLite
-	db, err := gorm.Open("sqlite3", cfg.Database)
+	db, err := gorm.Open(xgorm.SQLite, xgorm.SQLiteDefaultDsn(cfg.Database))
 	if err != nil {
 		return err
 	}
 
-	if cfg.LogMode {
-		db.LogMode(true)
-		db.SetLogger(xgorm.NewLogrusLogger(logger.Logger()))
-	} else {
+	// configure
+	if !cfg.LogMode {
 		db.SetLogger(xgorm.NewSilenceLogger())
+	} else {
+		db.LogMode(true)
+		db.SetLogger(xgorm.NewLogrusLogger(logger.Logger(), xgorm.WithSlowThreshold(time.Millisecond*500)))
 	}
 	db.SingularTable(true)
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return "tbl_" + defaultTableName
-	}
+	gorm.DefaultTableNameHandler = func(_ *gorm.DB, name string) string { return "tbl_" + name }
 	xgorm.HookDeletedAt(db, xgorm.DefaultDeletedAtTimestamp)
 
-	err = migrate(db)
+	// migrate
+	err = migrateDB(db)
 	if err != nil {
+		_ = db.Close()
 		return err
 	}
 
@@ -44,7 +47,7 @@ func SetupGormDB() error {
 	return nil
 }
 
-func migrate(db *gorm.DB) error {
+func migrateDB(db *gorm.DB) error {
 	for _, m := range []interface{}{
 		&model.Chat{},
 	} {

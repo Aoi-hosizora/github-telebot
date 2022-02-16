@@ -22,7 +22,7 @@ func Activity(bw *xtelebot.BotWrapper, m *telebot.Message) {
 		var err error
 		page, err = xnumber.Atoi(pageStr)
 		if err != nil {
-			bw.ReplyTo(m, _UNEXPECTED_NUMBER)
+			bw.RespondReply(m, false, _UNEXPECTED_NUMBER)
 			return
 		}
 		if page < 1 {
@@ -32,27 +32,27 @@ func Activity(bw *xtelebot.BotWrapper, m *telebot.Message) {
 
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 		return
 	}
 	events, err := service.GetActivityEvents(chat.Username, chat.Token, page)
 	if err != nil {
-		bw.ReplyTo(m, _GITHUB_FAILED)
+		bw.RespondReply(m, false, _GITHUB_FAILED)
 		return
 	}
-	formatted := service.FormatActivityEvents(events, chat.Username, page)
+	formatted := service.FormatActivityEvents(events, chat.Username, page) // <<< MarkdownV2
 	if formatted == "" {
-		bw.ReplyTo(m, _EMPTY_EVENT)
+		bw.RespondReply(m, false, _EMPTY_EVENT)
 		return
 	}
-	opt := []interface{}{telebot.ModeMarkdownV2}
+	opts := []interface{}{telebot.ModeMarkdownV2}
 	if chat.Silent {
-		opt = append(opt, telebot.Silent)
+		opts = append(opts, telebot.Silent)
 	}
 	if !chat.Preview {
-		opt = append(opt, telebot.NoPreview)
+		opts = append(opts, telebot.NoPreview)
 	}
-	bw.ReplyTo(m, formatted, opt...)
+	bw.RespondReply(m, false, formatted, opts...)
 }
 
 // Issue /issue
@@ -63,7 +63,7 @@ func Issue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 		var err error
 		page, err = xnumber.Atoi(pageStr)
 		if err != nil {
-			bw.ReplyTo(m, _UNEXPECTED_NUMBER)
+			bw.RespondReply(m, false, _UNEXPECTED_NUMBER)
 			return
 		}
 		if page < 1 {
@@ -73,32 +73,32 @@ func Issue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 		return
 	}
 	if chat.Token == "" {
-		bw.ReplyTo(m, _ISSUE_ONLY_FOR_TOKEN)
+		bw.RespondReply(m, false, _ISSUE_ONLY_FOR_TOKEN)
 		return
 	}
 	events, err := service.GetIssueEvents(chat.Username, chat.Token, page)
 	if err != nil {
-		bw.ReplyTo(m, _GITHUB_FAILED)
+		bw.RespondReply(m, false, _GITHUB_FAILED)
 		return
 	}
 	if chat.FilterMe {
 		events = service.FilterIssueEventSlice(events, chat.Username)
 	}
-	formatted := service.FormatIssueEvents(events, chat.Username, page)
+	formatted := service.FormatIssueEvents(events, chat.Username, page) // <<< MarkdownV2
 	if formatted == "" {
-		bw.ReplyTo(m, _EMPTY_EVENT)
+		bw.RespondReply(m, false, _EMPTY_EVENT)
 		return
 	}
-	opt := []interface{}{telebot.ModeMarkdownV2}
+	opts := []interface{}{telebot.ModeMarkdownV2}
 	if chat.Silent {
-		opt = append(opt, telebot.Silent)
+		opts = append(opts, telebot.Silent)
 	}
 	if !chat.Preview {
-		opt = append(opt, telebot.NoPreview)
+		opts = append(opts, telebot.NoPreview)
 	}
-	bw.ReplyTo(m, formatted, opt...)
+	bw.RespondReply(m, false, formatted, opts...)
 }

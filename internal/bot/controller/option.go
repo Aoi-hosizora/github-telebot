@@ -21,7 +21,7 @@ const (
 	_DISALLOW_ISSUE_SUCCESS = "Success to disallow bot to send issue events periodically."
 
 	_SILENT_FAILED          = "Failed to enable silence send, please retry later."
-	_SILENT_SUCCESS         = "Done. Now silence send will be enabled when %s."
+	_SILENT_SUCCESS         = "Done. Now any sending will be done in silence."
 	_DISABLE_SILENT_FAILED  = "Failed to disable silent, please retry later."
 	_DISABLE_SILENT_SUCCESS = "Disable silent success. Any message will be sent directly now."
 
@@ -33,35 +33,37 @@ const (
 
 // AllowIssue /allowissue
 func AllowIssue(bw *xtelebot.BotWrapper, m *telebot.Message) {
-	chat, _ := dao.QueryChat(m.Chat.ID)
-	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
-	} else if chat.Token == "" {
-		bw.ReplyTo(m, _ISSUE_ONLY_FOR_TOKEN)
-	} else {
-		bw.ReplyTo(m, _ALLOW_ISSUE_Q, &telebot.ReplyMarkup{
-			InlineKeyboard: xtelebot.InlineKeyboard(
+	{
+		chat, _ := dao.QueryChat(m.Chat.ID)
+		if chat == nil {
+			bw.RespondReply(m, false, _BIND_NOT_YET)
+		} else if chat.Token == "" {
+			bw.RespondReply(m, false, _ISSUE_ONLY_FOR_TOKEN)
+		} else {
+			bw.RespondReply(m, false, _ALLOW_ISSUE_Q, xtelebot.SetInlineKeyboard(xtelebot.InlineKeyboard(
 				xtelebot.InlineRow{button.InlineBtnFilter, button.InlineBtnNotFilter},
 				xtelebot.InlineRow{button.InlineBtnCancelSetupIssue},
-			),
-		})
+			)))
+		}
 	}
 
 	if !bw.IsHandled(button.InlineBtnFilter) {
 		bw.HandleInlineButton(button.InlineBtnFilter, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
+			bw.RespondDelete(c.Message)
 			sts, err := dao.UpdateChatIssue(c.Message.Chat.ID, true, true)
 			processOptionReply(bw, c.Message, sts, err, _ALLOW_ISSUE_FAILED, _ALLOW_ISSUE_FILTER_SUCCESS)
 		})
 	}
 	if !bw.IsHandled(button.InlineBtnNotFilter) {
 		bw.HandleInlineButton(button.InlineBtnNotFilter, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
+			bw.RespondDelete(c.Message)
 			sts, err := dao.UpdateChatIssue(c.Message.Chat.ID, true, false)
 			processOptionReply(bw, c.Message, sts, err, _ALLOW_ISSUE_FAILED, _ALLOW_ISSUE_NOT_FILTER_SUCCESS)
 		})
 	}
 	if !bw.IsHandled(button.InlineBtnCancelSetupIssue) {
 		bw.HandleInlineButton(button.InlineBtnCancelSetupIssue, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
-			bw.Bot().Edit(c.Message, fmt.Sprintf("%s (canceled)", c.Message.Text), &telebot.ReplyMarkup{InlineKeyboard: nil})
+			bw.Bot().Edit(c.Message, fmt.Sprintf("%s (canceled)", c.Message.Text), xtelebot.RemoveInlineKeyboard())
 		})
 	}
 }
@@ -70,7 +72,7 @@ func AllowIssue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 func DisallowIssue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 	} else {
 		sts, err := dao.UpdateChatIssue(m.Chat.ID, false, false)
 		processOptionReply(bw, m, sts, err, _DISALLOW_ISSUE_FAILED, _DISALLOW_ISSUE_SUCCESS)
@@ -81,7 +83,7 @@ func DisallowIssue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 func EnableSilent(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 	} else {
 		sts, err := dao.UpdateChatSilent(m.Chat.ID, true)
 		processOptionReply(bw, m, sts, err, _SILENT_FAILED, _SILENT_SUCCESS)
@@ -92,7 +94,7 @@ func EnableSilent(bw *xtelebot.BotWrapper, m *telebot.Message) {
 func DisableSilent(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 	} else {
 		sts, err := dao.UpdateChatSilent(m.Chat.ID, false)
 		processOptionReply(bw, m, sts, err, _DISABLE_SILENT_FAILED, _DISABLE_SILENT_SUCCESS)
@@ -103,7 +105,7 @@ func DisableSilent(bw *xtelebot.BotWrapper, m *telebot.Message) {
 func EnablePreview(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 	} else {
 		sts, err := dao.UpdateChatPreview(m.Chat.ID, true)
 		processOptionReply(bw, m, sts, err, _ENABLE_PREVIEW_FAILED, _ENABLE_PREVIEW_SUCCESS)
@@ -114,7 +116,7 @@ func EnablePreview(bw *xtelebot.BotWrapper, m *telebot.Message) {
 func DisablePreview(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.ReplyTo(m, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _BIND_NOT_YET)
 	} else {
 		sts, err := dao.UpdateChatPreview(m.Chat.ID, false)
 		processOptionReply(bw, m, sts, err, _DISABLE_PREVIEW_FAILED, _DISABLE_PREVIEW_SUCCESS)
@@ -133,5 +135,5 @@ func processOptionReply(bw *xtelebot.BotWrapper, m *telebot.Message, sts xstatus
 	} else {
 		flag = msgSuccess
 	}
-	bw.ReplyTo(m, flag)
+	bw.RespondReply(m, false, flag, xtelebot.RemoveInlineKeyboard())
 }

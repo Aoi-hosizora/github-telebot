@@ -22,11 +22,11 @@ type Config struct {
 }
 
 type MetaConfig struct {
+	Token   string `yaml:"token"    validate:"required"`
 	RunMode string `yaml:"run-mode" default:"debug"`
 	LogName string `yaml:"log-name" default:"./logs/console"`
 
-	Token         string `yaml:"token"          validate:"required"`
-	PollerTimeout uint64 `yaml:"poller-timeout" validate:"required"`
+	PollerTimeout uint64 `yaml:"poller-timeout" default:"5" validate:"gt=0"`
 }
 
 type TaskConfig struct {
@@ -84,13 +84,13 @@ func Load(path string) error {
 }
 
 func validateConfig(cfg *Config) error {
-	val := xvalidator.NewCustomStructValidator()
-	val.SetValidatorTagName("validate")
+	val := xvalidator.NewMessagedValidator()
+	val.SetValidateTagName("validate")
 	val.SetMessageTagName("message")
-	val.SetFieldNameTag("yaml")
+	val.UseTagAsFieldName("yaml", "json")
 	if err := val.ValidateStruct(cfg); err != nil {
 		ut, _ := xvalidator.ApplyTranslator(val.ValidateEngine(), xvalidator.EnLocaleTranslator(), xvalidator.EnTranslationRegisterFunc())
-		return xvalidator.FlattedMapToError(err.(*xvalidator.ValidateFieldsError).Translate(ut, false))
+		return xvalidator.MapToError(err.(*xvalidator.MultiFieldsError).Translate(ut, false))
 	}
 	return nil
 }

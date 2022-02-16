@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xtask"
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
-	"github.com/Aoi-hosizora/ahlib/xcolor"
 	"github.com/Aoi-hosizora/ahlib/xgopool"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
@@ -20,24 +19,24 @@ type Task struct {
 }
 
 func NewTask(bw *xtelebot.BotWrapper) (*Task, error) {
+	// task
 	task := xtask.NewCronTask(cron.New(cron.WithSeconds()))
-	task.SetJobAddedCallback(func(j *xtask.FuncJob) {
+	task.SetAddedCallback(func(j *xtask.FuncJob) {
 		if config.IsDebugMode() {
-			fmt.Printf("[Task-debug] %s --> %s (EntryID: %d)\n", xcolor.Blue.AlignedSprintf(-31, "%s, %s",
-				j.Title(), j.ScheduleExpr()), j.Funcname(), j.EntryID())
+			xtask.DefaultColorizedAddedCallback(j)
 		}
 	})
 	pool := xgopool.New(int32(10 * runtime.NumCPU()))
 	setupLoggers(task, pool)
 
-	// tasks
+	// jobs
 	jobs := NewJobSet(bw, pool)
 	cfg := config.Configs().Task
 	_, err := task.AddJobByCronSpec("activity", cfg.ActivityCron, jobs.activityJob)
 	if err != nil {
 		return nil, err
 	}
-	_, err = task.AddJobByCronSpec("activity", cfg.IssueCron, jobs.issueJob)
+	_, err = task.AddJobByCronSpec("issue", cfg.IssueCron, jobs.issueJob)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +53,7 @@ func setupLoggers(task *xtask.CronTask, pool *xgopool.GoPool) {
 	})
 	pool.SetPanicHandler(func(ctx context.Context, v interface{}) {
 		f := ctx.Value(ctxFuncnameKey)
-		fields := logrus.Fields{"module": "task", "type": "panic", "function": f, "panic": fmt.Sprintf("%v", v)}
+		fields := logrus.Fields{"module": "task", "type": "panic", "task": "?", "function": f, "panic": fmt.Sprintf("%v", v)}
 		l.WithFields(fields).Errorf("[Task] Function `%s` in job panics with `%v`", f, v)
 	})
 }

@@ -20,20 +20,17 @@ type Chat struct {
 }
 
 /*
-CREATE TABLE IF NOT EXISTS "tbl_chat" (
-    "cid"          integer primary key autoincrement,
-    "chat_id"      bigint(20),
-    "username"     varchar(255),
-    "token"        varchar(255),
-    "allow_issue"  tinyint     DEFAULT 0,
-    "filter_me"    tinyint     DEFAULT 1,
-    "silent"       tinyint     DEFAULT 0,
-    "silent_start" tinyint     DEFAULT 0,
-    "silent_end"   tinyint     DEFAULT 0,
-    "time_zone"    varchar(15) DEFAULT '+00:00',
-    "created_at"   datetime,
-    "updated_at"   datetime,
-    "deleted_at"   datetime DEFAULT '1970-01-01 00:00:01'
+CREATE TABLE "tbl_chat" (
+    "cid"        integer primary key autoincrement,
+    "chat_id"    bigint(20),
+    "username"   varchar(255),
+    "issue"      tinyint(1) DEFAULT 0,
+    "filter_me"  tinyint(1) DEFAULT 1,
+    "silent"     tinyint(1) DEFAULT 0,
+    "preview"    tinyint(1) DEFAULT 1,
+    "created_at" datetime,
+    "updated_at" datetime,
+    "deleted_at" datetime DEFAULT '1970-01-01 00:00:01'
 );
 CREATE UNIQUE INDEX uk_chat_id ON "tbl_chat" (chat_id, deleted_at);
 */

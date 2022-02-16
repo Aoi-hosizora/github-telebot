@@ -87,22 +87,20 @@ func FormatActivityEvents(events []*model.ActivityEvent, username string, page i
 	}
 
 	sb := strings.Builder{}
-	if page <= 0 {
-		sb.WriteString(fmt.Sprintf("*New activity events*"))
-	} else {
-		sb.WriteString(fmt.Sprintf("*Activity events from page %d*", page))
-	}
-
 	if len(events) == 1 {
-		sb.WriteString(formatActivityEvent(events[0])) // <<<
+		sb.WriteString(formatActivityEvent(events[0]) + "\n") // <<<
 	} else {
 		for idx, ev := range events {
 			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, formatActivityEvent(ev))) // <<<
 		}
 	}
 
-	sb.WriteString(`\=\=\=\=`)
-	sb.WriteString(fmt.Sprintf("\nFrom [%s](https://github.com/%s)\\.", Markdown(username), username))
+	userMd := fmt.Sprintf("[%s](https://github.com/%s)", markdownV2(username), username)
+	if page <= 0 {
+		sb.WriteString(fmt.Sprintf("\n*New activity events from %s*\\.", userMd))
+	} else {
+		sb.WriteString(fmt.Sprintf("\n*Activity events from %s of page %d*\\.", userMd, page))
+	}
 	return sb.String()
 }
 
@@ -112,21 +110,19 @@ func FormatIssueEvents(events []*model.IssueEvent, username string, page int) st
 	}
 
 	sb := strings.Builder{}
-	if page <= 0 {
-		sb.WriteString(fmt.Sprintf("*New issue events*"))
-	} else {
-		sb.WriteString(fmt.Sprintf("*Issue events from page %d*", page))
-	}
-
 	if len(events) == 1 {
-		sb.WriteString(formatIssueEvent(events[0])) // <<<
+		sb.WriteString(formatIssueEvent(events[0]) + "\n") // <<<
 	} else {
 		for idx, ev := range events {
 			sb.WriteString(fmt.Sprintf("%d\\. %s\n", idx+1, formatIssueEvent(ev))) // <<<
 		}
 	}
 
-	sb.WriteString(`\=\=\=\=`)
-	sb.WriteString(fmt.Sprintf("\nFrom [%s](https://github.com/%s)\\.", Markdown(username), username))
+	userMd := fmt.Sprintf("[%s](https://github.com/%s)", markdownV2(username), username)
+	if page <= 0 {
+		sb.WriteString(fmt.Sprintf("\n*New issue events from %s*\\.", userMd))
+	} else {
+		sb.WriteString(fmt.Sprintf("\n*Issue events from %s of page %d*\\.", userMd, page))
+	}
 	return sb.String()
 }

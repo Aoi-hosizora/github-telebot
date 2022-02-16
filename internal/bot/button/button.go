@@ -1,22 +1,22 @@
 package button
 
 import (
-	"gopkg.in/tucnak/telebot.v2"
+	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 )
 
 var (
 	// InlineBtnUnbind (controller.Unsubscribe)
-	InlineBtnUnbind = &telebot.InlineButton{Unique: "btn_unbind", Text: "Unbind"}
+	InlineBtnUnbind = xtelebot.DataBtn("Unbind", "btn_unbind")
 
 	// InlineBtnCancelUnbind (controller.Unsubscribe)
-	InlineBtnCancelUnbind = &telebot.InlineButton{Unique: "btn_cancel_unbind", Text: "Cancel"}
+	InlineBtnCancelUnbind = xtelebot.DataBtn("Cancel", "btn_cancel_unbind")
 
 	// InlineBtnFilter (controller.AllowIssue)
-	InlineBtnFilter = &telebot.InlineButton{Unique: "btn_filter", Text: "Filter"}
+	InlineBtnFilter = xtelebot.DataBtn("Filter", "btn_filter")
 
 	// InlineBtnNotFilter (controller.AllowIssue)
-	InlineBtnNotFilter = &telebot.InlineButton{Unique: "btn_not_filter", Text: "Not Filter"}
+	InlineBtnNotFilter = xtelebot.DataBtn("Not Filter", "btn_not_filter")
 
 	// InlineBtnCancelSetupIssue (controller.AllowIssue)
-	InlineBtnCancelSetupIssue = &telebot.InlineButton{Unique: "btn_cancel_setup_issue", Text: "Cancel"}
+	InlineBtnCancelSetupIssue = xtelebot.DataBtn("Cancel", "btn_cancel_setup_issue")
 )

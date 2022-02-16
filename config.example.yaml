@@ -1,8 +1,6 @@
 meta:
   run-mode: debug
   log-name: ./logs/console
-
-bot:
   token: xxx
   poller-timeout: 600 # second
 
@@ -24,5 +22,5 @@ redis:
   max-idletime: 300  # second
 
 task:
-  activity: 0 0/2 * * * *
-  issue: 0 0/10 * * * *
+  activity-cron: 0 0/2 * * * *
+  issue-cron: 0 0/10 * * * *
