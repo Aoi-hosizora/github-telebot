@@ -155,7 +155,8 @@ func Me(bw *xtelebot.BotWrapper, m *telebot.Message) {
 		if chat.Token == "" {
 			options = append(options, "subscribe without token")
 		} else {
-			masked := xstring.StringMaskTokenR(chat.Token, "\\*", 0, 1, 2, 3, -1, -2, -3, -4)
+			token := strings.ReplaceAll(chat.Token, "_", "\\_")
+			masked := xstring.StringMaskTokenR(token, "\\*", 0, 1, 2, 3, 4, -1, -2, -3, -4)
 			options = append(options, fmt.Sprintf("subscribe with token \"%s\"", masked))
 		}
 		options = append(options, xsugar.IfThenElse(!chat.Issue, "disallow to notify new issue events",

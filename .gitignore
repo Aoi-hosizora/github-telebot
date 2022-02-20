@@ -1,10 +1,10 @@
 ### Editor ###
-.idea/
 .vscode/
 .ionide/
 .history/
+.idea/
 
-### Build ###
+### Project ###
 build/
 logs/*
 !.gitkeep

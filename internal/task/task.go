@@ -21,11 +21,7 @@ type Task struct {
 func NewTask(bw *xtelebot.BotWrapper) (*Task, error) {
 	// task
 	task := xtask.NewCronTask(cron.New(cron.WithSeconds()))
-	task.SetAddedCallback(func(j *xtask.FuncJob) {
-		if config.IsDebugMode() {
-			xtask.DefaultColorizedAddedCallback(j)
-		}
-	})
+	task.SetAddedCallback(xtask.DefaultColorizedAddedCallback)
 	pool := xgopool.New(int32(10 * runtime.NumCPU()))
 	setupLoggers(task, pool)
 

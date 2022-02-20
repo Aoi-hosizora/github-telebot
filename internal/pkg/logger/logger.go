@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// _logger is the global logrus.Logger.
 var _logger *logrus.Logger
 
 func Logger() *logrus.Logger {
@@ -32,7 +31,7 @@ func Setup() error {
 	logName := config.Configs().Meta.LogName
 	rotation, err := xrotation.New(
 		logName+".%Y%m%d.log",
-		xrotation.WithSymlinkFilename(logName+"current.log"),
+		xrotation.WithSymlinkFilename(logName+".current.log"),
 		xrotation.WithRotationTime(24*time.Hour),
 		xrotation.WithRotationMaxAge(15*24*time.Hour),
 		xrotation.WithClock(xtime.Local),

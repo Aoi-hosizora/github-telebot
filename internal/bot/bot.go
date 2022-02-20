@@ -4,6 +4,7 @@ import (
 	"github.com/Aoi-hosizora/ahlib-web/xgin"
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
 	"github.com/Aoi-hosizora/ahlib/xruntime"
+	"github.com/Aoi-hosizora/github-telebot/internal/bot/fsm"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/config"
 	"github.com/Aoi-hosizora/github-telebot/internal/pkg/logger"
 	"gopkg.in/tucnak/telebot.v2"
@@ -36,14 +37,11 @@ func NewConsumer() (*Consumer, error) {
 
 	// wrapper
 	bw := xtelebot.NewBotWrapper(bot)
+	bw.Data().SetInitialState(fsm.None)
 	setupLoggers(bw)
 
 	// handlers
-	bw.SetHandledCallback(func(endpoint interface{}, renderedEndpoint string, handlerName string) {
-		if config.IsDebugMode() {
-			xtelebot.DefaultColorizedHandledCallback(endpoint, renderedEndpoint, handlerName)
-		}
-	})
+	bw.SetHandledCallback(xtelebot.DefaultColorizedHandledCallback)
 	setupHandlers(bw)
 	bw.SetHandledCallback(nil)
 
@@ -59,11 +57,7 @@ func setupLoggers(bw *xtelebot.BotWrapper) {
 	bw.SetRespondedCallback(func(typ xtelebot.RespondEventType, event *xtelebot.RespondEvent) {
 		xtelebot.LogRespondToLogrus(l, typ, event)
 		if event.ReturnedError != nil {
-			if typ == xtelebot.RespondSendEvent {
-				processSendError(bw, event.ReturnedError, event)
-			} else if typ == xtelebot.RespondReplyEvent {
-				processReplyError(bw, event.ReturnedError, event)
-			}
+			processError(bw, typ, event)
 		}
 	})
 	bw.SetPanicHandler(func(_, _, v interface{}) {
@@ -83,6 +77,13 @@ func (s *Consumer) Start() {
 		s.bw.Bot().Stop()
 	}()
 
+	hp, hsp, _ := xruntime.GetProxyEnv()
+	if hp != "" {
+		log.Printf("[Bot] Using http proxy: %s", hp)
+	}
+	if hsp != "" {
+		log.Printf("[Bot] Using https proxy: %s", hsp)
+	}
 	log.Printf("[Bot] Starting consuming incoming update on bot %s", s.bw.Bot().Me.Username)
 	s.bw.Bot().Start()
 	<-terminated

@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -26,7 +26,7 @@ func httpGet(url string, fn func(r *http.Request)) ([]byte, *http.Response, erro
 
 	body := resp.Body
 	defer body.Close()
-	bs, err := ioutil.ReadAll(body)
+	bs, err := io.ReadAll(body)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -7,7 +7,6 @@ import (
 	"os"
 )
 
-// _configs represents the global config.Config.
 var _configs *Config
 
 func Configs() *Config {
@@ -89,7 +88,7 @@ func validateConfig(cfg *Config) error {
 	val.SetMessageTagName("message")
 	val.UseTagAsFieldName("yaml", "json")
 	if err := val.ValidateStruct(cfg); err != nil {
-		ut, _ := xvalidator.ApplyTranslator(val.ValidateEngine(), xvalidator.EnLocaleTranslator(), xvalidator.EnTranslationRegisterFunc())
+		ut, _ := xvalidator.ApplyEnglishTranslator(val.ValidateEngine())
 		return xvalidator.MapToError(err.(*xvalidator.MultiFieldsError).Translate(ut, false))
 	}
 	return nil

@@ -19,6 +19,6 @@ func StateString(state xtelebot.ChatState) string {
 	case SubscribingUsername, SubscribingToken:
 		return "subscribe"
 	default:
-		return "?"
+		return "<unknown>"
 	}
 }

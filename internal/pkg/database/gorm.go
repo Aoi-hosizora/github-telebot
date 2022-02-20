@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-// _db represents the global gorm.DB.
 var _db *gorm.DB
 
 func GormDB() *gorm.DB {

@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
+	"github.com/Aoi-hosizora/ahlib/xgeneric/xsugar"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/controller"
 	"gopkg.in/tucnak/telebot.v2"
 	"strings"
@@ -84,51 +85,54 @@ var commands = []telebot.Command{
 // process error
 // =============
 
-func processError(what string, errMsg string, options []interface{}) (string, []interface{}) {
-	what = strings.ReplaceAll(what, "\\", "")
-	what += "\n\nPlease contact to @AoiHosizora with the message: \"" + errMsg + "\""
-	newOptions := make([]interface{}, 1, len(options))
-	newOptions[0] = telebot.ModeMarkdown
+const ctxRetryCountKey = "retry_count"
+
+func processError(bw *xtelebot.BotWrapper, typ xtelebot.RespondEventType, ev *xtelebot.RespondEvent) {
+	if typ != xtelebot.RespondSendEvent && typ != xtelebot.RespondReplyEvent {
+		return // ignore error
+	}
+	err := ev.ReturnedError
+	what, ok := xsugar.IfThenElse(typ == xtelebot.RespondSendEvent, ev.SendWhat, ev.ReplyWhat).(string)
+	options := xsugar.IfThenElse(typ == xtelebot.RespondSendEvent, ev.SendOptions, ev.ReplyOptions)
+	if !ok || len(options) == 0 || !xtelebot.IsEntityParseError(err) {
+		return // ignore error
+	}
+
+	tryCount, ok := ev.RespondContext.Value(ctxRetryCountKey).(int)
+	if !ok {
+		tryCount = 1 // first try (=1)
+	} else if tryCount > 3 {
+		return // max retry count (>3)
+	} else {
+		tryCount++ // after the first try (++)
+	}
+	ctx := context.WithValue(ev.RespondContext, ctxRetryCountKey, tryCount)
+
+	newWhat, newOptions := generateRetriedMsg(tryCount, err, what, options)
+	if typ == xtelebot.RespondSendEvent {
+		_, _ = bw.RespondSendCtx(ctx, ev.SendSource, newWhat, newOptions...)
+	} else {
+		_, _ = bw.RespondReplyCtx(ctx, ev.ReplySource, ev.ReplyExplicit, newWhat, newOptions...)
+	}
+}
+
+func generateRetriedMsg(tryCount int, err error, what string, options []interface{}) (newWhat string, newOptions []interface{}) {
+	firstTry := tryCount == 1
+	if firstTry {
+		newWhat = strings.ReplaceAll(what, "\\", "")
+		newWhat += "\n\nPlease contact to @AoiHosizora with following message: \"" + err.Error() + "\""
+	} else {
+		newWhat = what
+	}
+
+	newOptions = make([]interface{}, 0, len(options))
+	if firstTry {
+		newOptions = append(newOptions, telebot.ModeMarkdown)
+	}
 	for _, opt := range options {
-		if opt != telebot.ModeMarkdownV2 {
+		if (opt != telebot.ModeMarkdownV2) && (firstTry || opt != telebot.ModeMarkdown) {
 			newOptions = append(newOptions, opt)
 		}
 	}
 	return what, newOptions
-}
-
-var ctxRetryCountKey = "retry_count"
-
-func processSendError(bw *xtelebot.BotWrapper, err error, ev *xtelebot.RespondEvent) {
-	source, what, options, ctx := ev.SendSource, ev.SendWhat, ev.SendOptions, ev.RespondContext
-	if c, ok := ctx.Value(ctxRetryCountKey).(int); !ok {
-		ctx = context.WithValue(ctx, ctxRetryCountKey, 1)
-	} else if c <= 3 { // max retry count: 3
-		ctx = context.WithValue(ctx, ctxRetryCountKey, c+1)
-	} else {
-		return
-	}
-
-	strWhat, ok := what.(string)
-	if ok && xtelebot.IsEscapedParseError(err) {
-		newWhat, newOptions := processError(strWhat, err.Error(), options)
-		_, _ = bw.RespondSendCtx(ctx, source, newWhat, newOptions...)
-	}
-}
-
-func processReplyError(bw *xtelebot.BotWrapper, err error, ev *xtelebot.RespondEvent) {
-	source, explicit, what, options, ctx := ev.ReplySource, ev.ReplyExplicit, ev.ReplyWhat, ev.ReplyOptions, ev.RespondContext
-	if c, ok := ctx.Value(ctxRetryCountKey).(int); !ok {
-		ctx = context.WithValue(ctx, ctxRetryCountKey, 1)
-	} else if c <= 3 { // max retry count: 3
-		ctx = context.WithValue(ctx, ctxRetryCountKey, c+1)
-	} else {
-		return
-	}
-
-	strWhat, ok := what.(string)
-	if ok && xtelebot.IsEscapedParseError(err) {
-		newWhat, newOptions := processError(strWhat, err.Error(), options)
-		_, _ = bw.RespondReplyCtx(ctx, source, explicit, newWhat, newOptions...)
-	}
 }

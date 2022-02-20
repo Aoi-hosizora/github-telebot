@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	_START           = "Here is GitHub events telebot, developed by @AoiHosizora, send /help for help."
+	_START           = "Here is GitHub Events Bot, developed by @AoiHosizora, send /help for help."
 	_NO_ACTION       = "There is no action now."
 	_ACTION_CANCELED = "Action \"%s\" has been canceled."
 	_UNKNOWN_COMMAND = "Unknown command: %s, send /help for help."
@@ -32,7 +32,7 @@ func Cancel(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	if state == fsm.None {
 		bw.RespondReply(m, false, _NO_ACTION, xtelebot.RemoveReplyKeyboard())
 	} else {
-		bw.Data().SetState(m.Chat.ID, fsm.None)
+		bw.Data().DeleteState(m.Chat.ID)
 		s := fmt.Sprintf(_ACTION_CANCELED, fsm.StateString(state))
 		bw.RespondReply(m, false, s, xtelebot.RemoveReplyKeyboard())
 	}

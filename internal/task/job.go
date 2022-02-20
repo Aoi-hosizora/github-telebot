@@ -11,15 +11,28 @@ import (
 	"github.com/Aoi-hosizora/github-telebot/internal/service/dao"
 	"gopkg.in/tucnak/telebot.v2"
 	"sync"
+	"sync/atomic"
 )
 
 type JobSet struct {
 	bw   *xtelebot.BotWrapper
 	pool *xgopool.GoPool
+
+	activityFlag int32
+	issueFlag    int32
 }
 
 func NewJobSet(bw *xtelebot.BotWrapper, pool *xgopool.GoPool) *JobSet {
 	return &JobSet{bw: bw, pool: pool}
+}
+
+func (j *JobSet) checkExclusive(flag *int32) (allow bool, release func()) {
+	if !atomic.CompareAndSwapInt32(flag, 0, 1) {
+		return false, nil
+	}
+	return true, func() {
+		*flag = 0
+	}
 }
 
 func (j *JobSet) foreachChat(chats []*model.Chat, fn func(chat *model.Chat)) {
@@ -37,6 +50,11 @@ func (j *JobSet) foreachChat(chats []*model.Chat, fn func(chat *model.Chat)) {
 }
 
 func (j *JobSet) activityJob() {
+	ok, release := j.checkExclusive(&j.activityFlag)
+	if !ok {
+		return
+	}
+	defer release()
 	chats, _ := dao.QueryChats()
 	if len(chats) == 0 {
 		return
@@ -89,13 +107,18 @@ func (j *JobSet) activityJob() {
 }
 
 func (j *JobSet) issueJob() {
-	users, _ := dao.QueryChats()
-	if len(users) == 0 {
+	ok, release := j.checkExclusive(&j.issueFlag)
+	if !ok {
+		return
+	}
+	defer release()
+	chats, _ := dao.QueryChats()
+	if len(chats) == 0 {
 		return
 	}
 
 	// foreach chat
-	j.foreachChat(users, func(chat *model.Chat) {
+	j.foreachChat(chats, func(chat *model.Chat) {
 		// get new events and filter
 		if chat.Token == "" || !chat.Issue {
 			return

@@ -5,7 +5,24 @@
 ### Function
 
 + [x] Notify new activity and issue events for subscribed GitHub account
-+ [x] Configurable Silent and NoPreview send options 
++ [x] Configurable Silent and NoPreview send options
+
+### Build
+
++ Don't use Docker (need Go >= 1.18)
+
+```bash
+# create config.yaml from config.example.yaml
+go run cmd/main.go
+```
+
++ Use Docker
+
+```bash
+docker build -t aoihosizora/github-telebot:latest
+docker run -d -v ./database.db:/db/database.db -e BOT_TOKEN="xxx" --name github-telebot aoihosizora/github-telebot:latest
+# TODO 最佳实践
+```
 
 ### Endpoints
 

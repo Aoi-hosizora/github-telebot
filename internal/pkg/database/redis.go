@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// _redis is the global redis.Client.
 var _redis *redis.Client
 
 func RedisClient() *redis.Client {
