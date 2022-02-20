@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	_UNEXPECTED_NUMBER = "Unexpected page number. Please send an integer value. Send /cancel to cancel."
-	_EMPTY_EVENT       = "You have empty event."
+	_INVALID_NUMBER = "Expected page number, but got an invalid parameter. Please send an integer value. Send /cancel to cancel the current action."
+	_EMPTY_EVENT    = "Currently you have empty event."
 )
 
 // Activity /activity
@@ -22,7 +22,7 @@ func Activity(bw *xtelebot.BotWrapper, m *telebot.Message) {
 		var err error
 		page, err = xnumber.Atoi(pageStr)
 		if err != nil {
-			bw.RespondReply(m, false, _UNEXPECTED_NUMBER)
+			bw.RespondReply(m, false, _INVALID_NUMBER)
 			return
 		}
 		if page < 1 {
@@ -32,7 +32,7 @@ func Activity(bw *xtelebot.BotWrapper, m *telebot.Message) {
 
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.RespondReply(m, false, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _SUBSCRIBE_NOT_YET)
 		return
 	}
 	events, err := service.GetActivityEvents(chat.Username, chat.Token, page)
@@ -63,7 +63,7 @@ func Issue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 		var err error
 		page, err = xnumber.Atoi(pageStr)
 		if err != nil {
-			bw.RespondReply(m, false, _UNEXPECTED_NUMBER)
+			bw.RespondReply(m, false, _INVALID_NUMBER)
 			return
 		}
 		if page < 1 {
@@ -73,7 +73,7 @@ func Issue(bw *xtelebot.BotWrapper, m *telebot.Message) {
 
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		bw.RespondReply(m, false, _BIND_NOT_YET)
+		bw.RespondReply(m, false, _SUBSCRIBE_NOT_YET)
 		return
 	}
 	if chat.Token == "" {

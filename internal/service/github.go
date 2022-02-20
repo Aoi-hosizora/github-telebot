@@ -15,7 +15,7 @@ const (
 	IssueEventApi    string = "http://api.common.aoihosizora.top/github/users/%s/issues/timeline?page=%d"
 )
 
-func githubToken(token string) func(*http.Request) {
+func tokenFn(token string) func(*http.Request) {
 	return func(r *http.Request) {
 		if token != "" {
 			r.Header.Add(headers.Authorization, "Token "+token)
@@ -25,7 +25,7 @@ func githubToken(token string) func(*http.Request) {
 
 func CheckUserExistence(username string, token string) (bool, error) {
 	url := fmt.Sprintf(UserApi, username)
-	_, resp, err := httpGet(url, githubToken(token))
+	_, resp, err := httpGet(url, tokenFn(token))
 	if err != nil {
 		return false, err
 	}
@@ -34,7 +34,7 @@ func CheckUserExistence(username string, token string) (bool, error) {
 
 func GetActivityEvents(username string, token string, page int) ([]*model.ActivityEvent, error) {
 	url := fmt.Sprintf(ActivityEventApi, username, page)
-	bs, _, err := httpGet(url, githubToken(token))
+	bs, _, err := httpGet(url, tokenFn(token))
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func GetActivityEvents(username string, token string, page int) ([]*model.Activi
 
 func GetIssueEvents(username string, token string, page int) ([]*model.IssueEvent, error) {
 	url := fmt.Sprintf(IssueEventApi, username, page)
-	bs, _, err := httpGet(url, githubToken(token))
+	bs, _, err := httpGet(url, tokenFn(token))
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +97,9 @@ func FormatActivityEvents(events []*model.ActivityEvent, username string, page i
 
 	userMd := fmt.Sprintf("[%s](https://github.com/%s)", markdownV2(username), username)
 	if page <= 0 {
-		sb.WriteString(fmt.Sprintf("\n*New activity events from %s*\\.", userMd))
+		sb.WriteString(fmt.Sprintf("\\(*New activity events from %s*\\)", userMd))
 	} else {
-		sb.WriteString(fmt.Sprintf("\n*Activity events from %s of page %d*\\.", userMd, page))
+		sb.WriteString(fmt.Sprintf("\\(*Activity events from %s of page %d*\\)", userMd, page))
 	}
 	return sb.String()
 }
@@ -120,9 +120,9 @@ func FormatIssueEvents(events []*model.IssueEvent, username string, page int) st
 
 	userMd := fmt.Sprintf("[%s](https://github.com/%s)", markdownV2(username), username)
 	if page <= 0 {
-		sb.WriteString(fmt.Sprintf("\n*New issue events from %s*\\.", userMd))
+		sb.WriteString(fmt.Sprintf("\\(*New issue events from %s*\\)", userMd))
 	} else {
-		sb.WriteString(fmt.Sprintf("\n*Issue events from %s of page %d*\\.", userMd, page))
+		sb.WriteString(fmt.Sprintf("\\(*Issue events from %s of page %d*\\)", userMd, page))
 	}
 	return sb.String()
 }

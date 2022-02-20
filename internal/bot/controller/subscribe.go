@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"github.com/Aoi-hosizora/ahlib-web/xtelebot"
+	"github.com/Aoi-hosizora/ahlib/xgeneric/xsugar"
 	"github.com/Aoi-hosizora/ahlib/xstatus"
 	"github.com/Aoi-hosizora/ahlib/xstring"
 	"github.com/Aoi-hosizora/github-telebot/internal/bot/button"
@@ -15,26 +16,25 @@ import (
 )
 
 const (
-	_BIND_ALREADY        = "You have already bind with a github account."
-	_BIND_USERNAME_Q     = "Please send the github's username which you want to bind. Send /cancel to cancel."
-	_BIND_TOKEN_Q        = "Do you want to watch private events? Send your token if you want, otherwise send 'no'. Send /cancel to cancel."
-	_BIND_EMPTY_USERNAME = "Please send a non-empty username (without whitespace). Send /cancel to cancel."
-	_BIND_EMPTY_TOKEN    = "Please send a non-empty token (without whitespace), or send 'no' to ignore. Send /cancel to cancel."
-	_BIND_FAILED         = "Failed to bind github account, please retry later."
-	_BIND_TOKEN_SUCCESS  = "Binding user '%s' with token success. " + _BIND_SUCCESS_TIP
-	_BIND_NOTOK_SUCCESS  = "Binding user '%s' without token success. " + _BIND_SUCCESS_TIP
-	_BIND_SUCCESS_TIP    = "Send /activity to get activity events, send /issue to get issue events.\n" +
-		"(Tips: new activity events will be sent periodically, but issue events will not be sent in default, you can use /allowissue to allow sending periodically)"
+	_SUBSCRIBE_ALREADY        = "You have already subscribed with a GitHub account."
+	_SUBSCRIBE_USERNAME_Q     = "Please send your GitHub username. Send /cancel to cancel the current action."
+	_SUBSCRIBE_TOKEN_Q        = "Do you want to watch private events? Send your token with repo scope if you want, otherwise send 'no'. Send /cancel to cancel the current action."
+	_SUBSCRIBE_EMPTY_USERNAME = "Please send a non-empty username (without whitespace). Send /cancel to cancel the current action."
+	_SUBSCRIBE_EMPTY_TOKEN    = "Please send a non-empty token (without whitespace), or send 'no' for no token. Send /cancel to cancel the current action."
+	_SUBSCRIBE_FAILED         = "Oops. Failed to subscribe GitHub account, please retry later."
+	_SUBSCRIBE_TOKEN_SUCCESS  = "Done. Subscribe GitHub account '%s' with token successfully. " + _SUBSCRIBE_SUCCESS_TIP
+	_SUBSCRIBE_NOTOK_SUCCESS  = "Done. Subscribe GitHub account '%s' without token successfully. " + _SUBSCRIBE_SUCCESS_TIP
+	_SUBSCRIBE_SUCCESS_TIP    = "Now you can send /activity to get activity events, and send /issue to get issue events if you subscribe with token.\n" +
+		"(Tips: new activity events will be notified periodically, but issue events will not in default, you can send /allowissue to enable this action)"
 
-	_BIND_NOT_YET   = "You have not bind with a github account yet."
-	_UNBIND_Q       = "Sure to unbind the current github account '%s'?"
-	_UNBIND_FAILED  = "Failed to unbind github account, please retry later."
-	_UNBIND_SUCCESS = "Unbind user success."
+	_SUBSCRIBE_NOT_YET   = "You have not subscribed with any GitHub account yet."
+	_UNSUBSCRIBE_Q       = "Sure to unsubscribe the current GitHub account '%s'?"
+	_UNSUBSCRIBE_FAILED  = "Oops. Failed to unsubscribe GitHub account, please retry later."
+	_UNSUBSCRIBE_SUCCESS = "Done. Unsubscribe successfully."
 
-	_GITHUB_FAILED         = "Failed to query information from github, please retry later."
-	_GITHUB_USER_NOT_FOUND = "Github user is not found, or the token is invalid."
-	_GITHUB_ME_NOTOK       = "You have bound with user '%s' without token, current options: %s"
-	_GITHUB_ME_TOKEN       = "You have bound with user '%s' with token '%s', current options: %s"
+	_GITHUB_FAILED         = "Oops. Failed to fetch information from GitHub, please retry later."
+	_GITHUB_USER_NOT_FOUND = "Oops. Github user you specified is not found, or the token you sent is invalid."
+	_GITHUB_ME             = "You have subscribed with account '%s', current options:\n%s"
 )
 
 // Subscribe /subscribe
@@ -42,40 +42,41 @@ func Subscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	{
 		chat, _ := dao.QueryChat(m.Chat.ID)
 		if chat != nil {
-			bw.RespondReply(m, false, _BIND_ALREADY)
+			bw.RespondReply(m, false, _SUBSCRIBE_ALREADY)
 		} else {
-			bw.Data().SetState(m.Chat.ID, fsm.BindingUsername)
-			bw.RespondReply(m, false, _BIND_USERNAME_Q)
+			bw.Data().SetState(m.Chat.ID, fsm.SubscribingUsername)
+			bw.RespondReply(m, false, _SUBSCRIBE_USERNAME_Q)
 		}
 	}
 
 	const usernameKey = "username"
-	if !bw.Shs().IsRegistered(fsm.BindingUsername) {
-		bw.Shs().Register(fsm.BindingUsername, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	if !bw.Shs().IsRegistered(fsm.SubscribingUsername) {
+		bw.Shs().Register(fsm.SubscribingUsername, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
 			username := strings.TrimSpace(m.Text)
 			if username == "" {
-				bw.RespondReply(m, false, _BIND_EMPTY_USERNAME)
+				bw.RespondReply(m, false, _SUBSCRIBE_EMPTY_USERNAME)
 			} else {
 				bw.Data().SetCache(m.Chat.ID, usernameKey, username)
-				bw.Data().SetState(m.Chat.ID, fsm.BindingToken)
-				bw.RespondReply(m, false, _BIND_TOKEN_Q)
+				bw.Data().SetState(m.Chat.ID, fsm.SubscribingToken)
+				bw.RespondReply(m, false, _SUBSCRIBE_TOKEN_Q)
 			}
 		})
 	}
-	if !bw.Shs().IsRegistered(fsm.BindingToken) {
-		bw.Shs().Register(fsm.BindingToken, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
+	if !bw.Shs().IsRegistered(fsm.SubscribingToken) {
+		bw.Shs().Register(fsm.SubscribingToken, func(bw *xtelebot.BotWrapper, m *telebot.Message) {
 			token := strings.TrimSpace(m.Text)
 			if token == "" {
-				bw.RespondReply(m, false, _BIND_EMPTY_TOKEN)
+				bw.RespondReply(m, false, _SUBSCRIBE_EMPTY_TOKEN)
 				return
 			}
 			v, _ := bw.Data().GetCache(m.Chat.ID, usernameKey)
-			username := v.(string)
 			bw.Data().RemoveCache(m.Chat.ID, usernameKey)
+			username := v.(string)
 			if strings.ToLower(token) == "no" {
 				token = ""
 			}
 
+			// <<<<<<
 			flag := ""
 			ok, err := service.CheckUserExistence(username, token)
 			if err != nil {
@@ -85,16 +86,16 @@ func Subscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 			} else {
 				status, err := dao.CreateChat(m.Chat.ID, username, token)
 				if status == xstatus.DbExisted {
-					flag = _BIND_ALREADY
+					flag = _SUBSCRIBE_ALREADY
 				} else if status == xstatus.DbFailed {
-					flag = _BIND_FAILED
+					flag = _SUBSCRIBE_FAILED
 					if config.IsDebugMode() {
 						flag += "\nError：" + err.Error()
 					}
 				} else if token != "" {
-					flag = fmt.Sprintf(_BIND_TOKEN_SUCCESS, username)
+					flag = fmt.Sprintf(_SUBSCRIBE_TOKEN_SUCCESS, username)
 				} else {
-					flag = fmt.Sprintf(_BIND_NOTOK_SUCCESS, username)
+					flag = fmt.Sprintf(_SUBSCRIBE_NOTOK_SUCCESS, username)
 				}
 			}
 			bw.Data().DeleteState(m.Chat.ID)
@@ -108,35 +109,37 @@ func Unsubscribe(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	{
 		chat, _ := dao.QueryChat(m.Chat.ID)
 		if chat == nil {
-			bw.RespondReply(m, false, _BIND_NOT_YET)
+			bw.RespondReply(m, false, _SUBSCRIBE_NOT_YET)
 		} else {
-			bw.RespondReply(m, false, fmt.Sprintf(_UNBIND_Q, chat.Username), xtelebot.SetInlineKeyboard(xtelebot.InlineKeyboard(
-				xtelebot.InlineRow{button.InlineBtnUnbind},
-				xtelebot.InlineRow{button.InlineBtnCancelUnbind},
+			bw.RespondReply(m, false, fmt.Sprintf(_UNSUBSCRIBE_Q, chat.Username), xtelebot.SetInlineKeyboard(xtelebot.InlineKeyboard(
+				xtelebot.InlineRow{button.InlineBtnUnsubscribe},
+				xtelebot.InlineRow{button.InlineBtnCancelUnsubscribe},
 			)))
 		}
 	}
 
-	if !bw.IsHandled(button.InlineBtnUnbind) {
-		bw.HandleInlineButton(button.InlineBtnUnbind, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
+	if !bw.IsHandled(button.InlineBtnUnsubscribe) {
+		bw.HandleInlineButton(button.InlineBtnUnsubscribe, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
 			flag := ""
 			status, err := dao.DeleteChat(m.Chat.ID)
 			if status == xstatus.DbNotFound {
-				flag = _BIND_NOT_YET
+				flag = _SUBSCRIBE_NOT_YET
 			} else if status == xstatus.DbFailed {
-				flag = _UNBIND_FAILED
+				flag = _UNSUBSCRIBE_FAILED
 				if config.IsDebugMode() {
 					flag += "\nError：" + err.Error()
 				}
 			} else {
-				flag = _UNBIND_SUCCESS
+				flag = _UNSUBSCRIBE_SUCCESS
 			}
-			bw.Bot().Edit(c.Message, flag, xtelebot.RemoveInlineKeyboard())
+			bw.RespondEdit(c.Message, flag, xtelebot.RemoveInlineKeyboard())
+			bw.RespondCallback(c, nil)
 		})
 	}
-	if !bw.IsHandled(button.InlineBtnCancelUnbind) {
-		bw.HandleInlineButton(button.InlineBtnCancelUnbind, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
-			bw.Bot().Edit(c.Message, fmt.Sprintf("%s (canceled)", c.Message.Text), xtelebot.RemoveInlineKeyboard())
+	if !bw.IsHandled(button.InlineBtnCancelUnsubscribe) {
+		bw.HandleInlineButton(button.InlineBtnCancelUnsubscribe, func(bw *xtelebot.BotWrapper, c *telebot.Callback) {
+			bw.RespondEdit(c.Message, fmt.Sprintf("%s (canceled)", c.Message.Text), xtelebot.RemoveInlineKeyboard())
+			bw.RespondCallback(c, nil)
 		})
 	}
 }
@@ -146,16 +149,28 @@ func Me(bw *xtelebot.BotWrapper, m *telebot.Message) {
 	flag := ""
 	chat, _ := dao.QueryChat(m.Chat.ID)
 	if chat == nil {
-		flag = _BIND_NOT_YET
+		flag = _SUBSCRIBE_NOT_YET
 	} else {
-		url := fmt.Sprintf("[%s](https://github.com/%s)", chat.Username, chat.Username)
+		options := make([]string, 0, 4)
 		if chat.Token == "" {
-			flag = fmt.Sprintf(_GITHUB_ME_NOTOK, url)
+			options = append(options, "subscribe without token")
 		} else {
-			tok := xstring.MaskTokenR(chat.Token, '*', 0, 1, 2, -1, -2, -3)
-			tok = strings.ReplaceAll(tok, "*", "\\*")
-			flag = fmt.Sprintf(_GITHUB_ME_TOKEN, url, tok)
+			masked := xstring.StringMaskTokenR(chat.Token, "\\*", 0, 1, 2, 3, -1, -2, -3, -4)
+			options = append(options, fmt.Sprintf("subscribe with token \"%s\"", masked))
 		}
+		options = append(options, xsugar.IfThenElse(!chat.Issue, "disallow to notify new issue events",
+			xsugar.IfThenElse(chat.FilterMe, "notify new issue events excluding from me", "notify new issue events including from me")))
+		options = append(options, xsugar.IfThenElse(chat.Silent, "send message with no notification", "send message with notification"))
+		options = append(options, xsugar.IfThenElse(chat.Preview, "enable preview for links", "disable preview for links"))
+		bs := strings.Builder{}
+		for i, opt := range options {
+			if bs.Len() > 0 {
+				bs.WriteByte('\n')
+			}
+			bs.WriteString(fmt.Sprintf("%d. %s", i+1, opt))
+		}
+		url := fmt.Sprintf("[%s](https://github.com/%s)", chat.Username, chat.Username)
+		flag = fmt.Sprintf(_GITHUB_ME, url, bs.String())
 	}
 	bw.RespondReply(m, false, flag, telebot.ModeMarkdown)
 }

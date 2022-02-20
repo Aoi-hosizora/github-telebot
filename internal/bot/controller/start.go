@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	_START           = "Here is github events telebot, developed by @AoiHosizora, send /help for help."
+	_START           = "Here is GitHub events telebot, developed by @AoiHosizora, send /help for help."
 	_NO_ACTION       = "There is no action now."
 	_ACTION_CANCELED = "Action \"%s\" has been canceled."
 	_UNKNOWN_COMMAND = "Unknown command: %s, send /help for help."

@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	// InlineBtnUnbind (controller.Unsubscribe)
-	InlineBtnUnbind = xtelebot.DataBtn("Unbind", "btn_unbind")
+	// InlineBtnUnsubscribe (controller.Unsubscribe)
+	InlineBtnUnsubscribe = xtelebot.DataBtn("Unsubscribe", "btn_unsubscribe")
 
-	// InlineBtnCancelUnbind (controller.Unsubscribe)
-	InlineBtnCancelUnbind = xtelebot.DataBtn("Cancel", "btn_cancel_unbind")
+	// InlineBtnCancelUnsubscribe (controller.Unsubscribe)
+	InlineBtnCancelUnsubscribe = xtelebot.DataBtn("Cancel", "btn_cancel_unsubscribe")
 
 	// InlineBtnFilter (controller.AllowIssue)
 	InlineBtnFilter = xtelebot.DataBtn("Filter", "btn_filter")

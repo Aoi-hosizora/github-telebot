@@ -59,7 +59,11 @@ func setupLoggers(bw *xtelebot.BotWrapper) {
 	bw.SetRespondedCallback(func(typ xtelebot.RespondEventType, event *xtelebot.RespondEvent) {
 		xtelebot.LogRespondToLogrus(l, typ, event)
 		if event.ReturnedError != nil {
-			// TODO
+			if typ == xtelebot.RespondSendEvent {
+				processSendError(bw, event.ReturnedError, event)
+			} else if typ == xtelebot.RespondReplyEvent {
+				processReplyError(bw, event.ReturnedError, event)
+			}
 		}
 	})
 	bw.SetPanicHandler(func(_, _, v interface{}) {

@@ -7,16 +7,16 @@ import (
 const (
 	None xtelebot.ChatState = iota
 
-	// BindingUsername (controller.Subscribe)
-	BindingUsername
+	// SubscribingUsername (controller.Subscribe)
+	SubscribingUsername
 
-	// BindingToken (controller.Subscribe)
-	BindingToken
+	// SubscribingToken (controller.Subscribe)
+	SubscribingToken
 )
 
 func StateString(state xtelebot.ChatState) string {
 	switch state {
-	case BindingUsername, BindingToken:
+	case SubscribingUsername, SubscribingToken:
 		return "subscribe"
 	default:
 		return "?"

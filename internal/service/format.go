@@ -99,7 +99,7 @@ func formatActivityEvent(obj *model.ActivityEvent) string {
 	}
 
 	if !obj.Public {
-		message += " (private)"
+		message += " \\(private\\)"
 	}
 	return message
 }
