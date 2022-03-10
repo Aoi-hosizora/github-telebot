@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/Aoi-hosizora/ahlib/xgeneric/xslice"
+	"github.com/Aoi-hosizora/ahlib/xgeneric/xgslice"
 	"time"
 )
 
@@ -102,14 +102,14 @@ type IssueEvent struct {
 }
 
 func DiffActivityEventSlice(s1 []*ActivityEvent, s2 []*ActivityEvent) []*ActivityEvent {
-	return xslice.DiffWith(s1, s2, func(e1, e2 *ActivityEvent) bool {
+	return xgslice.DiffWith(s1, s2, func(e1, e2 *ActivityEvent) bool {
 		// checking type and repo is dummy
 		return e1.Id == e2.Id && e1.Type == e2.Type && e1.Repo.Name == e2.Repo.Name
 	})
 }
 
 func DiffIssueEventSlice(s1 []*IssueEvent, s2 []*IssueEvent) []*IssueEvent {
-	return xslice.DiffWith(s1, s2, func(e1, e2 *IssueEvent) bool {
+	return xgslice.DiffWith(s1, s2, func(e1, e2 *IssueEvent) bool {
 		// `id` is null when `event` is `opened` or `cross-referenced`
 		return e1.Id == e2.Id && e1.Event == e2.Event && e1.Repo == e2.Repo && e1.Number == e2.Number && e1.CreatedAt.Unix() == e2.CreatedAt.Unix()
 	})

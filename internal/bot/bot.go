@@ -18,8 +18,8 @@ type Consumer struct {
 	bw *xtelebot.BotWrapper
 }
 
-func (s *Consumer) BotWrapper() *xtelebot.BotWrapper {
-	return s.bw
+func (c *Consumer) BotWrapper() *xtelebot.BotWrapper {
+	return c.bw
 }
 
 func NewConsumer() (*Consumer, error) {
@@ -65,7 +65,7 @@ func setupLoggers(bw *xtelebot.BotWrapper) {
 	})
 }
 
-func (s *Consumer) Start() {
+func (c *Consumer) Start() {
 	terminated := make(chan interface{})
 	go func() {
 		defer close(terminated)
@@ -74,7 +74,7 @@ func (s *Consumer) Start() {
 		sig := <-ch
 		signal.Stop(ch)
 		log.Printf("[Bot] Stopping due to %s received...", xruntime.SignalName(sig.(syscall.Signal)))
-		s.bw.Bot().Stop()
+		c.bw.Bot().Stop()
 	}()
 
 	hp, hsp, _ := xruntime.GetProxyEnv()
@@ -84,8 +84,8 @@ func (s *Consumer) Start() {
 	if hsp != "" {
 		log.Printf("[Bot] Using https proxy: %s", hsp)
 	}
-	log.Printf("[Bot] Starting consuming incoming update on bot %s", s.bw.Bot().Me.Username)
-	s.bw.Bot().Start()
+	log.Printf("[Bot] Starting consuming incoming update on bot '%s'", c.bw.Bot().Me.Username)
+	c.bw.Bot().Start()
 	<-terminated
 	log.Println("[Bot] Bot consumer is stopped successfully")
 }
